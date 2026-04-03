@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokyay Kereste Brand Styles */
+
+:root {
+  --color-amber-primary: #e5a803;
+  --color-amber-dark: #c99502;
+  --color-amber-light: #fcc842;
+  --color-brown: #8b6f47;
+  --color-brown-dark: #5c4a31;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-gray-900;
+  }
+
+  h1 {
+    @apply text-4xl font-bold text-gray-900;
+  }
+
+  h2 {
+    @apply text-3xl font-bold text-gray-900;
+  }
+
+  h3 {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  h4 {
+    @apply text-xl font-semibold text-gray-900;
+  }
+
+  h5 {
+    @apply text-lg font-semibold text-gray-900;
+  }
+
+  h6 {
+    @apply text-base font-semibold text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold text-amber-700 border-2 border-amber-500 rounded-lg hover:bg-amber-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6;
+  }
+
+  .card-bordered {
+    @apply bg-white rounded-lg border-2 border-amber-200 p-6;
+  }
+
+  .badge-primary {
+    @apply inline-block px-3 py-1 bg-amber-100 text-amber-800 text-sm font-semibold rounded-full;
+  }
+
+  .badge-success {
+    @apply inline-block px-3 py-1 bg-green-100 text-green-800 text-sm font-semibold rounded-full;
+  }
+
+  .form-input {
+    @apply w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors duration-200;
+  }
+
+  .form-label {
+    @apply block text-sm font-semibold text-gray-700 mb-2;
+  }
+
+  .divider-amber {
+    @apply border-t-2 border-amber-300;
+  }
+
+  .section-header {
+    @apply border-b-4 border-amber-500 pb-2 mb-6;
+  }
+}
+
+/* Utility classes for brand colors */
+.text-amber-primary {
+  color: var(--color-amber-primary);
+}
+
+.bg-amber-primary {
+  background-color: var(--color-amber-primary);
+}
+
+.border-amber-primary {
+  border-color: var(--color-amber-primary);
+}
+
+/* Smooth transitions */
+* {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Remove transition for specific elements on load */
+.no-transition {
+  @apply transition-none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-amber-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-amber-dark);
+}
