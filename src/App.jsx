@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { getSupabase, isConfigured } from './lib/supabase';
 import AppLayout from './components/layout/AppLayout';
 import PatronDashboard from './components/dashboard/PatronDashboard';
 import TasarimciDashboard from './components/dashboard/TasarimciDashboard';
@@ -107,10 +108,13 @@ const ComingSoon = () => (
 // Login Page
 const LoginPage = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('patron@tokyaykereste.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('patron');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const supabaseReady = isConfigured();
 
   const roles = [
     { value: 'patron', label: 'Patron (İşletme Sahibi)' },
@@ -121,25 +125,68 @@ const LoginPage = () => {
     { value: 'musteri', label: 'Müşteri' },
   ];
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!email || !password) {
       setError('Lütfen e-mail ve şifreyi girin');
+      setLoading(false);
       return;
     }
 
-    // Simulate login - in real app would call API
-    const userData = {
-      id: '1',
-      name: email.split('@')[0],
-      email: email,
-      role: selectedRole,
-      token: 'demo-token-' + Date.now(),
-    };
+    try {
+      const supabase = getSupabase();
 
-    login(userData);
+      if (supabase) {
+        // Gercek Supabase auth
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (authError) {
+          setError('Giriş başarısız: ' + authError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (data.user) {
+          // Profil tablosundan rol bilgisini al
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, role')
+            .eq('id', data.user.id)
+            .single();
+
+          const userData = {
+            id: data.user.id,
+            name: profile?.full_name || data.user.email.split('@')[0],
+            email: data.user.email,
+            role: profile?.role || 'musteri',
+            token: data.session.access_token,
+          };
+
+          login(userData);
+        }
+      } else {
+        // Demo mod - Supabase baglantisi yok
+        const userData = {
+          id: 'demo-' + Date.now(),
+          name: email.split('@')[0],
+          email: email,
+          role: selectedRole,
+          token: 'demo-token-' + Date.now(),
+        };
+
+        login(userData);
+      }
+    } catch (err) {
+      setError('Bağlantı hatası: ' + (err.message || 'Bilinmeyen hata'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -158,6 +205,12 @@ const LoginPage = () => {
         <div className="bg-white rounded-lg shadow-xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Giriş Yapın</h2>
 
+          {/* Baglanti durumu */}
+          <div className={`mb-4 p-3 rounded-lg text-sm flex items-center gap-2 ${supabaseReady ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}>
+            <span className={`w-2 h-2 rounded-full ${supabaseReady ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+            {supabaseReady ? 'Veritabanı bağlantısı aktif' : 'Demo mod - Veritabanı bağlantısı yok'}
+          </div>
+
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
@@ -165,22 +218,25 @@ const LoginPage = () => {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rol Seçin
-              </label>
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
-              >
-                {roles.map((role) => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Rol secimi sadece demo modda gosterilir */}
+            {!supabaseReady && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rol Seçin (Demo)
+                </label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
+                >
+                  {roles.map((role) => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,6 +248,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ornek@tokyaykereste.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
+                disabled={loading}
               />
             </div>
 
@@ -205,20 +262,24 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
+                disabled={loading}
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-amber-700 text-white py-2 rounded-lg hover:bg-amber-800 transition-colors font-semibold mt-6"
+              disabled={loading}
+              className="w-full bg-amber-700 text-white py-2 rounded-lg hover:bg-amber-800 transition-colors font-semibold mt-6 disabled:opacity-50"
             >
-              Giriş Yap
+              {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </button>
           </form>
 
-          <p className="text-xs text-gray-500 text-center mt-6">
-            Demo amaçlı giriş. Herhangi bir e-mail ve şifre kombinasyonu çalışır.
-          </p>
+          {!supabaseReady && (
+            <p className="text-xs text-gray-500 text-center mt-6">
+              Demo modu aktif. Herhangi bir e-mail ve şifre ile giriş yapabilirsiniz.
+            </p>
+          )}
         </div>
       </div>
     </div>
