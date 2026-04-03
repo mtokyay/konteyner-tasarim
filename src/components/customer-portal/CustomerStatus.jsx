@@ -54,9 +54,9 @@ const CustomerStatus = () => {
         // Placeholder data
         setOrder({
           id: 1,
-          sozlesme_no: 'SK-001-2024',
-          musteri_id: 1,
-          tasarim_id: 1,
+          contract_number: 'SK-001-2024',
+          customer_id: 1,
+          design_id: 1,
           durum: 'montaj',
           tahmini_teslim_tarihi: '2024-06-15',
           ilerleme: 65,
@@ -170,7 +170,7 @@ const CustomerStatus = () => {
       const { data: customerData } = await supabase
         .from('customers')
         .select('id')
-        .eq('eposta', user.email)
+        .eq('email', user.email)
         .single();
 
       if (!customerData) {
@@ -181,7 +181,7 @@ const CustomerStatus = () => {
       const { data: orderData } = await supabase
         .from('production_orders')
         .select('*')
-        .eq('musteri_id', customerData.id)
+        .eq('customer_id', customerData.id)
         .eq('durum', 'uretimde')
         .single();
 
@@ -259,15 +259,15 @@ const CustomerStatus = () => {
       } = await supabase.auth.getUser();
       const { data: customerData } = await supabase
         .from('customers')
-        .select('ad, soyad')
-        .eq('eposta', user.email)
+        .select('first_name, last_name')
+        .eq('email', user.email)
         .single();
 
       const { error: msgError } = await supabase
         .from('order_messages')
         .insert({
           siparis_id: order.id,
-          gonderen: `${customerData?.ad} ${customerData?.soyad}`,
+          gonderen: `${customerData?.first_name} ${customerData?.last_name}`,
           rol: 'musteri',
           mesaj: newMessage,
           created_at: new Date().toISOString(),
@@ -365,7 +365,7 @@ const CustomerStatus = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {order.sozlesme_no}
+                    {order.contract_number}
                   </h2>
                   <p className="text-gray-600 mt-1">
                     Durum:{' '}

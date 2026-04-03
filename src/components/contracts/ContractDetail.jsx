@@ -24,7 +24,7 @@ const ContractDetail = () => {
 
       const { data: contractData, error: contractError } = await supabase
         .from('contracts')
-        .select('*, customers(ad, soyad, telefon, eposta, adres), designs(ad, ref_no, genislik, uzunluk, teslim_tarihi)')
+        .select('*, customers(first_name, last_name, phone, email, address), designs(title, ref_no, genislik, uzunluk, delivery_date)')
         .eq('id', id)
         .single();
 
@@ -34,7 +34,7 @@ const ContractDetail = () => {
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
-        .eq('sozlesme_id', id)
+        .eq('contract_id', id)
         .order('vade', { ascending: true });
 
       if (paymentsError) throw paymentsError;
@@ -177,8 +177,8 @@ const ContractDetail = () => {
     );
   }
 
-  const totalPayments = payments.reduce((sum, p) => sum + p.odenen_tutar, 0);
-  const remainingAmount = contract.toplam_tutar - totalPayments;
+  const totalPayments = payments.reduce((sum, p) => sum + p.paid_amount, 0);
+  const remainingAmount = contract.total_amount - totalPayments;
 
   return (
     <div className="space-y-6">
@@ -191,8 +191,8 @@ const ContractDetail = () => {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{contract.sozlesme_no}</h1>
-            <p className="text-gray-600 mt-1">{formatDate(contract.tarih)}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{contract.contract_number}</h1>
+            <p className="text-gray-600 mt-1">{formatDate(contract.contract_date)}</p>
           </div>
         </div>
         <div>{getStatusBadge(contract.status)}</div>
@@ -204,19 +204,19 @@ const ContractDetail = () => {
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-600">Ad Soyad</p>
-              <p className="font-medium">{contract.customers?.ad} {contract.customers?.soyad}</p>
+              <p className="font-medium">{contract.customers?.first_name} {contract.customers?.last_name}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Telefon</p>
-              <p className="font-medium">{contract.customers?.telefon}</p>
+              <p className="font-medium">{contract.customers?.phone}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">E-posta</p>
-              <p className="font-medium">{contract.customers?.eposta}</p>
+              <p className="font-medium">{contract.customers?.email}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Adres</p>
-              <p className="font-medium text-sm">{contract.customers?.adres}</p>
+              <p className="font-medium text-sm">{contract.customers?.address}</p>
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ const ContractDetail = () => {
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-600">Tasarım Adı</p>
-              <p className="font-medium">{contract.designs?.ad}</p>
+              <p className="font-medium">{contract.designs?.title}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Referans No</p>
@@ -240,7 +240,7 @@ const ContractDetail = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Teslim Tarihi</p>
-              <p className="font-medium">{formatDate(contract.designs?.teslim_tarihi)}</p>
+              <p className="font-medium">{formatDate(contract.designs?.delivery_date)}</p>
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@ const ContractDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-600">Toplam Tutar</p>
-            <p className="text-2xl font-bold text-amber-600">{formatCurrency(contract.toplam_tutar)}</p>
+            <p className="text-2xl font-bold text-amber-600">{formatCurrency(contract.total_amount)}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Ödenen Tutar</p>
@@ -298,7 +298,7 @@ const ContractDetail = () => {
                     {payment.tur === 'pesin' ? 'Peşinat' : 'Taksit'}
                   </td>
                   <td className="px-4 py-3">{formatCurrency(payment.tutar)}</td>
-                  <td className="px-4 py-3">{formatCurrency(payment.odenen_tutar)}</td>
+                  <td className="px-4 py-3">{formatCurrency(payment.paid_amount)}</td>
                   <td className="px-4 py-3">{formatDate(payment.vade)}</td>
                   <td className="px-4 py-3">{getPaymentStatusBadge(payment.durum)}</td>
                 </tr>

@@ -38,14 +38,14 @@ export default function MusteriDashboard() {
       const { data: orders } = await supabase
         .from('production_orders')
         .select('id, durum, created_at')
-        .eq('musteri_id', customerId)
+        .eq('customer_id', customerId)
         .order('created_at', { ascending: false });
 
       // Fetch customer payments
       const { data: payments } = await supabase
         .from('payments')
         .select('tutar, durum')
-        .eq('musteri_id', customerId);
+        .eq('customer_id', customerId);
 
       // Calculate stats
       const totalSpent = payments

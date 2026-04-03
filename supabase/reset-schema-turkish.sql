@@ -22,6 +22,8 @@ DROP FUNCTION IF EXISTS generate_contract_number() CASCADE;
 -- Mevcut tablolari kaldir (siralama onemli - foreign key bagimliliklari)
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS work_photos CASCADE;
+DROP TABLE IF EXISTS order_messages CASCADE;
 DROP TABLE IF EXISTS quality_checks CASCADE;
 DROP TABLE IF EXISTS production_steps CASCADE;
 DROP TABLE IF EXISTS production_orders CASCADE;

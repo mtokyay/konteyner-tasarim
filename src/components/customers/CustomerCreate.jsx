@@ -11,13 +11,13 @@ const CustomerCreate = () => {
   const [customerId, setCustomerId] = useState(null);
 
   const [formData, setFormData] = useState({
-    ad: '',
-    soyad: '',
-    telefon: '',
-    eposta: '',
-    nereden_geldi: 'referans',
-    adres: '',
-    notlar: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+    source: 'referans',
+    address: '',
+    notes: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -40,25 +40,25 @@ const CustomerCreate = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.ad.trim()) {
-      newErrors.ad = 'Ad alanı zorunludur';
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = 'Ad alanı zorunludur';
     }
 
-    if (!formData.soyad.trim()) {
-      newErrors.soyad = 'Soyad alanı zorunludur';
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = 'Soyad alanı zorunludur';
     }
 
-    if (!formData.telefon.trim()) {
-      newErrors.telefon = 'Telefon alanı zorunludur';
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Telefon alanı zorunludur';
     } else {
-      const cleanPhone = formData.telefon.replace(/\D/g, '');
+      const cleanPhone = formData.phone.replace(/\D/g, '');
       if (cleanPhone.length < 10) {
-        newErrors.telefon = 'Geçerli bir telefon numarası giriniz';
+        newErrors.phone = 'Geçerli bir telefon numarası giriniz';
       }
     }
 
-    if (formData.eposta && !formData.eposta.includes('@')) {
-      newErrors.eposta = 'Geçerli bir e-posta adresi giriniz';
+    if (formData.email && !formData.email.includes('@')) {
+      newErrors.email = 'Geçerli bir e-posta adresi giriniz';
     }
 
     setErrors(newErrors);
@@ -68,7 +68,7 @@ const CustomerCreate = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === 'telefon') {
+    if (name === 'phone') {
       const formatted = formatTurkishPhone(value);
       setFormData((prev) => ({
         ...prev,
@@ -111,14 +111,13 @@ const CustomerCreate = () => {
         .from('customers')
         .insert([
           {
-            ad: formData.ad.trim(),
-            soyad: formData.soyad.trim(),
-            telefon: formData.telefon.trim(),
-            eposta: formData.eposta.trim() || null,
-            nereden_geldi: formData.nereden_geldi,
-            adres: formData.adres.trim() || null,
-            notlar: formData.notlar.trim() || null,
-            created_at: new Date().toISOString(),
+            first_name: formData.first_name.trim(),
+            last_name: formData.last_name.trim(),
+            phone: formData.phone.trim(),
+            email: formData.email.trim() || null,
+            source: formData.source,
+            address: formData.address.trim() || null,
+            notes: formData.notes.trim() || null,
           },
         ])
         .select();
@@ -151,7 +150,7 @@ const CustomerCreate = () => {
               Müşteri Kaydedildi!
             </h2>
             <p className="text-gray-600 mb-6">
-              {formData.ad} {formData.soyad} başarıyla sisteme eklendi.
+              {formData.first_name} {formData.last_name} başarıyla sisteme eklendi.
             </p>
 
             <div className="space-y-3">
@@ -217,18 +216,18 @@ const CustomerCreate = () => {
                 </label>
                 <input
                   type="text"
-                  name="ad"
-                  value={formData.ad}
+                  name="first_name"
+                  value={formData.first_name}
                   onChange={handleInputChange}
                   placeholder="Müşteri adını giriniz"
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors ${
-                    errors.ad
+                    errors.first_name
                       ? 'border-red-500 bg-red-50'
                       : 'border-gray-300 bg-white'
                   }`}
                 />
-                {errors.ad && (
-                  <p className="text-red-600 text-sm mt-1">{errors.ad}</p>
+                {errors.first_name && (
+                  <p className="text-red-600 text-sm mt-1">{errors.first_name}</p>
                 )}
               </div>
 
@@ -238,18 +237,18 @@ const CustomerCreate = () => {
                 </label>
                 <input
                   type="text"
-                  name="soyad"
-                  value={formData.soyad}
+                  name="last_name"
+                  value={formData.last_name}
                   onChange={handleInputChange}
                   placeholder="Müşteri soyadını giriniz"
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors ${
-                    errors.soyad
+                    errors.last_name
                       ? 'border-red-500 bg-red-50'
                       : 'border-gray-300 bg-white'
                   }`}
                 />
-                {errors.soyad && (
-                  <p className="text-red-600 text-sm mt-1">{errors.soyad}</p>
+                {errors.last_name && (
+                  <p className="text-red-600 text-sm mt-1">{errors.last_name}</p>
                 )}
               </div>
             </div>
@@ -262,18 +261,18 @@ const CustomerCreate = () => {
                 </label>
                 <input
                   type="tel"
-                  name="telefon"
-                  value={formData.telefon}
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="(5XX) XXX-XXXX"
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors ${
-                    errors.telefon
+                    errors.phone
                       ? 'border-red-500 bg-red-50'
                       : 'border-gray-300 bg-white'
                   }`}
                 />
-                {errors.telefon && (
-                  <p className="text-red-600 text-sm mt-1">{errors.telefon}</p>
+                {errors.phone && (
+                  <p className="text-red-600 text-sm mt-1">{errors.phone}</p>
                 )}
               </div>
 
@@ -283,18 +282,18 @@ const CustomerCreate = () => {
                 </label>
                 <input
                   type="email"
-                  name="eposta"
-                  value={formData.eposta}
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   placeholder="ornek@example.com"
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors ${
-                    errors.eposta
+                    errors.email
                       ? 'border-red-500 bg-red-50'
                       : 'border-gray-300 bg-white'
                   }`}
                 />
-                {errors.eposta && (
-                  <p className="text-red-600 text-sm mt-1">{errors.eposta}</p>
+                {errors.email && (
+                  <p className="text-red-600 text-sm mt-1">{errors.email}</p>
                 )}
               </div>
             </div>
@@ -305,8 +304,8 @@ const CustomerCreate = () => {
                 Nereden Geldi <span className="text-red-500">*</span>
               </label>
               <select
-                name="nereden_geldi"
-                value={formData.nereden_geldi}
+                name="source"
+                value={formData.source}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors bg-white"
               >
@@ -326,8 +325,8 @@ const CustomerCreate = () => {
                 Adres
               </label>
               <textarea
-                name="adres"
-                value={formData.adres}
+                name="address"
+                value={formData.address}
                 onChange={handleInputChange}
                 placeholder="Müşteri adresini giriniz (opsiyonel)"
                 rows="2"
@@ -341,8 +340,8 @@ const CustomerCreate = () => {
                 Notlar
               </label>
               <textarea
-                name="notlar"
-                value={formData.notlar}
+                name="notes"
+                value={formData.notes}
                 onChange={handleInputChange}
                 placeholder="Ek notlar (opsiyonel)"
                 rows="3"

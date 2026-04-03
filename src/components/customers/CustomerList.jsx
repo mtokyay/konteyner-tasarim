@@ -59,28 +59,28 @@ const CustomerList = () => {
         const placeholderData = [
           {
             id: 1,
-            ad: 'Ahmet',
-            soyad: 'Yılmaz',
-            telefon: '05551234567',
-            nereden_geldi: 'referans',
+            first_name: 'Ahmet',
+            last_name: 'Yılmaz',
+            phone: '05551234567',
+            source: 'referans',
             tasarim_sayisi: 2,
             durum: 'yeni',
           },
           {
             id: 2,
-            ad: 'Fatma',
-            soyad: 'Kaya',
-            telefon: '05559876543',
-            nereden_geldi: 'instagram',
+            first_name: 'Fatma',
+            last_name: 'Kaya',
+            phone: '05559876543',
+            source: 'instagram',
             tasarim_sayisi: 1,
             durum: 'teklif_verildi',
           },
           {
             id: 3,
-            ad: 'İbrahim',
-            soyad: 'Demir',
-            telefon: '05553334444',
-            nereden_geldi: 'web_sitesi',
+            first_name: 'İbrahim',
+            last_name: 'Demir',
+            phone: '05553334444',
+            source: 'web_sitesi',
             tasarim_sayisi: 3,
             durum: 'sozlesme',
           },
@@ -96,13 +96,13 @@ const CustomerList = () => {
         .select(
           `
           id,
-          ad,
-          soyad,
-          telefon,
-          eposta,
-          nereden_geldi,
-          adres,
-          notlar,
+          first_name,
+          last_name,
+          phone,
+          email,
+          source,
+          address,
+          notes,
           created_at,
           designs(count)
         `
@@ -113,43 +113,20 @@ const CustomerList = () => {
         throw customersError;
       }
 
-      // Fetch orders to determine status
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('production_orders')
-        .select('musteri_id, durum');
-
-      if (ordersError) {
-        console.warn('Could not fetch orders:', ordersError);
-      }
-
-      // Map customers with design count and status
+      // Map customers with design count
       const formattedCustomers = customersData.map((customer) => {
-        const customerOrders = ordersData
-          ? ordersData.filter((order) => order.musteri_id === customer.id)
-          : [];
-
-        // Determine status based on orders
-        let durum = 'yeni';
-        if (customerOrders.length > 0) {
-          const statuses = customerOrders.map((o) => o.durum);
-          if (statuses.includes('sevk_edildi')) durum = 'teslim_edildi';
-          else if (statuses.includes('devam_ediyor')) durum = 'uretimde';
-          else if (statuses.includes('basladi')) durum = 'sozlesme';
-          else if (statuses.includes('bekliyor')) durum = 'teklif_verildi';
-        }
-
         return {
           id: customer.id,
-          ad: customer.ad,
-          soyad: customer.soyad,
-          telefon: customer.telefon,
-          eposta: customer.eposta,
-          nereden_geldi: customer.nereden_geldi,
-          adres: customer.adres,
-          notlar: customer.notlar,
+          first_name: customer.first_name,
+          last_name: customer.last_name,
+          phone: customer.phone,
+          email: customer.email,
+          source: customer.source,
+          address: customer.address,
+          notes: customer.notes,
           created_at: customer.created_at,
-          tasarim_sayisi: customer.designs[0]?.count || 0,
-          durum,
+          tasarim_sayisi: customer.designs?.[0]?.count || 0,
+          durum: 'yeni',
         };
       });
 
@@ -172,9 +149,9 @@ const CustomerList = () => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (customer) =>
-          customer.ad.toLowerCase().includes(term) ||
-          customer.soyad.toLowerCase().includes(term) ||
-          customer.telefon.includes(term)
+          (customer.first_name || '').toLowerCase().includes(term) ||
+          (customer.last_name || '').toLowerCase().includes(term) ||
+          (customer.phone || '').includes(term)
       );
     }
 
@@ -333,19 +310,19 @@ const CustomerList = () => {
                       >
                         <td className="px-6 py-4">
                           <div className="font-semibold text-gray-900">
-                            {customer.ad} {customer.soyad}
+                            {customer.first_name} {customer.last_name}
                           </div>
-                          {customer.eposta && (
+                          {customer.email && (
                             <div className="text-sm text-gray-600">
-                              {customer.eposta}
+                              {customer.email}
                             </div>
                           )}
                         </td>
                         <td className="px-6 py-4 text-gray-700">
-                          {customer.telefon}
+                          {customer.phone}
                         </td>
                         <td className="px-6 py-4 text-gray-700">
-                          {getSourceLabel(customer.nereden_geldi)}
+                          {getSourceLabel(customer.source)}
                         </td>
                         <td className="px-6 py-4 text-center">
                           <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold text-sm">

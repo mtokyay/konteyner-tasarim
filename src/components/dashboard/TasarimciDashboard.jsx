@@ -39,7 +39,7 @@ export default function TasarimciDashboard() {
       // Fetch recent designs with full details
       const { data: recentDesigns } = await supabase
         .from('designs')
-        .select('id, ad, status, toplam_fiyat, created_at, customer_id')
+        .select('id, title, status, total_price, created_at, customer_id')
         .order('created_at', { ascending: false })
         .limit(8);
 
@@ -175,7 +175,7 @@ export default function TasarimciDashboard() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-sm font-semibold text-gray-800 flex-1 truncate">
-                      {design.ad}
+                      {design.title}
                     </h3>
                     <div className={`p-2 rounded-lg ${statusColors.icon}`}>
                       {getStatusIcon(design.status)}
@@ -196,9 +196,9 @@ export default function TasarimciDashboard() {
                       <span className="text-xs text-gray-500">
                         {new Date(design.created_at).toLocaleDateString('tr-TR')}
                       </span>
-                      {design.toplam_fiyat && (
+                      {design.total_price && (
                         <span className="text-sm font-semibold text-blue-600">
-                          ₺{design.toplam_fiyat.toLocaleString('tr-TR')}
+                          ₺{design.total_price.toLocaleString('tr-TR')}
                         </span>
                       )}
                     </div>

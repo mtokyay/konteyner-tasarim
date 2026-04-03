@@ -38,11 +38,11 @@ const CustomerContract = () => {
         // Placeholder data
         setContract({
           id: 1,
-          sozlesme_no: 'SK-001-2024',
-          musteri_id: 1,
-          tasarim_id: 1,
+          contract_number: 'SK-001-2024',
+          customer_id: 1,
+          design_id: 1,
           tarih: '2024-01-15',
-          toplam_tutar: 200000,
+          total_amount: 200000,
           durum: 'aktif',
         });
 
@@ -97,7 +97,7 @@ const CustomerContract = () => {
       const { data: customerData } = await supabase
         .from('customers')
         .select('id')
-        .eq('eposta', user.email)
+        .eq('email', user.email)
         .single();
 
       if (!customerData) {
@@ -110,14 +110,14 @@ const CustomerContract = () => {
         .select(
           `
           id,
-          sozlesme_no,
+          contract_number,
           tarih,
-          toplam_tutar,
+          total_amount,
           durum,
           tasarim_id,
           designs(
             id,
-            ad,
+            title,
             genislik,
             yukseklik,
             uzunluk,
@@ -126,7 +126,7 @@ const CustomerContract = () => {
           )
         `
         )
-        .eq('musteri_id', customerData.id)
+        .eq('customer_id', customerData.id)
         .eq('durum', 'aktif')
         .single();
 
@@ -141,15 +141,15 @@ const CustomerContract = () => {
       const { data: paymentsData } = await supabase
         .from('payments')
         .select('*')
-        .eq('sozlesme_id', contractData?.id)
-        .order('vade', { ascending: true });
+        .eq('contract_id', contractData?.id)
+        .order('due_date', { ascending: true });
 
       if (paymentsData) {
         const formattedPayments = paymentsData.map((p) => ({
-          tur: p.tur,
-          tutar: p.tutar,
-          tarih: p.vade,
-          odendi: p.durum === 'odendi',
+          payment_type: p.payment_type,
+          amount: p.amount,
+          due_date: p.due_date,
+          paid: p.status === 'odendi',
         }));
         setPaymentPlan(formattedPayments);
       }
@@ -158,7 +158,7 @@ const CustomerContract = () => {
       const { data: pagesData } = await supabase
         .from('contract_pages')
         .select('*')
-        .eq('sozlesme_id', contractData?.id)
+        .eq('contract_id', contractData?.id)
         .order('sira', { ascending: true });
 
       if (pagesData) {
@@ -245,7 +245,7 @@ const CustomerContract = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {contract.sozlesme_no}
+                    {contract.contract_number}
                   </h2>
                   <p className="text-gray-600 mt-1">
                     Sözleşme Tarihi: {formatDate(contract.tarih)}
@@ -262,7 +262,7 @@ const CustomerContract = () => {
                     Toplam Sözleşme Değeri
                   </p>
                   <p className="text-3xl font-bold text-amber-600 mt-2">
-                    {formatCurrency(contract.toplam_tutar)}
+                    {formatCurrency(contract.total_amount)}
                   </p>
                 </div>
                 <div>
@@ -289,7 +289,7 @@ const CustomerContract = () => {
                       Tasarım Adı
                     </p>
                     <p className="text-lg font-semibold text-gray-900 mt-2">
-                      {design.ad}
+                      {design.title}
                     </p>
                   </div>
                   <div className="border border-gray-200 rounded-lg p-4">
@@ -388,20 +388,20 @@ const CustomerContract = () => {
                     {paymentPlan.map((payment, idx) => (
                       <tr key={idx} className="hover:bg-amber-50">
                         <td className="px-4 py-3 text-gray-900 font-semibold">
-                          {payment.tur === 'pesin'
+                          {payment.payment_type === 'pesin'
                             ? 'Peşinat'
-                            : payment.tur === 'taksit'
+                            : payment.payment_type === 'taksit'
                             ? 'Taksit'
                             : 'Kalan'}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                          {formatCurrency(payment.tutar)}
+                          {formatCurrency(payment.amount)}
                         </td>
                         <td className="px-4 py-3 text-center text-gray-700">
-                          {formatDate(payment.tarih)}
+                          {formatDate(payment.due_date)}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          {payment.odendi ? (
+                          {payment.paid ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                               <CheckCircle className="w-4 h-4" />
                               Ödendi

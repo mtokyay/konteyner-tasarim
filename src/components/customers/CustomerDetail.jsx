@@ -52,7 +52,7 @@ const designStatusConfig = {
 };
 
 const CustomerDetail = () => {
-  const { customerId } = useParams();
+  const { id: customerId } = useParams();
   const navigate = useNavigate();
 
   const [customer, setCustomer] = useState(null);
@@ -78,25 +78,25 @@ const CustomerDetail = () => {
         // Placeholder data
         setCustomer({
           id: customerId,
-          ad: 'Ahmet',
-          soyad: 'Yılmaz',
-          telefon: '05551234567',
-          eposta: 'ahmet@example.com',
-          nereden_geldi: 'referans',
-          adres: 'Ankara, Türkiye',
-          notlar: 'Önemli müşteri',
+          first_name: 'Ahmet',
+          last_name: 'Yılmaz',
+          phone: '05551234567',
+          email: 'ahmet@example.com',
+          source: 'referans',
+          address: 'Ankara, Türkiye',
+          notes: 'Önemli müşteri',
           created_at: new Date().toISOString(),
         });
         setDesigns([
           {
             id: 1,
-            ad: 'Modern Ev Tasarımı',
+            name: 'Modern Ev Tasarımı',
             status: 'approved',
             created_at: new Date().toISOString(),
           },
           {
             id: 2,
-            ad: 'Kütüphane Tasarımı',
+            name: 'Kütüphane Tasarımı',
             status: 'production',
             created_at: new Date().toISOString(),
           },
@@ -252,7 +252,7 @@ const CustomerDetail = () => {
             <ArrowLeft className="w-6 h-6 text-gray-700" />
           </button>
           <h1 className="text-3xl font-bold text-gray-900">
-            {customer.ad} {customer.soyad}
+            {customer.first_name} {customer.last_name}
           </h1>
         </div>
 
@@ -288,30 +288,30 @@ const CustomerDetail = () => {
                 <Phone className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-600">Telefon</p>
-                  <p className="font-semibold text-gray-900">{customer.telefon}</p>
+                  <p className="font-semibold text-gray-900">{customer.phone}</p>
                 </div>
               </div>
 
               {/* Email */}
-              {customer.eposta && (
+              {customer.email && (
                 <div className="flex gap-3">
                   <Mail className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-600">E-posta</p>
                     <p className="font-semibold text-gray-900">
-                      {customer.eposta}
+                      {customer.email}
                     </p>
                   </div>
                 </div>
               )}
 
               {/* Address */}
-              {customer.adres && (
+              {customer.address && (
                 <div className="flex gap-3">
                   <MapPin className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-600">Adres</p>
-                    <p className="font-semibold text-gray-900">{customer.adres}</p>
+                    <p className="font-semibold text-gray-900">{customer.address}</p>
                   </div>
                 </div>
               )}
@@ -320,19 +320,19 @@ const CustomerDetail = () => {
               <div className="pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600">Nereden Geldi</p>
                 <p className="font-semibold text-gray-900">
-                  {getSourceLabel(customer.nereden_geldi)}
+                  {getSourceLabel(customer.source)}
                 </p>
               </div>
 
               {/* Notes */}
-              {customer.notlar && (
+              {customer.notes && (
                 <div className="pt-4 border-t border-gray-200">
                   <p className="text-sm text-gray-600 flex items-center gap-2">
                     <FileText className="w-4 h-4" />
                     Notlar
                   </p>
                   <p className="font-semibold text-gray-900 text-sm">
-                    {customer.notlar}
+                    {customer.notes}
                   </p>
                 </div>
               )}
@@ -450,7 +450,7 @@ const CustomerDetail = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h4 className="font-semibold text-gray-900">
-                              {design.ad || `Tasarım #${design.id}`}
+                              {design.name || `Tasarım #${design.id}`}
                             </h4>
                             <p className="text-sm text-gray-600 mt-1">
                               {formatDate(design.created_at)}

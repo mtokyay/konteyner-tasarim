@@ -74,7 +74,7 @@ const CompanyInfo = () => {
         setCompanyData(data);
         if (data.logo_url) setLogoPreview(data.logo_url);
         setContractTerms(data.contract_terms || DEFAULT_CONTRACT_TERMS);
-        setQcItems(data.qc_items || DEFAULT_QC_ITEMS);
+        setQcItems(data.quality_checklist || DEFAULT_QC_ITEMS);
         setBankInfo({
           bank_name: data.bank_name || '',
           branch: data.bank_branch || '',
@@ -139,7 +139,7 @@ const CompanyInfo = () => {
         iban: companyData.iban || '',
         logo_url: logoUrl,
         contract_terms: contractTerms,
-        qc_items: qcItems,
+        quality_checklist: qcItems,
         bank_name: bankInfo.bank_name,
         bank_branch: bankInfo.branch,
         bank_iban: bankInfo.iban,

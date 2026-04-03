@@ -136,6 +136,13 @@ CREATE TABLE company_info (
   contract_terms TEXT[] DEFAULT ARRAY[]::TEXT[],
   -- Kalite kontrol maddeleri
   quality_checklist TEXT[] DEFAULT ARRAY[]::TEXT[],
+  -- Banka bilgileri
+  bank_name TEXT,
+  bank_branch TEXT,
+  bank_iban TEXT,
+  bank_account_no TEXT,
+  -- Proforma fatura alt notu
+  proforma_footer_note TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

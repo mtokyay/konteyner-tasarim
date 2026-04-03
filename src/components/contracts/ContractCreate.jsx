@@ -41,7 +41,7 @@ const ContractCreate = () => {
 
       const { data: designsData, error: designsError } = await supabase
         .from('designs')
-        .select('*, customers(ad, soyad, telefon, eposta, adres)')
+        .select('*, customers(first_name, last_name, phone, email, address)')
         .eq('status', 'onaylandi')
         .order('created_at', { ascending: false });
 
@@ -83,7 +83,7 @@ const ContractCreate = () => {
   const generatePaymentSchedule = () => {
     if (!selectedDesign) return;
 
-    const totalAmount = selectedDesign.net_fiyat;
+    const totalAmount = selectedDesign.final_price;
     const downPayment = (totalAmount * downPaymentPercent) / 100;
     const remainingAmount = totalAmount - downPayment;
     const installmentAmount = remainingAmount / installmentCount;
@@ -97,7 +97,7 @@ const ContractCreate = () => {
       },
     ];
 
-    const startDate = new Date(selectedDesign.teslim_tarihi || new Date());
+    const startDate = new Date(selectedDesign.delivery_date || new Date());
     for (let i = 1; i <= installmentCount; i++) {
       const dueDate = new Date(startDate);
       dueDate.setMonth(dueDate.getMonth() + i);
@@ -139,8 +139,8 @@ const ContractCreate = () => {
           {
             design_id: selectedDesign.id,
             customer_id: customer.id,
-            tarih: new Date().toISOString().split('T')[0],
-            toplam_tutar: selectedDesign.net_fiyat,
+            contract_date: new Date().toISOString().split('T')[0],
+            total_amount: selectedDesign.final_price,
             terms: contractTerms,
             status: 'hazirlandi',
             created_by: 'user',
@@ -152,11 +152,11 @@ const ContractCreate = () => {
       const contractId = contractData[0].id;
 
       const paymentRecords = paymentSchedule.map((payment) => ({
-        sozlesme_id: contractId,
-        musteri_id: customer.id,
+        contract_id: contractId,
+        customer_id: customer.id,
         tur: payment.type,
         tutar: payment.tutar,
-        odenen_tutar: 0,
+        paid_amount: 0,
         vade: payment.vade,
         durum: 'bekliyor',
       }));
@@ -221,7 +221,7 @@ const ContractCreate = () => {
             <option value="">Onaylanan tasarım seçin</option>
             {designs.map((design) => (
               <option key={design.id} value={design.id}>
-                {design.ad} ({design.ref_no}) - {formatCurrency(design.net_fiyat)}
+                {design.title} ({design.ref_no}) - {formatCurrency(design.final_price)}
               </option>
             ))}
           </select>
@@ -236,19 +236,19 @@ const ContractCreate = () => {
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-gray-600">Ad Soyad</p>
-                      <p className="font-medium">{customer.ad} {customer.soyad}</p>
+                      <p className="font-medium">{customer.first_name} {customer.last_name}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Telefon</p>
-                      <p className="font-medium">{customer.telefon}</p>
+                      <p className="font-medium">{customer.phone}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">E-posta</p>
-                      <p className="font-medium">{customer.eposta}</p>
+                      <p className="font-medium">{customer.email}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Adres</p>
-                      <p className="font-medium text-sm">{customer.adres}</p>
+                      <p className="font-medium text-sm">{customer.address}</p>
                     </div>
                   </div>
                 )}
@@ -259,7 +259,7 @@ const ContractCreate = () => {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-600">Tasarım Adı</p>
-                    <p className="font-medium">{selectedDesign.ad}</p>
+                    <p className="font-medium">{selectedDesign.title}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Referans No</p>
@@ -267,12 +267,12 @@ const ContractCreate = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Net Fiyat</p>
-                    <p className="font-medium text-amber-600">{formatCurrency(selectedDesign.net_fiyat)}</p>
+                    <p className="font-medium text-amber-600">{formatCurrency(selectedDesign.final_price)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Teslim Tarihi</p>
                     <p className="font-medium">
-                      {new Date(selectedDesign.teslim_tarihi).toLocaleDateString('tr-TR')}
+                      {new Date(selectedDesign.delivery_date).toLocaleDateString('tr-TR')}
                     </p>
                   </div>
                 </div>

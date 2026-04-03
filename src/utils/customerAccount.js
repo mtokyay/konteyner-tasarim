@@ -77,7 +77,7 @@ export async function verifyCustomerAccount(supabase, email) {
     const { data, error } = await supabase
       .from('customers')
       .select('*')
-      .eq('eposta', email)
+      .eq('email', email)
       .maybeSingle();
 
     if (error) {
@@ -105,8 +105,8 @@ export async function getCustomerByEmail(supabase, email) {
 
     const { data, error } = await supabase
       .from('customers')
-      .select('id, ad, soyad, telefon, eposta, assigned_user_id, created_at, updated_at')
-      .eq('eposta', email)
+      .select('id, first_name, last_name, phone, email, assigned_user_id, created_at, updated_at')
+      .eq('email', email)
       .maybeSingle();
 
     if (error) {
@@ -196,7 +196,7 @@ export async function getCustomerWithRelations(supabase, customerId) {
     const { data: payments, error: paymentsError } = await supabase
       .from('payments')
       .select('*')
-      .eq('musteri_id', customerId);
+      .eq('customer_id', customerId);
 
     if (paymentsError) {
       console.error('Ödeme getirme hatası:', paymentsError);

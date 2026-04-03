@@ -50,19 +50,19 @@ const CustomerPaymentNotification = () => {
         setPendingPayments([
           {
             id: 1,
-            sozlesme_no: 'SK-001-2024',
-            tur: 'peşinat',
-            tutar: 50000,
-            vade: '2024-01-15',
-            durum: 'bekliyor',
+            contract_number: 'SK-001-2024',
+            payment_type: 'peşinat',
+            amount: 50000,
+            due_date: '2024-01-15',
+            status: 'pending',
           },
           {
             id: 2,
-            sozlesme_no: 'SK-001-2024',
-            tur: 'taksit',
-            tutar: 30000,
-            vade: '2024-02-15',
-            durum: 'bekliyor',
+            contract_number: 'SK-001-2024',
+            payment_type: 'taksit',
+            amount: 30000,
+            due_date: '2024-02-15',
+            status: 'pending',
           },
         ]);
 
@@ -98,7 +98,7 @@ const CustomerPaymentNotification = () => {
       const { data: customerData } = await supabase
         .from('customers')
         .select('id')
-        .eq('eposta', user.email)
+        .eq('email', user.email)
         .single();
 
       if (!customerData) {
@@ -111,27 +111,27 @@ const CustomerPaymentNotification = () => {
         .select(
           `
           id,
-          tur,
-          tutar,
-          odenen_tutar,
-          vade,
-          durum,
-          contracts(sozlesme_no)
+          payment_type,
+          amount,
+          paid_amount,
+          due_date,
+          status,
+          contracts(contract_number)
         `
         )
-        .eq('musteri_id', customerData.id)
-        .eq('durum', 'bekliyor')
-        .order('vade', { ascending: true });
+        .eq('customer_id', customerData.id)
+        .eq('status', 'pending')
+        .order('due_date', { ascending: true });
 
       if (paymentsData) {
         const formattedPayments = paymentsData.map((p) => ({
           id: p.id,
-          sozlesme_no: p.contracts?.sozlesme_no || 'N/A',
-          tur: p.tur,
-          tutar: p.tutar,
-          odenen_tutar: p.odenen_tutar || 0,
-          vade: p.vade,
-          durum: p.durum,
+          contract_number: p.contracts?.contract_number || 'N/A',
+          payment_type: p.payment_type,
+          amount: p.amount,
+          paid_amount: p.paid_amount || 0,
+          due_date: p.due_date,
+          status: p.status,
         }));
         setPendingPayments(formattedPayments);
       }
@@ -140,7 +140,7 @@ const CustomerPaymentNotification = () => {
       const { data: notificationsData } = await supabase
         .from('payment_notifications')
         .select('*')
-        .eq('musteri_id', customerData.id)
+        .eq('customer_id', customerData.id)
         .order('created_at', { ascending: false });
 
       if (notificationsData) {
@@ -170,7 +170,7 @@ const CustomerPaymentNotification = () => {
         setFormData((prev) => ({
           ...prev,
           odeme_tutari:
-            selectedPayment.tutar - (selectedPayment.odenen_tutar || 0),
+            selectedPayment.amount - (selectedPayment.paid_amount || 0),
         }));
       }
     }
@@ -236,8 +236,8 @@ const CustomerPaymentNotification = () => {
       } = await supabase.auth.getUser();
       const { data: customerData } = await supabase
         .from('customers')
-        .select('id, ad, soyad')
-        .eq('eposta', user.email)
+        .select('id, first_name, last_name')
+        .eq('email', user.email)
         .single();
 
       if (!customerData) {
@@ -268,13 +268,13 @@ const CustomerPaymentNotification = () => {
       const { error: notifError } = await supabase
         .from('payment_notifications')
         .insert({
-          musteri_id: customerData.id,
-          odeme_id: formData.odeme_id,
-          odeme_tutari: parseFloat(formData.odeme_tutari),
-          odeme_tarihi: formData.odeme_tarihi,
-          dekont_url,
-          aciklama: formData.aciklama,
-          durum: 'bekliyor',
+          customer_id: customerData.id,
+          payment_id: formData.odeme_id,
+          amount: parseFloat(formData.odeme_tutari),
+          paid_date: formData.odeme_tarihi,
+          receipt_url: dekont_url,
+          notes: formData.aciklama,
+          status: 'pending',
           created_at: new Date().toISOString(),
         });
 
@@ -284,10 +284,10 @@ const CustomerPaymentNotification = () => {
 
       // Create notification for admin
       await supabase.from('notifications').insert({
-        musteri_id: null,
+        customer_id: null,
         tur: 'odeme_bildirimi',
         baslik: 'Yeni Ödeme Bildirimi',
-        mesaj: `${customerData.ad} ${customerData.soyad} tarafından ${formData.odeme_tutari} TL ödeme bildirimi gönderilmiştir.`,
+        mesaj: `${customerData.first_name} ${customerData.last_name} tarafından ${formData.odeme_tutari} TL ödeme bildirimi gönderilmiştir.`,
         veri: {
           payment_id: formData.odeme_id,
           notification_id: null,
@@ -433,24 +433,24 @@ const CustomerPaymentNotification = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {payment.sozlesme_no}
+                        {payment.contract_number}
                       </p>
                       <p className="text-sm text-gray-600 capitalize">
-                        {payment.tur === 'pesin'
+                        {payment.payment_type === 'pesin'
                           ? 'Peşinat'
-                          : payment.tur === 'taksit'
+                          : payment.payment_type === 'taksit'
                           ? 'Taksit'
                           : 'Kalan'}
                       </p>
                     </div>
                     <p className="text-lg font-bold text-amber-600">
                       {formatCurrency(
-                        payment.tutar - (payment.odenen_tutar || 0)
+                        payment.amount - (payment.paid_amount || 0)
                       )}
                     </p>
                   </div>
                   <p className="text-xs text-gray-600">
-                    Vade: {formatDate(payment.vade)}
+                    Vade: {formatDate(payment.due_date)}
                   </p>
                 </div>
               ))}
@@ -491,9 +491,9 @@ const CustomerPaymentNotification = () => {
                 <option value="">Ödeme Seçiniz</option>
                 {pendingPayments.map((payment) => (
                   <option key={payment.id} value={payment.id}>
-                    {payment.sozlesme_no} - {payment.tur} -{' '}
+                    {payment.contract_number} - {payment.payment_type} -{' '}
                     {formatCurrency(
-                      payment.tutar - (payment.odenen_tutar || 0)
+                      payment.amount - (payment.paid_amount || 0)
                     )}
                   </option>
                 ))}

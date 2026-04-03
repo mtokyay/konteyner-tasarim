@@ -20,8 +20,8 @@ const ContractList = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('contracts')
-        .select('*, customers(ad, soyad, eposta)')
-        .order('tarih', { ascending: false });
+        .select('*, customers(first_name, last_name, email)')
+        .order('contract_date', { ascending: false });
 
       if (error) throw error;
       setContracts(data || []);
@@ -58,9 +58,9 @@ const ContractList = () => {
 
   const filteredContracts = contracts.filter((contract) => {
     const matchesSearch =
-      contract.sozlesme_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.customers?.ad?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.customers?.soyad?.toLowerCase().includes(searchTerm.toLowerCase());
+      contract.contract_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.customers?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.customers?.last_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = !statusFilter || contract.status === statusFilter;
 
@@ -151,14 +151,14 @@ const ContractList = () => {
               <tbody>
                 {filteredContracts.map((contract) => (
                   <tr key={contract.id} className="border-b border-gray-200 hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{contract.sozlesme_no}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{contract.contract_number}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {contract.customers?.ad} {contract.customers?.soyad}
+                      {contract.customers?.first_name} {contract.customers?.last_name}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {formatCurrency(contract.toplam_tutar)}
+                      {formatCurrency(contract.total_amount)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(contract.tarih)}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(contract.contract_date)}</td>
                     <td className="px-4 py-3">{getStatusBadge(contract.status)}</td>
                     <td className="px-4 py-3 text-center">
                       <Link
