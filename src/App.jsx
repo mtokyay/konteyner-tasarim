@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { getSupabase, isConfigured } from './lib/supabase';
 import AppLayout from './components/layout/AppLayout';
 import PatronDashboard from './components/dashboard/PatronDashboard';
@@ -47,7 +47,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('authToken', userData.token);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Supabase oturumunu kapat
+    try {
+      const supabase = getSupabase();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.warn('Supabase signOut error:', err);
+    }
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
@@ -107,7 +116,8 @@ const ComingSoon = () => (
 
 // Login Page
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('patron');
@@ -115,6 +125,13 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
 
   const supabaseReady = isConfigured();
+
+  // Zaten giris yapmissa dashboard'a yonlendir
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const roles = [
     { value: 'patron', label: 'Patron (İşletme Sahibi)' },
@@ -181,6 +198,7 @@ const LoginPage = () => {
           };
 
           login(userData);
+          navigate('/dashboard', { replace: true });
         }
       } else {
         // Demo mod - Supabase baglantisi yok
@@ -193,6 +211,7 @@ const LoginPage = () => {
         };
 
         login(userData);
+        navigate('/dashboard', { replace: true });
       }
     } catch (err) {
       setError('Bağlantı hatası: ' + (err.message || 'Bilinmeyen hata'));
