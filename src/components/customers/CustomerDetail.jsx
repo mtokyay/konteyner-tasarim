@@ -11,6 +11,9 @@ import {
   MapPin,
   FileText,
   DollarSign,
+  Save,
+  X,
+  Check,
 } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 
@@ -62,6 +65,10 @@ const CustomerDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('designs');
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     loadCustomerData();
@@ -149,7 +156,7 @@ const CustomerDetail = () => {
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
-        .eq('customer_id', customerId)
+        .eq('musteri_id', customerId)
         .order('created_at', { ascending: false });
 
       if (paymentsError) {
@@ -162,6 +169,70 @@ const CustomerDetail = () => {
       console.error('Customer detail load error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startEditing = () => {
+    setEditData({
+      ad: customer.ad || '',
+      soyad: customer.soyad || '',
+      telefon: customer.telefon || '',
+      eposta: customer.eposta || '',
+      nereden_geldi: customer.nereden_geldi || '',
+      adres: customer.adres || '',
+      notlar: customer.notlar || '',
+    });
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+    setEditData({});
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveCustomer = async () => {
+    if (!editData.ad || !editData.soyad) {
+      setError('Ad ve soyad zorunludur');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        setCustomer(prev => ({ ...prev, ...editData }));
+        setEditing(false);
+        setSaving(false);
+        return;
+      }
+      const { data, error: updateError } = await supabase
+        .from('customers')
+        .update({
+          ad: editData.ad,
+          soyad: editData.soyad,
+          telefon: editData.telefon,
+          eposta: editData.eposta,
+          nereden_geldi: editData.nereden_geldi || null,
+          adres: editData.adres,
+          notlar: editData.notlar,
+        })
+        .eq('id', customerId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+      setCustomer(data);
+      setEditing(false);
+      setSuccessMsg('Müşteri bilgileri güncellendi');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Güncelleme sırasında hata oluştu');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -272,79 +343,131 @@ const CustomerDetail = () => {
           <div className="lg:col-span-1 bg-white rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-xl font-bold text-gray-900">Müşteri Bilgileri</h2>
-              <button
-                onClick={() =>
-                  navigate(`/customers/${customerId}/edit`)
-                }
-                className="p-2 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors"
-              >
-                <Edit2 className="w-5 h-5" />
-              </button>
+              {!editing ? (
+                <button
+                  onClick={startEditing}
+                  className="p-2 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors"
+                  title="Düzenle"
+                >
+                  <Edit2 className="w-5 h-5" />
+                </button>
+              ) : (
+                <div className="flex gap-1">
+                  <button
+                    onClick={handleSaveCustomer}
+                    disabled={saving}
+                    className="p-2 hover:bg-green-100 text-green-600 rounded-lg transition-colors"
+                    title="Kaydet"
+                  >
+                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+                    title="İptal"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-4">
-              {/* Phone */}
-              <div className="flex gap-3">
-                <Phone className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            {successMsg && (
+              <div className="mb-4 p-2 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+                <Check className="w-4 h-4" /> {successMsg}
+              </div>
+            )}
+
+            {editing ? (
+              <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600">Telefon</p>
-                  <p className="font-semibold text-gray-900">{customer.telefon}</p>
+                  <label className="text-sm text-gray-600 block mb-1">Ad</label>
+                  <input type="text" value={editData.ad} onChange={e => handleEditChange('ad', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">Soyad</label>
+                  <input type="text" value={editData.soyad} onChange={e => handleEditChange('soyad', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">Telefon</label>
+                  <input type="text" value={editData.telefon} onChange={e => handleEditChange('telefon', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">E-posta</label>
+                  <input type="email" value={editData.eposta} onChange={e => handleEditChange('eposta', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">Nereden Geldi</label>
+                  <select value={editData.nereden_geldi} onChange={e => handleEditChange('nereden_geldi', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm">
+                    <option value="">Seçiniz</option>
+                    <option value="referans">Referans</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="web_sitesi">Web Sitesi</option>
+                    <option value="ilan">İlan</option>
+                    <option value="arama">Arama</option>
+                    <option value="diger">Diğer</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">Adres</label>
+                  <textarea value={editData.adres} onChange={e => handleEditChange('adres', e.target.value)} rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600 block mb-1">Notlar</label>
+                  <textarea value={editData.notlar} onChange={e => handleEditChange('notlar', e.target.value)} rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm" />
                 </div>
               </div>
-
-              {/* Email */}
-              {customer.eposta && (
+            ) : (
+              <div className="space-y-4">
                 <div className="flex gap-3">
-                  <Mail className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <Phone className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-600">E-posta</p>
-                    <p className="font-semibold text-gray-900">
-                      {customer.eposta}
-                    </p>
+                    <p className="text-sm text-gray-600">Telefon</p>
+                    <p className="font-semibold text-gray-900">{customer.telefon}</p>
                   </div>
                 </div>
-              )}
-
-              {/* Address */}
-              {customer.adres && (
-                <div className="flex gap-3">
-                  <MapPin className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-600">Adres</p>
-                    <p className="font-semibold text-gray-900">{customer.adres}</p>
+                {customer.eposta && (
+                  <div className="flex gap-3">
+                    <Mail className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-gray-600">E-posta</p>
+                      <p className="font-semibold text-gray-900">{customer.eposta}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* Source */}
-              <div className="pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600">Nereden Geldi</p>
-                <p className="font-semibold text-gray-900">
-                  {getSourceLabel(customer.nereden_geldi)}
-                </p>
-              </div>
-
-              {/* Notes */}
-              {customer.notlar && (
+                )}
+                {customer.adres && (
+                  <div className="flex gap-3">
+                    <MapPin className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-gray-600">Adres</p>
+                      <p className="font-semibold text-gray-900">{customer.adres}</p>
+                    </div>
+                  </div>
+                )}
                 <div className="pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Notlar
-                  </p>
-                  <p className="font-semibold text-gray-900 text-sm">
-                    {customer.notlar}
-                  </p>
+                  <p className="text-sm text-gray-600">Nereden Geldi</p>
+                  <p className="font-semibold text-gray-900">{getSourceLabel(customer.nereden_geldi)}</p>
                 </div>
-              )}
-
-              {/* Registration Date */}
-              <div className="pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600">Kayıt Tarihi</p>
-                <p className="font-semibold text-gray-900">
-                  {formatDate(customer.created_at)}
-                </p>
+                {customer.notlar && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600 flex items-center gap-2"><FileText className="w-4 h-4" /> Notlar</p>
+                    <p className="font-semibold text-gray-900 text-sm">{customer.notlar}</p>
+                  </div>
+                )}
+                <div className="pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-600">Kayıt Tarihi</p>
+                  <p className="font-semibold text-gray-900">{formatDate(customer.created_at)}</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Stats */}
@@ -365,7 +488,7 @@ const CustomerDetail = () => {
               </p>
               <p className="text-2xl font-bold text-green-700">
                 {formatCurrency(
-                  payments.reduce((sum, p) => sum + (p.amount || 0), 0)
+                  payments.reduce((sum, p) => sum + (p.tutar || 0), 0)
                 )}
               </p>
             </div>
@@ -524,15 +647,15 @@ const CustomerDetail = () => {
                             <div className="flex items-center gap-2 mb-1">
                               <DollarSign className="w-4 h-4 text-green-600" />
                               <h4 className="font-semibold text-gray-900">
-                                {formatCurrency(payment.amount)}
+                                {formatCurrency(payment.tutar)}
                               </h4>
                             </div>
                             <p className="text-sm text-gray-600">
                               {formatDate(payment.created_at)}
                             </p>
-                            {payment.note && (
+                            {payment.notlar && (
                               <p className="text-sm text-gray-600 mt-1">
-                                {payment.note}
+                                {payment.notlar}
                               </p>
                             )}
                           </div>

@@ -11,6 +11,7 @@ import CustomerDetail from './components/customers/CustomerDetail';
 import DesignList from './components/design/DesignList';
 import DesignNew from './components/design/DesignNew';
 import DesignDetail from './components/design/DesignDetail';
+import DesignEditor from './components/design/DesignEditor';
 import CompanyInfo from './components/company/CompanyInfo';
 import ContractCreate from './components/contracts/ContractCreate';
 import ContractList from './components/contracts/ContractList';
@@ -96,6 +97,23 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   }
 
   return <AppLayout user={user}>{children}</AppLayout>;
+};
+
+// Auth-only wrapper (no AppLayout - for full-screen views)
+const AuthOnly = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
 };
 
 // Placeholder Component for Routes Not Yet Built
@@ -428,6 +446,22 @@ const App = () => {
               <ProtectedRoute>
                 <DesignDetail />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/designs/:id/editor"
+            element={
+              <AuthOnly>
+                <DesignEditor />
+              </AuthOnly>
+            }
+          />
+          <Route
+            path="/designs/new/editor"
+            element={
+              <AuthOnly>
+                <DesignEditor />
+              </AuthOnly>
             }
           />
 

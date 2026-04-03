@@ -1160,7 +1160,26 @@
       const handleMouseMove=useCallback(e=>{const pt=getSvgPt(e);const cx=snapTo(s2c(pt.x-padding)),cy=snapTo(s2c(pt.y-padding));setMousePos({x:cx,y:cy});if(isDragging&&selectedItem){handleMoveItem(selectedItem,snapTo(s2c(pt.x-padding)-dragOffset.x),snapTo(s2c(pt.y-padding)-dragOffset.y))}},[isDragging,selectedItem,dragOffset,getSvgPt,handleMoveItem]);
       const handleMouseDown=useCallback((e,id)=>{e.stopPropagation();const pt=getSvgPt(e);const item=items.find(i=>i.id===id);if(item){setDragOffset({x:s2c(pt.x-padding)-item.x,y:s2c(pt.y-padding)-item.y});setIsDragging(true);setSelectedItem(id)}},[items,getSvgPt]);
       const handleSvgClick=useCallback(e=>{if(mode==="place"&&placingItem){const pt=getSvgPt(e);const cx=snapTo(s2c(pt.x-padding)),cy=snapTo(s2c(pt.y-padding));if(cx>=0&&cx<=totalL&&cy>=0&&cy<=totalW)handlePlaceItem(cx,cy)}else if(!isDragging){setSelectedItem(null);setEditingItem(null)}},[mode,placingItem,getSvgPt,totalL,totalW,handlePlaceItem,isDragging]);
-      useEffect(()=>{const fn=e=>{if(e.key==="Escape"){setMode("select");setPlacingItem(null);setSelectedItem(null);setEditingItem(null)}if(e.key==="Delete"&&selectedItem)handleDeleteItem(selectedItem);if(e.key==="r"&&selectedItem&&!editingItem)handleRotateItem(selectedItem)};window.addEventListener("keydown",fn);return()=>window.removeEventListener("keydown",fn)},[selectedItem,editingItem,handleDeleteItem,handleRotateItem]);
+      
+      // postMessage bridge: register state getter and setter for iframe integration
+      useEffect(() => {
+        registerAppState(() => ({ container, items, partitions, wcZones, combo, veranda }));
+        window.__setDesignState = (d) => {
+          if (d.container) setContainer(prev => ({...prev, ...d.container}));
+          if (d.items) setItems(d.items);
+          if (d.partitions) setPartitions(d.partitions);
+          if (d.wcZones) setWcZones(d.wcZones);
+          if (d.combo) setCombo(prev => ({...prev, ...d.combo}));
+          if (d.veranda) setVeranda(prev => ({...prev, ...d.veranda}));
+        };
+        window.__triggerPDF = () => setShowPrint(true);
+        // Notify parent on mount
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'DESIGNER_READY' }, '*');
+        }
+      }, [container, items, partitions, wcZones, combo, veranda]);
+      
+      useEffect(()=>{const fn=e=>{if(e.key==="Escape"){setMode("select");setPlacingItem(null);setSelectedItem(null);setEditingItem(null)}if(e.key==="Delete"&&selectedItem)handleDeleteItem(selectedItem);if(e.key==="r"&&selectedItem&&!editingItem)handleRotateItem(selectedItem)};window.addEventListener("keydown",fn);return()=>window.removeEventListener("keydown",fn)},[selectedItem,editingItem,handleDeleteItem,handleRotateItem]);
       const startPlacing=item=>{setMode("place");setPlacingItem(item)};
       const addWcZone=corner=>{
         // Calculate offset for 2nd container in combo mode
@@ -1363,7 +1382,8 @@
                   <button key={v.id} onClick={()=>setViewMode(v.id)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${viewMode===v.id?"bg-white text-blue-700 shadow-sm":"text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
                 ))}
               </div>
-              <button onClick={()=>setShowPrint(true)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">PDF / Yazdir</button>
+              <button onClick={()=>{if(window.parent!==window){const state=_appStateGetter?_appStateGetter():{};window.parent.postMessage({type:'DESIGN_DATA',designData:state},'*')}else{alert('Kaydetmek icin portal uzerinden acin')}}} className="px-3 py-1.5 bg-amber-700 text-white rounded-lg text-xs font-medium hover:bg-amber-800">Kaydet</button>
+              <button onClick={()=>setShowPrint(true)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">PDF / Yazdir</button>
               <button onClick={()=>setShowExport(true)} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700">Ozet</button>
             </div>
           </div>
@@ -1629,7 +1649,27 @@
         </div>
       );
     }
-    const root = ReactDOM.createRoot(document.getElementById('root'));
+    // postMessage Bridge for iframe integration
+    let _appStateGetter = null;
+    function registerAppState(getter) { _appStateGetter = getter; }
+
+    window.addEventListener('message', function(event) {
+      if (!event.data || !event.data.type) return;
+      if (event.data.type === 'LOAD_DESIGN') {
+        const d = event.data.designData;
+        if (d && window.__setDesignState) {
+          window.__setDesignState(d);
+        }
+      }
+      if (event.data.type === 'REQUEST_SAVE') {
+        if (_appStateGetter) {
+          const state = _appStateGetter();
+          window.parent.postMessage({ type: 'DESIGN_DATA', designData: state }, '*');
+        }
+      }
+    });
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App/>);
     </script>
 </body>

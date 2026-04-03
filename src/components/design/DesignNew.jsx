@@ -81,8 +81,18 @@ export default function DesignNew() {
   );
 
   const handleSelectCustomer = (customer) => {
-    setSelectedCustomer(customer);
-    setStep(2);
+    // Navigate to full-screen design editor with customer info
+    navigate('/designs/new/editor', {
+      state: {
+        customerId: customer.id,
+        customerInfo: {
+          ad: customer.ad,
+          soyad: customer.soyad,
+          telefon: customer.telefon,
+          eposta: customer.eposta,
+        },
+      },
+    });
   };
 
   const handleInputChange = (e) => {

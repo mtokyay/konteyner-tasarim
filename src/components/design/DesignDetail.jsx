@@ -12,6 +12,7 @@ import {
   Package,
   Truck,
   Ban,
+  PenTool,
 } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 
@@ -271,6 +272,14 @@ export default function DesignDetail() {
           </button>
           <div className="flex items-center gap-3">
             {!isEditing && (
+              <>
+              <button
+                onClick={() => navigate(`/designs/${id}/editor`)}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-semibold transition-all"
+              >
+                <PenTool size={18} />
+                Tasarımı Aç
+              </button>
               <button
                 onClick={() => setIsEditing(true)}
                 className="flex items-center gap-2 px-4 py-2 border-2 border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 font-semibold transition-all"
@@ -278,6 +287,7 @@ export default function DesignDetail() {
                 <Edit2 size={18} />
                 Düzenle
               </button>
+              </>
             )}
             {isEditing && (
               <>
