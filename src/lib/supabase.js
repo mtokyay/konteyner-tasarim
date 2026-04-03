@@ -5,10 +5,15 @@ const CONFIG_KEYS = {
   KEY: 'tk_supabase_key',
 };
 
+// Env variable'lardan Supabase bilgilerini al (Netlify/Vite)
+const ENV_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const ENV_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
 let supabaseClient = null;
 
 /**
- * Initialize Supabase client from localStorage config
+ * Initialize Supabase client
+ * Oncelik: 1) Env variables  2) localStorage
  * Returns null if not configured
  */
 export function getSupabase() {
@@ -16,8 +21,15 @@ export function getSupabase() {
     return supabaseClient;
   }
 
-  const url = localStorage.getItem(CONFIG_KEYS.URL);
-  const key = localStorage.getItem(CONFIG_KEYS.KEY);
+  // Oncelik 1: Env variables (Netlify'da ayarlanan)
+  let url = ENV_URL;
+  let key = ENV_KEY;
+
+  // Oncelik 2: localStorage (SupabaseConfig ekraninda girilen)
+  if (!url || !key) {
+    url = localStorage.getItem(CONFIG_KEYS.URL) || '';
+    key = localStorage.getItem(CONFIG_KEYS.KEY) || '';
+  }
 
   if (!url || !key) {
     return null;
@@ -45,9 +57,10 @@ export function createClient(url, key) {
 }
 
 /**
- * Check if Supabase is configured in localStorage
+ * Check if Supabase is configured (env or localStorage)
  */
 export function isConfigured() {
+  if (ENV_URL && ENV_KEY) return true;
   const url = localStorage.getItem(CONFIG_KEYS.URL);
   const key = localStorage.getItem(CONFIG_KEYS.KEY);
   return !!(url && key);
