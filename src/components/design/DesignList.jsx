@@ -26,36 +26,36 @@ const statusLabels = {
 const placeholderData = [
   {
     id: '1',
-    title: 'Modern Ev Tasarımı',
-    design_data: { ref_no: 'TH-001' },
+    ad: 'Modern Ev Tasarımı',
+    ref_no: 'TH-001',
     status: 'onaylandi',
-    total_price: 45000,
-    final_price: 42000,
-    delivery_date: '2026-05-15',
+    toplam_fiyat: 45000,
+    net_fiyat: 42000,
+    teslim_tarihi: '2026-05-15',
     created_at: '2026-04-01',
-    customers: { first_name: 'Ahmet', last_name: 'Yılmaz' },
+    customers: { ad: 'Ahmet', soyad: 'Yılmaz' },
   },
   {
     id: '2',
-    title: 'Kompakt Tasarım',
-    design_data: { ref_no: 'TH-002' },
+    ad: 'Kompakt Tasarım',
+    ref_no: 'TH-002',
     status: 'uretimde',
-    total_price: 35000,
-    final_price: 33000,
-    delivery_date: '2026-06-01',
+    toplam_fiyat: 35000,
+    net_fiyat: 33000,
+    teslim_tarihi: '2026-06-01',
     created_at: '2026-03-28',
-    customers: { first_name: 'Fatma', last_name: 'Kara' },
+    customers: { ad: 'Fatma', soyad: 'Kara' },
   },
   {
     id: '3',
-    title: 'Lüks İçerik',
-    design_data: { ref_no: 'TH-003' },
+    ad: 'Lüks İçerik',
+    ref_no: 'TH-003',
     status: 'taslak',
-    total_price: 55000,
-    final_price: 50000,
-    delivery_date: '2026-07-10',
+    toplam_fiyat: 55000,
+    net_fiyat: 50000,
+    teslim_tarihi: '2026-07-10',
     created_at: '2026-04-02',
-    customers: { first_name: 'Mehmet', last_name: 'Demir' },
+    customers: { ad: 'Mehmet', soyad: 'Demir' },
   },
 ];
 
@@ -86,7 +86,7 @@ export default function DesignList() {
 
       const { data, error: queryError } = await supabase
         .from('designs')
-        .select('id, title, status, total_price, final_price, delivery_date, created_at, customers(first_name, last_name)');
+        .select('id, ad, ref_no, status, toplam_fiyat, net_fiyat, teslim_tarihi, created_at, customers(ad, soyad)');
 
       if (queryError) throw queryError;
       setDesigns(data || []);
@@ -101,9 +101,9 @@ export default function DesignList() {
 
   const filteredDesigns = designs.filter(design => {
     const matchesSearch =
-      (design.design_data?.ref_no || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      design.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (design.customers && `${design.customers.first_name} ${design.customers.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()));
+      (design.ref_no || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      design.ad.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (design.customers && `${design.customers.ad} ${design.customers.soyad}`.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus = !filterStatus || design.status === filterStatus;
 
@@ -237,13 +237,13 @@ export default function DesignList() {
                 <tbody>
                   {paginatedDesigns.map((design, idx) => (
                     <tr key={design.id} className={`border-b border-gray-200 hover:bg-amber-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                      <td className="px-6 py-4 font-semibold text-amber-700">{design.design_data?.ref_no || '-'}</td>
-                      <td className="px-6 py-4 text-gray-900 font-medium">{design.title}</td>
+                      <td className="px-6 py-4 font-semibold text-amber-700">{design.ref_no || '-'}</td>
+                      <td className="px-6 py-4 text-gray-900 font-medium">{design.ad}</td>
                       <td className="px-6 py-4 text-gray-700">
-                        {design.customers ? `${design.customers.first_name} ${design.customers.last_name}` : '-'}
+                        {design.customers ? `${design.customers.ad} ${design.customers.soyad}` : '-'}
                       </td>
                       <td className="px-6 py-4 text-right text-gray-900 font-semibold">
-                        {formatCurrency(design.final_price)}
+                        {formatCurrency(design.net_fiyat)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${statusColors[design.status]?.badge}`}>
@@ -251,7 +251,7 @@ export default function DesignList() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {formatDate(design.delivery_date)}
+                        {formatDate(design.teslim_tarihi)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex justify-center gap-3">

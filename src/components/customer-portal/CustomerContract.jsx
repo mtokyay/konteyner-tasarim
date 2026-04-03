@@ -38,11 +38,11 @@ const CustomerContract = () => {
         // Placeholder data
         setContract({
           id: 1,
-          contract_number: 'SK-001-2024',
+          sozlesme_no: 'SK-001-2024',
           customer_id: 1,
           design_id: 1,
           tarih: '2024-01-15',
-          total_amount: 200000,
+          toplam_tutar: 200000,
           durum: 'aktif',
         });
 
@@ -57,11 +57,11 @@ const CustomerContract = () => {
         });
 
         setPaymentPlan([
-          { tur: 'pesin', tutar: 50000, tarih: '2024-01-15', odendi: true },
-          { tur: 'taksit', tutar: 30000, tarih: '2024-02-15', odendi: true },
-          { tur: 'taksit', tutar: 30000, tarih: '2024-03-15', odendi: false },
-          { tur: 'taksit', tutar: 30000, tarih: '2024-04-15', odendi: false },
-          { tur: 'kalan', tutar: 60000, tarih: '2024-05-15', odendi: false },
+          { tur: 'pesin', tutar: 50000, vade: '2024-01-15', durum: 'odendi' },
+          { tur: 'taksit', tutar: 30000, vade: '2024-02-15', durum: 'odendi' },
+          { tur: 'taksit', tutar: 30000, vade: '2024-03-15', durum: 'bekliyor' },
+          { tur: 'taksit', tutar: 30000, vade: '2024-04-15', durum: 'bekliyor' },
+          { tur: 'kalan', tutar: 60000, vade: '2024-05-15', durum: 'bekliyor' },
         ]);
 
         setContractPages([
@@ -97,7 +97,7 @@ const CustomerContract = () => {
       const { data: customerData } = await supabase
         .from('customers')
         .select('id')
-        .eq('email', user.email)
+        .eq('eposta', user.email)
         .single();
 
       if (!customerData) {
@@ -110,14 +110,14 @@ const CustomerContract = () => {
         .select(
           `
           id,
-          contract_number,
+          sozlesme_no,
           tarih,
-          total_amount,
+          toplam_tutar,
           durum,
           tasarim_id,
           designs(
             id,
-            title,
+            ad,
             genislik,
             yukseklik,
             uzunluk,
@@ -141,15 +141,15 @@ const CustomerContract = () => {
       const { data: paymentsData } = await supabase
         .from('payments')
         .select('*')
-        .eq('contract_id', contractData?.id)
-        .order('due_date', { ascending: true });
+        .eq('sozlesme_id', contractData?.id)
+        .order('vade', { ascending: true });
 
       if (paymentsData) {
         const formattedPayments = paymentsData.map((p) => ({
-          payment_type: p.payment_type,
-          amount: p.amount,
-          due_date: p.due_date,
-          paid: p.status === 'odendi',
+          tur: p.tur,
+          tutar: p.tutar,
+          vade: p.vade,
+          durum: p.durum,
         }));
         setPaymentPlan(formattedPayments);
       }
@@ -158,7 +158,7 @@ const CustomerContract = () => {
       const { data: pagesData } = await supabase
         .from('contract_pages')
         .select('*')
-        .eq('contract_id', contractData?.id)
+        .eq('sozlesme_id', contractData?.id)
         .order('sira', { ascending: true });
 
       if (pagesData) {
@@ -245,7 +245,7 @@ const CustomerContract = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {contract.contract_number}
+                    {contract.sozlesme_no}
                   </h2>
                   <p className="text-gray-600 mt-1">
                     Sözleşme Tarihi: {formatDate(contract.tarih)}
@@ -262,7 +262,7 @@ const CustomerContract = () => {
                     Toplam Sözleşme Değeri
                   </p>
                   <p className="text-3xl font-bold text-amber-600 mt-2">
-                    {formatCurrency(contract.total_amount)}
+                    {formatCurrency(contract.toplam_tutar)}
                   </p>
                 </div>
                 <div>
@@ -289,7 +289,7 @@ const CustomerContract = () => {
                       Tasarım Adı
                     </p>
                     <p className="text-lg font-semibold text-gray-900 mt-2">
-                      {design.title}
+                      {design.ad}
                     </p>
                   </div>
                   <div className="border border-gray-200 rounded-lg p-4">
@@ -388,20 +388,20 @@ const CustomerContract = () => {
                     {paymentPlan.map((payment, idx) => (
                       <tr key={idx} className="hover:bg-amber-50">
                         <td className="px-4 py-3 text-gray-900 font-semibold">
-                          {payment.payment_type === 'pesin'
+                          {payment.tur === 'pesin'
                             ? 'Peşinat'
-                            : payment.payment_type === 'taksit'
+                            : payment.tur === 'taksit'
                             ? 'Taksit'
                             : 'Kalan'}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                          {formatCurrency(payment.amount)}
+                          {formatCurrency(payment.tutar)}
                         </td>
                         <td className="px-4 py-3 text-center text-gray-700">
-                          {formatDate(payment.due_date)}
+                          {formatDate(payment.vade)}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          {payment.paid ? (
+                          {payment.durum === 'odendi' ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                               <CheckCircle className="w-4 h-4" />
                               Ödendi

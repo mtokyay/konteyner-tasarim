@@ -77,7 +77,7 @@ export async function verifyCustomerAccount(supabase, email) {
     const { data, error } = await supabase
       .from('customers')
       .select('*')
-      .eq('email', email)
+      .eq('eposta', email)
       .maybeSingle();
 
     if (error) {
@@ -105,8 +105,8 @@ export async function getCustomerByEmail(supabase, email) {
 
     const { data, error } = await supabase
       .from('customers')
-      .select('id, first_name, last_name, phone, email, assigned_user_id, created_at, updated_at')
-      .eq('email', email)
+      .select('id, ad, soyad, telefon, eposta, assigned_user_id, created_at, updated_at')
+      .eq('eposta', email)
       .maybeSingle();
 
     if (error) {

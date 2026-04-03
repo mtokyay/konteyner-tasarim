@@ -24,22 +24,22 @@ export default function TasarimciDashboard() {
         .from('designs')
         .select('*', { count: 'exact', head: true });
 
-      // Fetch pending reviews
+      // Fetch pending reviews (uretimde = in production)
       const { count: pendingCount } = await supabase
         .from('designs')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'in_progress');
+        .eq('status', 'uretimde');
 
       // Fetch completed designs
       const { count: completedCount } = await supabase
         .from('designs')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'completed');
+        .eq('status', 'tamamlandi');
 
       // Fetch recent designs with full details
       const { data: recentDesigns } = await supabase
         .from('designs')
-        .select('id, title, status, total_price, created_at, customer_id')
+        .select('id, ad, status, toplam_fiyat, created_at, customer_id')
         .order('created_at', { ascending: false })
         .limit(8);
 
@@ -73,51 +73,46 @@ export default function TasarimciDashboard() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'draft':
-        return {
-          badge: 'bg-gray-100 text-gray-800',
-          icon: 'text-gray-500',
-        };
-      case 'in_progress':
-        return {
-          badge: 'bg-blue-100 text-blue-800',
-          icon: 'text-blue-500',
-        };
-      case 'completed':
-        return {
-          badge: 'bg-green-100 text-green-800',
-          icon: 'text-green-500',
-        };
-      case 'archived':
-        return {
-          badge: 'bg-purple-100 text-purple-800',
-          icon: 'text-purple-500',
-        };
+      case 'taslak':
+        return { badge: 'bg-gray-100 text-gray-800', icon: 'text-gray-500' };
+      case 'teklif':
+        return { badge: 'bg-blue-100 text-blue-800', icon: 'text-blue-500' };
+      case 'onaylandi':
+        return { badge: 'bg-amber-100 text-amber-800', icon: 'text-amber-500' };
+      case 'uretimde':
+        return { badge: 'bg-orange-100 text-orange-800', icon: 'text-orange-500' };
+      case 'tamamlandi':
+        return { badge: 'bg-green-100 text-green-800', icon: 'text-green-500' };
+      case 'teslim_edildi':
+        return { badge: 'bg-emerald-100 text-emerald-800', icon: 'text-emerald-500' };
+      case 'iptal':
+        return { badge: 'bg-red-100 text-red-800', icon: 'text-red-500' };
       default:
-        return {
-          badge: 'bg-gray-100 text-gray-800',
-          icon: 'text-gray-500',
-        };
+        return { badge: 'bg-gray-100 text-gray-800', icon: 'text-gray-500' };
     }
   };
 
   const getStatusLabel = (status) => {
     const labels = {
-      draft: 'Taslak',
-      in_progress: 'İşlemde',
-      completed: 'Tamamlandı',
-      archived: 'Arşivlendi',
+      taslak: 'Taslak',
+      teklif: 'Teklif',
+      onaylandi: 'Onaylandı',
+      uretimde: 'Üretimde',
+      tamamlandi: 'Tamamlandı',
+      teslim_edildi: 'Teslim Edildi',
+      iptal: 'İptal',
     };
     return labels[status] || status;
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'draft':
+      case 'taslak':
         return <PenTool className="w-4 h-4" />;
-      case 'in_progress':
+      case 'uretimde':
         return <Clock className="w-4 h-4" />;
-      case 'completed':
+      case 'tamamlandi':
+      case 'teslim_edildi':
         return <CheckCircle className="w-4 h-4" />;
       default:
         return <PenTool className="w-4 h-4" />;
@@ -175,7 +170,7 @@ export default function TasarimciDashboard() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-sm font-semibold text-gray-800 flex-1 truncate">
-                      {design.title}
+                      {design.ad}
                     </h3>
                     <div className={`p-2 rounded-lg ${statusColors.icon}`}>
                       {getStatusIcon(design.status)}
@@ -196,9 +191,9 @@ export default function TasarimciDashboard() {
                       <span className="text-xs text-gray-500">
                         {new Date(design.created_at).toLocaleDateString('tr-TR')}
                       </span>
-                      {design.total_price && (
+                      {design.toplam_fiyat && (
                         <span className="text-sm font-semibold text-blue-600">
-                          ₺{design.total_price.toLocaleString('tr-TR')}
+                          ₺{design.toplam_fiyat.toLocaleString('tr-TR')}
                         </span>
                       )}
                     </div>

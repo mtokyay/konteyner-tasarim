@@ -4,9 +4,9 @@ import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 
 const placeholderCustomers = [
-  { id: '1', first_name: 'Ahmet', last_name: 'Yılmaz', phone: '0532 123 45 67', email: 'ahmet@example.com' },
-  { id: '2', first_name: 'Fatma', last_name: 'Kara', phone: '0533 234 56 78', email: 'fatma@example.com' },
-  { id: '3', first_name: 'Mehmet', last_name: 'Demir', phone: '0534 345 67 89', email: 'mehmet@example.com' },
+  { id: '1', ad: 'Ahmet', soyad: 'Yılmaz', telefon: '0532 123 45 67', eposta: 'ahmet@example.com' },
+  { id: '2', ad: 'Fatma', soyad: 'Kara', telefon: '0533 234 56 78', eposta: 'fatma@example.com' },
+  { id: '3', ad: 'Mehmet', soyad: 'Demir', telefon: '0534 345 67 89', eposta: 'mehmet@example.com' },
 ];
 
 export default function DesignNew() {
@@ -24,25 +24,25 @@ export default function DesignNew() {
 
   // Step 2: Design Details
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    width: '',
-    height: '',
-    length: '',
-    features: [],
-    total_price: '',
-    discount: '',
-    delivery_date: '',
-    notes: '',
+    ad: '',
+    aciklama: '',
+    genislik: '',
+    yukseklik: '',
+    uzunluk: '',
+    ozellikler: [],
+    toplam_fiyat: '',
+    indirim: '',
+    teslim_tarihi: '',
+    notlar: '',
   });
 
   // Step 3: New Customer Modal
   const [newCustomer, setNewCustomer] = useState({
-    first_name: '',
-    last_name: '',
-    phone: '',
-    email: '',
-    source: '',
+    ad: '',
+    soyad: '',
+    telefon: '',
+    eposta: '',
+    nereden_geldi: '',
   });
 
   useEffect(() => {
@@ -62,8 +62,8 @@ export default function DesignNew() {
 
       const { data, error: queryError } = await supabase
         .from('customers')
-        .select('id, first_name, last_name, phone, email')
-        .order('first_name', { ascending: true });
+        .select('id, ad, soyad, telefon, eposta')
+        .order('ad', { ascending: true });
 
       if (queryError) throw queryError;
       setCustomers(data || []);
@@ -76,8 +76,8 @@ export default function DesignNew() {
   };
 
   const filteredCustomers = customers.filter(customer =>
-    `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(searchCustomer.toLowerCase()) ||
-    (customer.phone || '').includes(searchCustomer)
+    `${customer.ad} ${customer.soyad}`.toLowerCase().includes(searchCustomer.toLowerCase()) ||
+    (customer.telefon || '').includes(searchCustomer)
   );
 
   const handleSelectCustomer = (customer) => {
@@ -96,27 +96,27 @@ export default function DesignNew() {
   const handleChecked = (feature) => {
     setFormData(prev => ({
       ...prev,
-      features: prev.features.includes(feature)
-        ? prev.features.filter(f => f !== feature)
-        : [...prev.features, feature],
+      ozellikler: prev.ozellikler.includes(feature)
+        ? prev.ozellikler.filter(f => f !== feature)
+        : [...prev.ozellikler, feature],
     }));
   };
 
   const calculateArea = () => {
-    const width = parseFloat(formData.width) || 0;
-    const length = parseFloat(formData.length) || 0;
+    const width = parseFloat(formData.genislik) || 0;
+    const length = parseFloat(formData.uzunluk) || 0;
     return (width * length).toFixed(2);
   };
 
   const calculateNetPrice = () => {
-    const total = parseFloat(formData.total_price) || 0;
-    const disc = parseFloat(formData.discount) || 0;
+    const total = parseFloat(formData.toplam_fiyat) || 0;
+    const disc = parseFloat(formData.indirim) || 0;
     return Math.max(0, total - disc).toFixed(2);
   };
 
   const handleAddCustomer = async (e) => {
     e.preventDefault();
-    if (!newCustomer.first_name || !newCustomer.last_name || !newCustomer.phone || !newCustomer.email) {
+    if (!newCustomer.ad || !newCustomer.soyad || !newCustomer.telefon || !newCustomer.eposta) {
       setError('Lütfen tüm alanları doldurunuz');
       return;
     }
@@ -132,7 +132,7 @@ export default function DesignNew() {
         };
         setSelectedCustomer(mockCustomer);
         setShowCustomerModal(false);
-        setNewCustomer({ first_name: '', last_name: '', phone: '', email: '', source: '' });
+        setNewCustomer({ ad: '', soyad: '', telefon: '', eposta: '', nereden_geldi: '' });
         setError('');
         setStep(2);
         return;
@@ -148,7 +148,7 @@ export default function DesignNew() {
       const addedCustomer = data[0];
       setSelectedCustomer(addedCustomer);
       setShowCustomerModal(false);
-      setNewCustomer({ first_name: '', last_name: '', phone: '', email: '', source: '' });
+      setNewCustomer({ ad: '', soyad: '', telefon: '', eposta: '', nereden_geldi: '' });
       setError('');
       await fetchCustomers();
       setStep(2);
@@ -162,7 +162,7 @@ export default function DesignNew() {
 
   const handleSubmitDesign = async (e) => {
     e.preventDefault();
-    if (!formData.title || !selectedCustomer) {
+    if (!formData.ad || !selectedCustomer) {
       setError('Lütfen gerekli alanları doldurunuz');
       return;
     }
@@ -174,22 +174,20 @@ export default function DesignNew() {
 
       const designPayload = {
         customer_id: selectedCustomer.id,
-        title: formData.title,
-        design_data: {
-          description: formData.description,
-          width: formData.width ? parseFloat(formData.width) : null,
-          height: formData.height ? parseFloat(formData.height) : null,
-          length: formData.length ? parseFloat(formData.length) : null,
-          area: parseFloat(calculateArea()),
-          features: formData.features,
-          ref_no: `TH-${Date.now().toString().slice(-6)}`,
-        },
+        ad: formData.ad,
+        aciklama: formData.aciklama,
+        genislik: formData.genislik ? parseFloat(formData.genislik) : null,
+        yukseklik: formData.yukseklik ? parseFloat(formData.yukseklik) : null,
+        uzunluk: formData.uzunluk ? parseFloat(formData.uzunluk) : null,
+        alan: parseFloat(calculateArea()),
+        ozellikler: formData.ozellikler,
+        ref_no: `TH-${Date.now().toString().slice(-6)}`,
         status: 'taslak',
-        total_price: parseFloat(formData.total_price) || 0,
-        discount: parseFloat(formData.discount) || 0,
-        final_price: netPrice,
-        delivery_date: formData.delivery_date || null,
-        notes: formData.notes,
+        toplam_fiyat: parseFloat(formData.toplam_fiyat) || 0,
+        indirim: parseFloat(formData.indirim) || 0,
+        net_fiyat: netPrice,
+        teslim_tarihi: formData.teslim_tarihi || null,
+        notlar: formData.notlar,
       };
 
       if (!supabase) {
@@ -301,9 +299,9 @@ export default function DesignNew() {
                     onClick={() => handleSelectCustomer(customer)}
                     className="p-4 border-2 border-gray-200 rounded-lg hover:border-amber-500 hover:bg-amber-50 transition-all text-left"
                   >
-                    <div className="font-semibold text-gray-900 mb-1">{customer.first_name} {customer.last_name}</div>
-                    <div className="text-sm text-gray-600 mb-2">{customer.phone}</div>
-                    <div className="text-sm text-gray-500">{customer.email}</div>
+                    <div className="font-semibold text-gray-900 mb-1">{customer.ad} {customer.soyad}</div>
+                    <div className="text-sm text-gray-600 mb-2">{customer.telefon}</div>
+                    <div className="text-sm text-gray-500">{customer.eposta}</div>
                   </button>
                 ))}
               </div>
@@ -325,7 +323,7 @@ export default function DesignNew() {
         {step === 2 && (
           <form onSubmit={handleSubmitDesign} className="bg-white rounded-lg shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Tasarım Detayları - {selectedCustomer?.first_name} {selectedCustomer?.last_name}
+              Tasarım Detayları - {selectedCustomer?.ad} {selectedCustomer?.soyad}
             </h2>
 
             {/* Basic Info */}
@@ -333,8 +331,8 @@ export default function DesignNew() {
               <label className="block text-sm font-semibold text-gray-900 mb-2">Tasarım Adı *</label>
               <input
                 type="text"
-                name="title"
-                value={formData.title}
+                name="ad"
+                value={formData.ad}
                 onChange={handleInputChange}
                 placeholder="Örn: Modern Ev Tasarımı"
                 required
@@ -345,8 +343,8 @@ export default function DesignNew() {
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-900 mb-2">Açıklama</label>
               <textarea
-                name="description"
-                value={formData.description}
+                name="aciklama"
+                value={formData.aciklama}
                 onChange={handleInputChange}
                 placeholder="Tasarım hakkında açıklama..."
                 rows="3"
@@ -360,8 +358,8 @@ export default function DesignNew() {
                 <label className="block text-sm font-semibold text-gray-900 mb-2">Genişlik (m)</label>
                 <input
                   type="number"
-                  name="width"
-                  value={formData.width}
+                  name="genislik"
+                  value={formData.genislik}
                   onChange={handleInputChange}
                   step="0.1"
                   placeholder="0.00"
@@ -372,8 +370,8 @@ export default function DesignNew() {
                 <label className="block text-sm font-semibold text-gray-900 mb-2">Yükseklik (m)</label>
                 <input
                   type="number"
-                  name="height"
-                  value={formData.height}
+                  name="yukseklik"
+                  value={formData.yukseklik}
                   onChange={handleInputChange}
                   step="0.1"
                   placeholder="0.00"
@@ -384,8 +382,8 @@ export default function DesignNew() {
                 <label className="block text-sm font-semibold text-gray-900 mb-2">Uzunluk (m)</label>
                 <input
                   type="number"
-                  name="length"
-                  value={formData.length}
+                  name="uzunluk"
+                  value={formData.uzunluk}
                   onChange={handleInputChange}
                   step="0.1"
                   placeholder="0.00"
@@ -408,7 +406,7 @@ export default function DesignNew() {
                   <label key={feature.id} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={formData.features.includes(feature.id)}
+                      checked={formData.ozellikler.includes(feature.id)}
                       onChange={() => handleChecked(feature.id)}
                       className="w-4 h-4 text-amber-600 rounded focus:ring-2 focus:ring-amber-500"
                     />
@@ -424,8 +422,8 @@ export default function DesignNew() {
                 <label className="block text-sm font-semibold text-gray-900 mb-2">Toplam Fiyat (₺)</label>
                 <input
                   type="number"
-                  name="total_price"
-                  value={formData.total_price}
+                  name="toplam_fiyat"
+                  value={formData.toplam_fiyat}
                   onChange={handleInputChange}
                   step="0.01"
                   placeholder="0.00"
@@ -436,8 +434,8 @@ export default function DesignNew() {
                 <label className="block text-sm font-semibold text-gray-900 mb-2">İndirim (₺)</label>
                 <input
                   type="number"
-                  name="discount"
-                  value={formData.discount}
+                  name="indirim"
+                  value={formData.indirim}
                   onChange={handleInputChange}
                   step="0.01"
                   placeholder="0.00"
@@ -457,8 +455,8 @@ export default function DesignNew() {
               <label className="block text-sm font-semibold text-gray-900 mb-2">Teslim Tarihi</label>
               <input
                 type="date"
-                name="delivery_date"
-                value={formData.delivery_date}
+                name="teslim_tarihi"
+                value={formData.teslim_tarihi}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               />
@@ -468,8 +466,8 @@ export default function DesignNew() {
             <div className="mb-8">
               <label className="block text-sm font-semibold text-gray-900 mb-2">Notlar</label>
               <textarea
-                name="notes"
-                value={formData.notes}
+                name="notlar"
+                value={formData.notlar}
                 onChange={handleInputChange}
                 placeholder="Ek notlar..."
                 rows="3"
@@ -518,8 +516,8 @@ export default function DesignNew() {
                   <label className="block text-sm font-semibold text-gray-900 mb-1">Ad *</label>
                   <input
                     type="text"
-                    value={newCustomer.first_name}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, first_name: e.target.value })}
+                    value={newCustomer.ad}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, ad: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>
@@ -527,8 +525,8 @@ export default function DesignNew() {
                   <label className="block text-sm font-semibold text-gray-900 mb-1">Soyad *</label>
                   <input
                     type="text"
-                    value={newCustomer.last_name}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, last_name: e.target.value })}
+                    value={newCustomer.soyad}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, soyad: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>
@@ -536,8 +534,8 @@ export default function DesignNew() {
                   <label className="block text-sm font-semibold text-gray-900 mb-1">Telefon *</label>
                   <input
                     type="tel"
-                    value={newCustomer.phone}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                    value={newCustomer.telefon}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, telefon: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>
@@ -545,8 +543,8 @@ export default function DesignNew() {
                   <label className="block text-sm font-semibold text-gray-900 mb-1">E-posta *</label>
                   <input
                     type="email"
-                    value={newCustomer.email}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                    value={newCustomer.eposta}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, eposta: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>
@@ -554,8 +552,8 @@ export default function DesignNew() {
                   <label className="block text-sm font-semibold text-gray-900 mb-1">Nereden Geldi</label>
                   <input
                     type="text"
-                    value={newCustomer.source}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, source: e.target.value })}
+                    value={newCustomer.nereden_geldi}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, nereden_geldi: e.target.value })}
                     placeholder="Sosyal medya, referans, vb."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />

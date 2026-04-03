@@ -24,7 +24,7 @@ export default function PaymentList() {
 
       let query = supabase
         .from('payments')
-        .select('*, customers:customer_id(first_name, last_name), contracts:contract_id(contract_number)');
+        .select('*, customers:musteri_id(ad, soyad), contracts:sozlesme_id(sozlesme_no)');
 
       if (filterStatus) {
         query = query.eq('status', filterStatus);
@@ -37,7 +37,7 @@ export default function PaymentList() {
       let filteredData = data || [];
       if (searchTerm) {
         filteredData = filteredData.filter(payment =>
-          `${payment.customers?.first_name} ${payment.customers?.last_name}`
+          `${payment.customers?.ad} ${payment.customers?.soyad}`
             .toLowerCase()
             .includes(searchTerm.toLowerCase())
         );
@@ -65,13 +65,13 @@ export default function PaymentList() {
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
-      case 'paid':
+      case 'odendi':
         return 'bg-green-100 text-green-800 border border-green-300';
-      case 'pending':
+      case 'bekliyor':
         return 'bg-amber-100 text-amber-800 border border-amber-300';
-      case 'overdue':
+      case 'gecikli':
         return 'bg-red-100 text-red-800 border border-red-300';
-      case 'cancelled':
+      case 'iptal':
         return 'bg-gray-100 text-gray-800 border border-gray-300';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -80,29 +80,29 @@ export default function PaymentList() {
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'paid':
+      case 'odendi':
         return 'Ödendi';
-      case 'pending':
+      case 'bekliyor':
         return 'Bekliyor';
-      case 'overdue':
+      case 'gecikli':
         return 'Gecikti';
-      case 'cancelled':
+      case 'iptal':
         return 'İptal';
       default:
         return status;
     }
   };
 
-  const getPaymentTypeLabel = (payment_type) => {
-    switch (payment_type) {
-      case 'deposit':
+  const getPaymentTypeLabel = (tur) => {
+    switch (tur) {
+      case 'pesinat':
         return 'Peşinat';
-      case 'installment':
+      case 'taksit':
         return 'Taksit';
-      case 'remaining':
+      case 'kalan':
         return 'Kalan';
       default:
-        return payment_type;
+        return tur;
     }
   };
 
@@ -177,10 +177,10 @@ export default function PaymentList() {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               >
                 <option value="">Tümü</option>
-                <option value="pending">Bekliyor</option>
-                <option value="paid">Ödendi</option>
-                <option value="overdue">Gecikti</option>
-                <option value="cancelled">İptal</option>
+                <option value="bekliyor">Bekliyor</option>
+                <option value="odendi">Ödendi</option>
+                <option value="gecikli">Gecikti</option>
+                <option value="iptal">İptal</option>
               </select>
             </div>
           </div>
@@ -212,24 +212,24 @@ export default function PaymentList() {
                   paginatedPayments.map((payment) => (
                     <tr key={payment.id} className="hover:bg-amber-50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {payment.customers?.first_name} {payment.customers?.last_name}
+                        {payment.customers?.ad} {payment.customers?.soyad}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {payment.contracts?.contract_number}
+                        {payment.contracts?.sozlesme_no}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                          {getPaymentTypeLabel(payment.payment_type)}
+                          {getPaymentTypeLabel(payment.tur)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-gray-900 text-right">
-                        {formatCurrency(payment.amount)}
+                        {formatCurrency(payment.tutar)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 text-right">
-                        {formatCurrency(payment.paid_amount || 0)}
+                        {formatCurrency(payment.odenen_tutar || 0)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatDate(payment.due_date)}
+                        {formatDate(payment.vade)}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(payment.status)}`}>

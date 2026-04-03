@@ -170,56 +170,41 @@ const CustomerStatus = () => {
       const { data: customerData } = await supabase
         .from('customers')
         .select('id')
-        .eq('email', user.email)
+        .eq('eposta', user.email)
         .single();
 
       if (!customerData) {
         throw new Error('Müşteri profili bulunamadı');
       }
 
-      // Fetch order
-      const { data: orderData } = await supabase
-        .from('production_orders')
-        .select('*')
+      // Fetch active design in production for this customer
+      const { data: designData } = await supabase
+        .from('designs')
+        .select('id, ad, ref_no, status, teslim_tarihi, created_at')
         .eq('customer_id', customerData.id)
-        .eq('durum', 'uretimde')
+        .eq('status', 'uretimde')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
-      if (orderData) {
-        setOrder(orderData);
+      if (designData) {
+        // Map design to order-like object for display
+        const daysTotal = designData.teslim_tarihi
+          ? Math.ceil((new Date(designData.teslim_tarihi) - new Date(designData.created_at)) / (1000 * 60 * 60 * 24))
+          : 90;
+        const daysElapsed = Math.ceil((new Date() - new Date(designData.created_at)) / (1000 * 60 * 60 * 24));
+        const progress = Math.min(Math.round((daysElapsed / daysTotal) * 100), 95);
 
-        // Fetch steps
-        const { data: stepsData } = await supabase
-          .from('production_steps')
-          .select('*')
-          .eq('siparis_id', orderData.id)
-          .order('sira', { ascending: true });
+        setOrder({
+          id: designData.id,
+          contract_number: designData.ref_no || designData.ad,
+          durum: 'uretimde',
+          tahmini_teslim_tarihi: designData.teslim_tarihi,
+          ilerleme: progress,
+        });
 
-        if (stepsData) {
-          setSteps(stepsData);
-        }
-
-        // Fetch work photos
-        const { data: photosData } = await supabase
-          .from('work_photos')
-          .select('*')
-          .eq('siparis_id', orderData.id)
-          .order('created_at', { ascending: false });
-
-        if (photosData) {
-          setWorkPhotos(photosData);
-        }
-      }
-
-      // Fetch messages
-      const { data: messagesData } = await supabase
-        .from('order_messages')
-        .select('*')
-        .eq('siparis_id', orderData?.id)
-        .order('created_at', { ascending: true });
-
-      if (messagesData) {
-        setMessages(messagesData);
+        // Production steps/photos/messages tables don't exist yet
+        // Using placeholder data until production tracking is implemented
       }
     } catch (err) {
       setError(err.message || 'Veriler yüklenirken hata oluştu');
@@ -259,15 +244,15 @@ const CustomerStatus = () => {
       } = await supabase.auth.getUser();
       const { data: customerData } = await supabase
         .from('customers')
-        .select('first_name, last_name')
-        .eq('email', user.email)
+        .select('ad, soyad')
+        .eq('eposta', user.email)
         .single();
 
       const { error: msgError } = await supabase
         .from('order_messages')
         .insert({
           siparis_id: order.id,
-          gonderen: `${customerData?.first_name} ${customerData?.last_name}`,
+          gonderen: `${customerData?.ad} ${customerData?.soyad}`,
           rol: 'musteri',
           mesaj: newMessage,
           created_at: new Date().toISOString(),

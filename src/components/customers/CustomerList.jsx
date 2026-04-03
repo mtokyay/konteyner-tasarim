@@ -59,28 +59,28 @@ const CustomerList = () => {
         const placeholderData = [
           {
             id: 1,
-            first_name: 'Ahmet',
-            last_name: 'Yılmaz',
-            phone: '05551234567',
-            source: 'referans',
+            ad: 'Ahmet',
+            soyad: 'Yılmaz',
+            telefon: '05551234567',
+            nereden_geldi: 'referans',
             tasarim_sayisi: 2,
             durum: 'yeni',
           },
           {
             id: 2,
-            first_name: 'Fatma',
-            last_name: 'Kaya',
-            phone: '05559876543',
-            source: 'instagram',
+            ad: 'Fatma',
+            soyad: 'Kaya',
+            telefon: '05559876543',
+            nereden_geldi: 'instagram',
             tasarim_sayisi: 1,
             durum: 'teklif_verildi',
           },
           {
             id: 3,
-            first_name: 'İbrahim',
-            last_name: 'Demir',
-            phone: '05553334444',
-            source: 'web_sitesi',
+            ad: 'İbrahim',
+            soyad: 'Demir',
+            telefon: '05553334444',
+            nereden_geldi: 'web_sitesi',
             tasarim_sayisi: 3,
             durum: 'sozlesme',
           },
@@ -96,13 +96,13 @@ const CustomerList = () => {
         .select(
           `
           id,
-          first_name,
-          last_name,
-          phone,
-          email,
-          source,
-          address,
-          notes,
+          ad,
+          soyad,
+          telefon,
+          eposta,
+          nereden_geldi,
+          adres,
+          notlar,
           created_at,
           designs(count)
         `
@@ -117,13 +117,13 @@ const CustomerList = () => {
       const formattedCustomers = customersData.map((customer) => {
         return {
           id: customer.id,
-          first_name: customer.first_name,
-          last_name: customer.last_name,
-          phone: customer.phone,
-          email: customer.email,
-          source: customer.source,
-          address: customer.address,
-          notes: customer.notes,
+          ad: customer.ad,
+          soyad: customer.soyad,
+          telefon: customer.telefon,
+          eposta: customer.eposta,
+          nereden_geldi: customer.nereden_geldi,
+          adres: customer.adres,
+          notlar: customer.notlar,
           created_at: customer.created_at,
           tasarim_sayisi: customer.designs?.[0]?.count || 0,
           durum: 'yeni',
@@ -149,9 +149,9 @@ const CustomerList = () => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (customer) =>
-          (customer.first_name || '').toLowerCase().includes(term) ||
-          (customer.last_name || '').toLowerCase().includes(term) ||
-          (customer.phone || '').includes(term)
+          (customer.ad || '').toLowerCase().includes(term) ||
+          (customer.soyad || '').toLowerCase().includes(term) ||
+          (customer.telefon || '').includes(term)
       );
     }
 
@@ -310,19 +310,19 @@ const CustomerList = () => {
                       >
                         <td className="px-6 py-4">
                           <div className="font-semibold text-gray-900">
-                            {customer.first_name} {customer.last_name}
+                            {customer.ad} {customer.soyad}
                           </div>
-                          {customer.email && (
+                          {customer.eposta && (
                             <div className="text-sm text-gray-600">
-                              {customer.email}
+                              {customer.eposta}
                             </div>
                           )}
                         </td>
                         <td className="px-6 py-4 text-gray-700">
-                          {customer.phone}
+                          {customer.telefon}
                         </td>
                         <td className="px-6 py-4 text-gray-700">
-                          {getSourceLabel(customer.source)}
+                          {getSourceLabel(customer.nereden_geldi)}
                         </td>
                         <td className="px-6 py-4 text-center">
                           <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold text-sm">

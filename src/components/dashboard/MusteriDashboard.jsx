@@ -34,10 +34,10 @@ export default function MusteriDashboard() {
 
       const customerId = customers[0].id;
 
-      // Fetch customer orders
+      // Fetch customer designs (orders)
       const { data: orders } = await supabase
-        .from('production_orders')
-        .select('id, durum, created_at')
+        .from('designs')
+        .select('id, ad, status, created_at')
         .eq('customer_id', customerId)
         .order('created_at', { ascending: false });
 
@@ -45,7 +45,7 @@ export default function MusteriDashboard() {
       const { data: payments } = await supabase
         .from('payments')
         .select('tutar, durum')
-        .eq('customer_id', customerId);
+        .eq('musteri_id', customerId);
 
       // Calculate stats
       const totalSpent = payments
@@ -56,7 +56,7 @@ export default function MusteriDashboard() {
         ?.filter((p) => p.durum === 'bekliyor')
         .length || 0;
 
-      const completedOrders = orders?.filter((o) => o.durum === 'completed').length || 0;
+      const completedOrders = orders?.filter((o) => o.status === 'tamamlandi' || o.status === 'teslim_edildi').length || 0;
 
       setCustomerData({
         orders: orders || [],
@@ -90,13 +90,19 @@ export default function MusteriDashboard() {
 
   const getOrderStatusColor = (status) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
+      case 'taslak':
+        return 'bg-gray-100 text-gray-800';
+      case 'teklif':
         return 'bg-blue-100 text-blue-800';
-      case 'completed':
+      case 'onaylandi':
+        return 'bg-amber-100 text-amber-800';
+      case 'uretimde':
+        return 'bg-orange-100 text-orange-800';
+      case 'tamamlandi':
         return 'bg-green-100 text-green-800';
-      case 'cancelled':
+      case 'teslim_edildi':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'iptal':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -105,23 +111,28 @@ export default function MusteriDashboard() {
 
   const getOrderStatusLabel = (status) => {
     const labels = {
-      pending: 'Beklemede',
-      processing: 'İşlemde',
-      completed: 'Tamamlandı',
-      cancelled: 'İptal Edildi',
+      taslak: 'Taslak',
+      teklif: 'Teklif',
+      onaylandi: 'Onaylandı',
+      uretimde: 'Üretimde',
+      tamamlandi: 'Tamamlandı',
+      teslim_edildi: 'Teslim Edildi',
+      iptal: 'İptal',
     };
     return labels[status] || status;
   };
 
   const getOrderStatusIcon = (status) => {
     switch (status) {
-      case 'pending':
+      case 'taslak':
+      case 'teklif':
         return <Clock className="w-4 h-4" />;
-      case 'processing':
+      case 'uretimde':
         return <Package className="w-4 h-4" />;
-      case 'completed':
+      case 'tamamlandi':
+      case 'teslim_edildi':
         return <CheckCircle className="w-4 h-4" />;
-      case 'cancelled':
+      case 'iptal':
         return <Clock className="w-4 h-4" />;
       default:
         return <Package className="w-4 h-4" />;
@@ -140,7 +151,7 @@ export default function MusteriDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Aktif Siparişler"
-          value={customerData.orders.filter((o) => o.durum !== 'completed').length}
+          value={customerData.orders.filter((o) => o.status !== 'tamamlandi' && o.status !== 'teslim_edildi').length}
           icon={ShoppingCart}
           color="#10b981"
           subtext={`Toplam ${customerData.orders.length} sipariş`}
@@ -197,11 +208,11 @@ export default function MusteriDashboard() {
                     <div className="flex items-center gap-2">
                       <span
                         className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${getOrderStatusColor(
-                          order.durum
+                          order.status
                         )}`}
                       >
-                        {getOrderStatusIcon(order.durum)}
-                        {getOrderStatusLabel(order.durum)}
+                        {getOrderStatusIcon(order.status)}
+                        {getOrderStatusLabel(order.status)}
                       </span>
                     </div>
                   </div>
@@ -210,9 +221,9 @@ export default function MusteriDashboard() {
                   <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${
-                        order.durum === 'completed'
+                        order.status === 'tamamlandi' || order.status === 'teslim_edildi'
                           ? 'bg-green-500 w-full'
-                          : order.durum === 'processing'
+                          : order.status === 'uretimde'
                           ? 'bg-blue-500 w-2/3'
                           : 'bg-yellow-500 w-1/3'
                       }`}

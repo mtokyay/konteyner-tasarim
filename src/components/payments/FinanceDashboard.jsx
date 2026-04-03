@@ -125,12 +125,12 @@ const FinanceDashboard = () => {
       // Fetch contracts
       const { data: contractsData } = await supabase
         .from('contracts')
-        .select('id, total_price');
+        .select('id, toplam_tutar');
 
       let totalContractValue = 0;
       if (contractsData) {
         totalContractValue = contractsData.reduce(
-          (sum, c) => sum + (c.total_price || 0),
+          (sum, c) => sum + (c.toplam_tutar || 0),
           0
         );
       }
@@ -141,18 +141,18 @@ const FinanceDashboard = () => {
         .select(
           `
           id,
-          customer_id,
-          contract_id,
-          amount,
-          paid_amount,
-          due_date,
-          status,
-          paid_date,
-          customers(first_name, last_name),
-          contracts(contract_number, total_price)
+          musteri_id,
+          sozlesme_id,
+          tutar,
+          odenen_tutar,
+          vade,
+          durum,
+          odeme_tarihi,
+          customers:musteri_id(ad, soyad),
+          contracts:sozlesme_id(sozlesme_no, toplam_tutar)
         `
         )
-        .order('due_date', { ascending: true });
+        .order('vade', { ascending: true });
 
       if (!paymentsData) {
         throw new Error('Ödeme verileri yüklenemedi');
@@ -160,7 +160,7 @@ const FinanceDashboard = () => {
 
       // Calculate totals
       const totalReceived = paymentsData.reduce(
-        (sum, p) => sum + (p.paid_amount || 0),
+        (sum, p) => sum + (p.odenen_tutar || 0),
         0
       );
       const remainingAmount = totalContractValue - totalReceived;
@@ -174,12 +174,12 @@ const FinanceDashboard = () => {
       const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
       const thisMonthPayments = paymentsData.filter((p) => {
-        const dueDate = new Date(p.due_date);
+        const dueDate = new Date(p.vade);
         return dueDate >= thisMonthStart && dueDate <= thisMonthEnd;
       });
 
       const expectedThisMonth = thisMonthPayments.reduce(
-        (sum, p) => sum + (p.amount - (p.paid_amount || 0)),
+        (sum, p) => sum + (p.tutar - (p.odenen_tutar || 0)),
         0
       );
 
@@ -206,11 +206,11 @@ const FinanceDashboard = () => {
       }
 
       paymentsData.forEach((p) => {
-        if (p.paid_date) {
-          const payDate = new Date(p.paid_date);
+        if (p.odeme_tarihi) {
+          const payDate = new Date(p.odeme_tarihi);
           const monthKey = `${payDate.getFullYear()}-${String(payDate.getMonth() + 1).padStart(2, '0')}`;
           if (monthlyMap.hasOwnProperty(monthKey)) {
-            monthlyMap[monthKey] += p.paid_amount || 0;
+            monthlyMap[monthKey] += p.odenen_tutar || 0;
           }
         }
       });
@@ -225,11 +225,11 @@ const FinanceDashboard = () => {
       // Customer payment status
       const customerPaymentMap = {};
       paymentsData.forEach((p) => {
-        const key = p.customer_id;
+        const key = p.musteri_id;
         if (!customerPaymentMap[key]) {
           customerPaymentMap[key] = {
-            id: p.customer_id,
-            musteri_adi: `${p.customers?.first_name} ${p.customers?.last_name}`,
+            id: p.musteri_id,
+            musteri_adi: `${p.customers?.ad} ${p.customers?.soyad}`,
             sozlesme_tutari: 0,
             odenen: 0,
             kalan: 0,
@@ -237,11 +237,11 @@ const FinanceDashboard = () => {
             durum: 'iyi',
           };
         }
-        customerPaymentMap[key].sozlesme_tutari += p.amount;
-        customerPaymentMap[key].odenen += p.paid_amount || 0;
+        customerPaymentMap[key].sozlesme_tutari += p.tutar;
+        customerPaymentMap[key].odenen += p.odenen_tutar || 0;
 
-        if (!customerPaymentMap[key].sonraki_vade || p.due_date < customerPaymentMap[key].sonraki_vade) {
-          customerPaymentMap[key].sonraki_vade = p.due_date;
+        if (!customerPaymentMap[key].sonraki_vade || p.vade < customerPaymentMap[key].sonraki_vade) {
+          customerPaymentMap[key].sonraki_vade = p.vade;
         }
       });
 
@@ -265,25 +265,25 @@ const FinanceDashboard = () => {
 
       // Upcoming payments (next 30 days)
       const upcoming = paymentsData.filter((p) => {
-        const dueDate = new Date(p.due_date);
+        const dueDate = new Date(p.vade);
         const now = new Date();
         const diffTime = dueDate - now;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays > 0 && diffDays <= 30 && p.status === 'pending';
+        return diffDays > 0 && diffDays <= 30 && p.durum === 'bekliyor';
       });
 
       setUpcomingPayments(
         upcoming.map((p) => {
-          const dueDate = new Date(p.due_date);
+          const dueDate = new Date(p.vade);
           const now = new Date();
           const daysLeft = Math.ceil(
             (dueDate - now) / (1000 * 60 * 60 * 24)
           );
           return {
             id: p.id,
-            musteri_adi: `${p.customers?.first_name} ${p.customers?.last_name}`,
-            tutar: p.amount - (p.paid_amount || 0),
-            vade: p.due_date,
+            musteri_adi: `${p.customers?.ad} ${p.customers?.soyad}`,
+            tutar: p.tutar - (p.odenen_tutar || 0),
+            vade: p.vade,
             gun_kaldi: daysLeft,
           };
         })
@@ -291,22 +291,22 @@ const FinanceDashboard = () => {
 
       // Overdue payments
       const overdue = paymentsData.filter((p) => {
-        const dueDate = new Date(p.due_date);
-        return dueDate < new Date() && p.status === 'pending';
+        const dueDate = new Date(p.vade);
+        return dueDate < new Date() && p.durum === 'bekliyor';
       });
 
       setOverduePayments(
         overdue.map((p) => {
-          const dueDate = new Date(p.due_date);
+          const dueDate = new Date(p.vade);
           const now = new Date();
           const daysOverdue = Math.ceil(
             (now - dueDate) / (1000 * 60 * 60 * 24)
           );
           return {
             id: p.id,
-            musteri_adi: `${p.customers?.first_name} ${p.customers?.last_name}`,
-            tutar: p.amount - (p.paid_amount || 0),
-            vade: p.due_date,
+            musteri_adi: `${p.customers?.ad} ${p.customers?.soyad}`,
+            tutar: p.tutar - (p.odenen_tutar || 0),
+            vade: p.vade,
             gun_gecikti: daysOverdue,
           };
         })
@@ -335,16 +335,16 @@ const FinanceDashboard = () => {
       // Get payment details
       const { data: payment } = await supabase
         .from('payments')
-        .select('customer_id, due_date, amount')
+        .select('musteri_id, vade, tutar')
         .eq('id', paymentId)
         .single();
 
       if (payment) {
         // Create notification
         await supabase.from('notifications').insert({
-          customer_id: payment.customer_id,
+          musteri_id: payment.musteri_id,
           baslik: 'Ödeme Hatırlatması',
-          mesaj: `${payment.amount} TL ödemenizin vade tarihi ${new Date(payment.due_date).toLocaleDateString('tr-TR')} olarak belirlenmiştir. Lütfen ödemenizi yapınız.`,
+          mesaj: `${payment.tutar} TL ödemenizin vade tarihi ${new Date(payment.vade).toLocaleDateString('tr-TR')} olarak belirlenmiştir. Lütfen ödemenizi yapınız.`,
           tur: 'odeme_hatirlatmasi',
           okundu: false,
           created_at: new Date().toISOString(),

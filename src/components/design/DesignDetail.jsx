@@ -47,21 +47,19 @@ const statusTransitions = {
 
 const placeholderDesign = {
   id: '1',
-  title: 'Modern Ev Tasarımı',
-  design_data: {
-    ref_no: 'TH-001',
-    description: 'Şehir tipi kompakt ev tasarımı',
-    width: 5.0,
-    height: 3.5,
-    length: 10.0,
-    area: 50.0,
-    features: ['kat', 'isitma', 'elektrik'],
-  },
-  total_price: 45000,
-  discount: 3000,
-  final_price: 42000,
-  delivery_date: '2026-05-15',
-  notes: 'Müşteri özel istek ile tasarlandı',
+  ad: 'Modern Ev Tasarımı',
+  ref_no: 'TH-001',
+  aciklama: 'Şehir tipi kompakt ev tasarımı',
+  genislik: 5.0,
+  yukseklik: 3.5,
+  uzunluk: 10.0,
+  alan: 50.0,
+  ozellikler: ['kat', 'isitma', 'elektrik'],
+  toplam_fiyat: 45000,
+  indirim: 3000,
+  net_fiyat: 42000,
+  teslim_tarihi: '2026-05-15',
+  notlar: 'Müşteri özel istek ile tasarlandı',
   status: 'onaylandi',
   customer_id: '1',
   created_at: '2026-04-01',
@@ -69,10 +67,10 @@ const placeholderDesign = {
 
 const placeholderCustomer = {
   id: '1',
-  first_name: 'Ahmet',
-  last_name: 'Yılmaz',
-  phone: '0532 123 45 67',
-  email: 'ahmet@example.com',
+  ad: 'Ahmet',
+  soyad: 'Yılmaz',
+  telefon: '0532 123 45 67',
+  eposta: 'ahmet@example.com',
 };
 
 export default function DesignDetail() {
@@ -89,10 +87,10 @@ export default function DesignDetail() {
   const [selectedStatus, setSelectedStatus] = useState(null);
 
   const [editData, setEditData] = useState({
-    total_price: '',
-    discount: '',
-    notes: '',
-    delivery_date: '',
+    toplam_fiyat: '',
+    indirim: '',
+    notlar: '',
+    teslim_tarihi: '',
   });
 
   useEffect(() => {
@@ -111,10 +109,10 @@ export default function DesignDetail() {
         setDesign(placeholderDesign);
         setCustomer(placeholderCustomer);
         setEditData({
-          total_price: placeholderDesign.total_price,
-          discount: placeholderDesign.discount,
-          notes: placeholderDesign.notes,
-          delivery_date: placeholderDesign.delivery_date,
+          toplam_fiyat: placeholderDesign.toplam_fiyat,
+          indirim: placeholderDesign.indirim,
+          notlar: placeholderDesign.notlar,
+          teslim_tarihi: placeholderDesign.teslim_tarihi,
         });
         setLoading(false);
         return;
@@ -130,7 +128,7 @@ export default function DesignDetail() {
 
       const { data: customerData, error: customerError } = await supabase
         .from('customers')
-        .select('id, first_name, last_name, phone, email')
+        .select('id, ad, soyad, telefon, eposta')
         .eq('id', designData.customer_id)
         .single();
 
@@ -139,10 +137,10 @@ export default function DesignDetail() {
       setDesign(designData);
       setCustomer(customerData || null);
       setEditData({
-        total_price: designData.total_price,
-        discount: designData.discount,
-        notes: designData.notes,
-        delivery_date: designData.delivery_date,
+        toplam_fiyat: designData.toplam_fiyat,
+        indirim: designData.indirim,
+        notlar: designData.notlar,
+        teslim_tarihi: designData.teslim_tarihi,
       });
     } catch (err) {
       console.error('Error fetching design:', err);
@@ -155,8 +153,8 @@ export default function DesignDetail() {
   };
 
   const calculateNetPrice = () => {
-    const toplam = parseFloat(editData.total_price) || 0;
-    const indirim = parseFloat(editData.discount) || 0;
+    const toplam = parseFloat(editData.toplam_fiyat) || 0;
+    const indirim = parseFloat(editData.indirim) || 0;
     return Math.max(0, toplam - indirim).toFixed(2);
   };
 
@@ -195,11 +193,11 @@ export default function DesignDetail() {
       const supabase = getSupabase();
 
       const updateData = {
-        total_price: parseFloat(editData.total_price) || 0,
-        discount: parseFloat(editData.discount) || 0,
-        final_price: netPrice,
-        notes: editData.notes,
-        delivery_date: editData.delivery_date || null,
+        toplam_fiyat: parseFloat(editData.toplam_fiyat) || 0,
+        indirim: parseFloat(editData.indirim) || 0,
+        net_fiyat: netPrice,
+        notlar: editData.notlar,
+        teslim_tarihi: editData.teslim_tarihi || null,
       };
 
       if (!supabase) {
@@ -287,10 +285,10 @@ export default function DesignDetail() {
                   onClick={() => {
                     setIsEditing(false);
                     setEditData({
-                      total_price: design.total_price,
-                      discount: design.discount,
-                      notes: design.notes,
-                      delivery_date: design.delivery_date,
+                      toplam_fiyat: design.toplam_fiyat,
+                      indirim: design.indirim,
+                      notlar: design.notlar,
+                      teslim_tarihi: design.teslim_tarihi,
                     });
                   }}
                   className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-all"
@@ -326,8 +324,8 @@ export default function DesignDetail() {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <div className="text-sm font-semibold text-gray-500 mb-1">Ref No</div>
-                  <div className="text-3xl font-bold text-amber-700 mb-4">{design.design_data?.ref_no || '-'}</div>
-                  <h1 className="text-4xl font-bold text-gray-900">{design.title}</h1>
+                  <div className="text-3xl font-bold text-amber-700 mb-4">{design.ref_no || '-'}</div>
+                  <h1 className="text-4xl font-bold text-gray-900">{design.ad}</h1>
                 </div>
                 <div className="text-right">
                   <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${statusColors[design.status]?.badge}`}>
@@ -395,7 +393,7 @@ export default function DesignDetail() {
                       {new Intl.NumberFormat('tr-TR', {
                         style: 'currency',
                         currency: 'TRY',
-                      }).format(design.total_price)}
+                      }).format(design.toplam_fiyat)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pb-3 border-b border-gray-200">
@@ -404,7 +402,7 @@ export default function DesignDetail() {
                       -{new Intl.NumberFormat('tr-TR', {
                         style: 'currency',
                         currency: 'TRY',
-                      }).format(design.discount)}
+                      }).format(design.indirim)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-3 bg-amber-50 px-4 py-3 rounded-lg border border-amber-200">
@@ -413,7 +411,7 @@ export default function DesignDetail() {
                       {new Intl.NumberFormat('tr-TR', {
                         style: 'currency',
                         currency: 'TRY',
-                      }).format(design.final_price)}
+                      }).format(design.net_fiyat)}
                     </span>
                   </div>
                 </div>
@@ -423,8 +421,8 @@ export default function DesignDetail() {
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Toplam Fiyat (₺)</label>
                     <input
                       type="number"
-                      value={editData.total_price}
-                      onChange={(e) => setEditData({ ...editData, total_price: e.target.value })}
+                      value={editData.toplam_fiyat}
+                      onChange={(e) => setEditData({ ...editData, toplam_fiyat: e.target.value })}
                       step="0.01"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
@@ -433,8 +431,8 @@ export default function DesignDetail() {
                     <label className="block text-sm font-semibold text-gray-900 mb-2">İndirim (₺)</label>
                     <input
                       type="number"
-                      value={editData.discount}
-                      onChange={(e) => setEditData({ ...editData, discount: e.target.value })}
+                      value={editData.indirim}
+                      onChange={(e) => setEditData({ ...editData, indirim: e.target.value })}
                       step="0.01"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
@@ -454,12 +452,12 @@ export default function DesignDetail() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Notlar</h2>
               {!isEditing ? (
                 <p className="text-gray-700 whitespace-pre-wrap">
-                  {design.notes || 'Nota eklenmemiş'}
+                  {design.notlar || 'Nota eklenmemiş'}
                 </p>
               ) : (
                 <textarea
-                  value={editData.notes}
-                  onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                  value={editData.notlar}
+                  onChange={(e) => setEditData({ ...editData, notlar: e.target.value })}
                   rows="4"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />
@@ -476,18 +474,18 @@ export default function DesignDetail() {
                 <div className="space-y-3">
                   <div>
                     <div className="text-sm text-gray-600">Ad Soyad</div>
-                    <div className="font-semibold text-gray-900">{customer.first_name} {customer.last_name}</div>
+                    <div className="font-semibold text-gray-900">{customer.ad} {customer.soyad}</div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Telefon</div>
-                    <a href={`tel:${customer.phone}`} className="font-semibold text-amber-600 hover:text-amber-800">
-                      {customer.phone}
+                    <a href={`tel:${customer.telefon}`} className="font-semibold text-amber-600 hover:text-amber-800">
+                      {customer.telefon}
                     </a>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">E-posta</div>
-                    <a href={`mailto:${customer.email}`} className="font-semibold text-amber-600 hover:text-amber-800 break-all">
-                      {customer.email}
+                    <a href={`mailto:${customer.eposta}`} className="font-semibold text-amber-600 hover:text-amber-800 break-all">
+                      {customer.eposta}
                     </a>
                   </div>
                 </div>
@@ -501,8 +499,8 @@ export default function DesignDetail() {
                 <div>
                   <div className="text-sm text-gray-600 mb-2">Teslim Tarihi</div>
                   <div className="text-xl font-bold text-gray-900">
-                    {design.delivery_date
-                      ? new Date(design.delivery_date).toLocaleDateString('tr-TR', {
+                    {design.teslim_tarihi
+                      ? new Date(design.teslim_tarihi).toLocaleDateString('tr-TR', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -515,8 +513,8 @@ export default function DesignDetail() {
                   <label className="block text-sm font-semibold text-gray-900 mb-2">Teslim Tarihi</label>
                   <input
                     type="date"
-                    value={editData.delivery_date}
-                    onChange={(e) => setEditData({ ...editData, delivery_date: e.target.value })}
+                    value={editData.teslim_tarihi}
+                    onChange={(e) => setEditData({ ...editData, teslim_tarihi: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   />
                 </div>

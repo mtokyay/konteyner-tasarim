@@ -14,10 +14,10 @@ export default function PaymentEntry() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const [formData, setFormData] = useState({
-    paid_amount: '',
-    paid_date: '',
-    payment_method: 'nakit',
-    notes: '',
+    odenen_tutar: '',
+    odeme_tarihi: '',
+    odeme_yontemi: 'nakit',
+    notlar: '',
     dekont_file: null,
   });
 
@@ -32,7 +32,7 @@ export default function PaymentEntry() {
 
       const { data, error: fetchError } = await supabase
         .from('payments')
-        .select('*, customers:customer_id(first_name, last_name, email), contracts:contract_id(contract_number)')
+        .select('*, customers:musteri_id(ad, soyad, eposta), contracts:sozlesme_id(sozlesme_no)')
         .eq('id', id)
         .single();
 
@@ -41,10 +41,10 @@ export default function PaymentEntry() {
       setPayment(data);
       setFormData(prev => ({
         ...prev,
-        paid_amount: data.paid_amount || '',
-        paid_date: data.paid_date || new Date().toISOString().split('T')[0],
-        payment_method: data.payment_method || 'nakit',
-        notes: data.notes || '',
+        odenen_tutar: data.odenen_tutar || '',
+        odeme_tarihi: data.odeme_tarihi || new Date().toISOString().split('T')[0],
+        odeme_yontemi: data.odeme_yontemi || 'nakit',
+        notlar: data.notlar || '',
       }));
 
       setError(null);
@@ -97,7 +97,7 @@ export default function PaymentEntry() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.paid_amount || !formData.paid_date || !formData.payment_method) {
+    if (!formData.odenen_tutar || !formData.odeme_tarihi || !formData.odeme_yontemi) {
       setError('Lütfen tüm zorunlu alanları doldurun');
       return;
     }
@@ -106,7 +106,7 @@ export default function PaymentEntry() {
       setSaving(true);
       const supabase = getSupabase();
 
-      let receiptUrl = payment.receipt_url;
+      let receiptUrl = payment.dekont_url;
       if (formData.dekont_file) {
         receiptUrl = await uploadReceipt(supabase, payment.id, formData.dekont_file);
       }
@@ -114,12 +114,12 @@ export default function PaymentEntry() {
       const { error: updateError } = await supabase
         .from('payments')
         .update({
-          paid_amount: parseFloat(formData.paid_amount),
-          paid_date: formData.paid_date,
-          payment_method: formData.payment_method,
-          status: 'odendi',
-          notes: formData.notes,
-          receipt_url: receiptUrl,
+          odenen_tutar: parseFloat(formData.odenen_tutar),
+          odeme_tarihi: formData.odeme_tarihi,
+          odeme_yontemi: formData.odeme_yontemi,
+          durum: 'odendi',
+          notlar: formData.notlar,
+          dekont_url: receiptUrl,
           recorded_by: (await supabase.auth.getUser()).data.user?.id,
         })
         .eq('id', payment.id);
@@ -203,7 +203,7 @@ export default function PaymentEntry() {
     );
   }
 
-  const remainingAmount = (payment.amount || 0) - (parseFloat(formData.paid_amount) || 0);
+  const remainingAmount = (payment.tutar || 0) - (parseFloat(formData.odenen_tutar) || 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 p-6">
@@ -241,7 +241,7 @@ export default function PaymentEntry() {
                     Müşteri
                   </p>
                   <p className="text-sm font-medium text-gray-900">
-                    {payment.customers?.first_name} {payment.customers?.last_name}
+                    {payment.customers?.ad} {payment.customers?.soyad}
                   </p>
                 </div>
 
@@ -251,7 +251,7 @@ export default function PaymentEntry() {
                     Sözleşme No
                   </p>
                   <p className="text-sm font-medium text-gray-900">
-                    {payment.contracts?.contract_number}
+                    {payment.contracts?.sozlesme_no}
                   </p>
                 </div>
 
@@ -261,7 +261,7 @@ export default function PaymentEntry() {
                     Ödeme Türü
                   </p>
                   <p className="text-sm font-medium text-gray-900">
-                    {getTurLabel(payment.payment_type)}
+                    {getTurLabel(payment.tur)}
                   </p>
                 </div>
 
@@ -272,7 +272,7 @@ export default function PaymentEntry() {
                       Toplam Tutar
                     </p>
                     <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(payment.amount)}
+                      {formatCurrency(payment.tutar)}
                     </p>
                   </div>
 
@@ -282,7 +282,7 @@ export default function PaymentEntry() {
                       Ödenen Tutar
                     </p>
                     <p className="text-lg font-bold text-green-600">
-                      {formatCurrency(parseFloat(formData.paid_amount) || 0)}
+                      {formatCurrency(parseFloat(formData.odenen_tutar) || 0)}
                     </p>
                   </div>
 
@@ -303,7 +303,7 @@ export default function PaymentEntry() {
                     Vade
                   </p>
                   <p className="text-sm font-medium text-gray-900">
-                    {formatDate(payment.due_date)}
+                    {formatDate(payment.vade)}
                   </p>
                 </div>
               </div>
@@ -318,16 +318,16 @@ export default function PaymentEntry() {
               <div className="space-y-6">
                 {/* Paid Amount Input */}
                 <div>
-                  <label htmlFor="paid_amount" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="odenen_tutar" className="block text-sm font-semibold text-gray-700 mb-2">
                     Ödenen Tutar *
                   </label>
                   <input
                     type="number"
-                    id="paid_amount"
-                    name="paid_amount"
+                    id="odenen_tutar"
+                    name="odenen_tutar"
                     step="0.01"
                     min="0"
-                    value={formData.paid_amount}
+                    value={formData.odenen_tutar}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                     placeholder="0.00"
@@ -338,14 +338,14 @@ export default function PaymentEntry() {
 
                 {/* Payment Date */}
                 <div>
-                  <label htmlFor="paid_date" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="odeme_tarihi" className="block text-sm font-semibold text-gray-700 mb-2">
                     Ödeme Tarihi *
                   </label>
                   <input
                     type="date"
-                    id="paid_date"
-                    name="paid_date"
-                    value={formData.paid_date}
+                    id="odeme_tarihi"
+                    name="odeme_tarihi"
+                    value={formData.odeme_tarihi}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                     required
@@ -354,13 +354,13 @@ export default function PaymentEntry() {
 
                 {/* Payment Method */}
                 <div>
-                  <label htmlFor="payment_method" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="odeme_yontemi" className="block text-sm font-semibold text-gray-700 mb-2">
                     Ödeme Yöntemi *
                   </label>
                   <select
-                    id="payment_method"
-                    name="payment_method"
-                    value={formData.payment_method}
+                    id="odeme_yontemi"
+                    name="odeme_yontemi"
+                    value={formData.odeme_yontemi}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                     required
@@ -373,13 +373,13 @@ export default function PaymentEntry() {
 
                 {/* Notes */}
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="notlar" className="block text-sm font-semibold text-gray-700 mb-2">
                     Notlar
                   </label>
                   <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
+                    id="notlar"
+                    name="notlar"
+                    value={formData.notlar}
                     onChange={handleInputChange}
                     rows="4"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
@@ -413,7 +413,7 @@ export default function PaymentEntry() {
                       </div>
                     </label>
                   </div>
-                  {payment.receipt_url && !formData.dekont_file && (
+                  {payment.dekont_url && !formData.dekont_file && (
                     <p className="mt-2 text-xs text-green-600 font-medium">
                       ✓ Dekont zaten yüklü
                     </p>
