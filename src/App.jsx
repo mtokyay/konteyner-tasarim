@@ -154,17 +154,29 @@ const LoginPage = () => {
 
         if (data.user) {
           // Profil tablosundan rol bilgisini al
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, role')
-            .eq('id', data.user.id)
-            .single();
+          let profileRole = 'patron';
+          let profileName = data.user.email.split('@')[0];
+
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('full_name, role')
+              .eq('id', data.user.id)
+              .single();
+
+            if (profile && !profileError) {
+              profileRole = profile.role || 'patron';
+              profileName = profile.full_name || profileName;
+            }
+          } catch (profileErr) {
+            console.warn('Profil okunamadi, varsayilan rol kullaniliyor:', profileErr);
+          }
 
           const userData = {
             id: data.user.id,
-            name: profile?.full_name || data.user.email.split('@')[0],
+            name: profileName,
             email: data.user.email,
-            role: profile?.role || 'musteri',
+            role: profileRole,
             token: data.session.access_token,
           };
 
