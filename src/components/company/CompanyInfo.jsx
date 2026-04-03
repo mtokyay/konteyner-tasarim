@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Save, Loader2, AlertCircle, Check, Plus, Trash2, Upload } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
+import { useAuth } from '../../App';
 
 const DEFAULT_CONTRACT_TERMS = [
   'Sözleşme imzalandıktan sonra 7 iş günü içinde peşinat ödenecektir.',
@@ -21,6 +22,8 @@ const DEFAULT_QC_ITEMS = [
 ];
 
 const CompanyInfo = () => {
+  const { user } = useAuth();
+  const [existingId, setExistingId] = useState(null);
   const [companyData, setCompanyData] = useState({
     name: '',
     address: '',
@@ -67,6 +70,7 @@ const CompanyInfo = () => {
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
+        setExistingId(data.id);
         setCompanyData(data);
         if (data.logo_url) setLogoPreview(data.logo_url);
         setContractTerms(data.contract_terms || DEFAULT_CONTRACT_TERMS);
@@ -126,7 +130,13 @@ const CompanyInfo = () => {
       }
 
       const saveData = {
-        ...companyData,
+        name: companyData.name || '',
+        address: companyData.address || '',
+        phone: companyData.phone || '',
+        email: companyData.email || '',
+        tax_office: companyData.tax_office || '',
+        tax_number: companyData.tax_number || '',
+        iban: companyData.iban || '',
         logo_url: logoUrl,
         contract_terms: contractTerms,
         qc_items: qcItems,
@@ -137,11 +147,26 @@ const CompanyInfo = () => {
         proforma_footer_note: bankInfo.footer_note,
       };
 
-      const { error } = await supabase
-        .from('company_info')
-        .upsert(saveData, { onConflict: 'id' });
+      let result;
+      if (existingId) {
+        // Update existing record
+        result = await supabase
+          .from('company_info')
+          .update(saveData)
+          .eq('id', existingId);
+      } else {
+        // Insert new record with owner_id
+        saveData.owner_id = user.id;
+        result = await supabase
+          .from('company_info')
+          .insert(saveData)
+          .select();
+        if (result.data && result.data[0]) {
+          setExistingId(result.data[0].id);
+        }
+      }
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       setMessage({ type: 'success', text: 'Veriler başarıyla kaydedildi' });
       setTimeout(() => setMessage(null), 3000);

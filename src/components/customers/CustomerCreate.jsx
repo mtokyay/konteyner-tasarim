@@ -157,7 +157,7 @@ const CustomerCreate = () => {
             <div className="space-y-3">
               <button
                 onClick={() =>
-                  navigate('/designs/create', {
+                  navigate('/designs/new', {
                     state: { customerId },
                   })
                 }

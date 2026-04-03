@@ -153,7 +153,7 @@ export default function DesignList() {
             <p className="text-gray-600">Tüm tasarımlarınızı yönetin ve izleyin</p>
           </div>
           <Link
-            to="/designs/create"
+            to="/designs/new"
             className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg"
           >
             <Plus size={20} />
@@ -214,7 +214,7 @@ export default function DesignList() {
             <div className="p-12 text-center text-gray-500">
               <p className="text-lg mb-4">Tasarım bulunamadı</p>
               <Link
-                to="/designs/create"
+                to="/designs/new"
                 className="inline-block px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
               >
                 İlk Tasarımı Oluştur

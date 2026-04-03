@@ -425,7 +425,7 @@ const CustomerDetail = () => {
                   </h3>
                   <button
                     onClick={() =>
-                      navigate('/designs/create', {
+                      navigate('/designs/new', {
                         state: { customerId },
                       })
                     }

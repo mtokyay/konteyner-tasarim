@@ -92,7 +92,7 @@ const ContractList = () => {
           <p className="text-gray-600 mt-1">Tüm sözleşmeleri yönetin ve takip edin</p>
         </div>
         <button
-          onClick={() => navigate('/contracts/create')}
+          onClick={() => navigate('/designs')}
           className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition"
         >
           <Plus size={20} />

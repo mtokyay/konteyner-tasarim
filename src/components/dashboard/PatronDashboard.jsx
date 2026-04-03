@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, PenTool, DollarSign, Factory, Plus, FileText, CreditCard } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 
 export default function PatronDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalCustomers: 0,
     activeDesigns: 0,
@@ -194,19 +196,19 @@ export default function PatronDashboard() {
         <div className="bg-white rounded-lg shadow-md p-6 h-fit">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Hızlı İşlemler</h2>
           <div className="space-y-3">
-            <button className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+            <button onClick={() => navigate('/customers/new')} className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition">
               <Plus className="w-5 h-5" />
               Yeni Müşteri
             </button>
-            <button className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+            <button onClick={() => navigate('/designs/new')} className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition">
               <PenTool className="w-5 h-5" />
               Yeni Tasarım
             </button>
-            <button className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+            <button onClick={() => navigate('/payments')} className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition">
               <CreditCard className="w-5 h-5" />
               Ödemeler
             </button>
-            <button className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+            <button onClick={() => navigate('/production')} className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition">
               <Factory className="w-5 h-5" />
               Üretim Siparişleri
             </button>

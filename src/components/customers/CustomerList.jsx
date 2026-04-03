@@ -115,8 +115,8 @@ const CustomerList = () => {
 
       // Fetch orders to determine status
       const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('customer_id, status');
+        .from('production_orders')
+        .select('musteri_id, durum');
 
       if (ordersError) {
         console.warn('Could not fetch orders:', ordersError);
@@ -125,17 +125,17 @@ const CustomerList = () => {
       // Map customers with design count and status
       const formattedCustomers = customersData.map((customer) => {
         const customerOrders = ordersData
-          ? ordersData.filter((order) => order.customer_id === customer.id)
+          ? ordersData.filter((order) => order.musteri_id === customer.id)
           : [];
 
         // Determine status based on orders
         let durum = 'yeni';
         if (customerOrders.length > 0) {
-          const statuses = customerOrders.map((o) => o.status);
-          if (statuses.includes('delivered')) durum = 'teslim_edildi';
-          else if (statuses.includes('production')) durum = 'uretimde';
-          else if (statuses.includes('contract')) durum = 'sozlesme';
-          else if (statuses.includes('offer')) durum = 'teklif_verildi';
+          const statuses = customerOrders.map((o) => o.durum);
+          if (statuses.includes('sevk_edildi')) durum = 'teslim_edildi';
+          else if (statuses.includes('devam_ediyor')) durum = 'uretimde';
+          else if (statuses.includes('basladi')) durum = 'sozlesme';
+          else if (statuses.includes('bekliyor')) durum = 'teklif_verildi';
         }
 
         return {
@@ -239,7 +239,7 @@ const CustomerList = () => {
             </p>
           </div>
           <button
-            onClick={() => navigate('/customers/create')}
+            onClick={() => navigate('/customers/new')}
             className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -366,7 +366,7 @@ const CustomerList = () => {
                             </Link>
                             <button
                               onClick={() =>
-                                navigate(`/customers/${customer.id}/edit`)
+                                navigate(`/customers/${customer.id}`)
                               }
                               className="p-2 hover:bg-green-100 text-green-600 rounded-lg transition-colors"
                               title="Düzenle"
