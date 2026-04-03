@@ -21,7 +21,6 @@ const CustomerContract = () => {
   const [contract, setContract] = useState(null);
   const [design, setDesign] = useState(null);
   const [paymentPlan, setPaymentPlan] = useState([]);
-  const [contractPages, setContractPages] = useState([]);
 
   useEffect(() => {
     loadContractData();
@@ -39,11 +38,16 @@ const CustomerContract = () => {
         setContract({
           id: 1,
           sozlesme_no: 'SK-001-2024',
-          musteri_id: 1,
-          tasarim_id: 1,
+          customer_id: 1,
+          design_id: 1,
           tarih: '2024-01-15',
           toplam_tutar: 200000,
-          durum: 'aktif',
+          status: 'aktif',
+          signed_pdf_urls: [
+            'https://via.placeholder.com/500x700?text=Sayfa+1',
+            'https://via.placeholder.com/500x700?text=Sayfa+2',
+            'https://via.placeholder.com/500x700?text=Sayfa+3',
+          ],
         });
 
         setDesign({
@@ -62,24 +66,6 @@ const CustomerContract = () => {
           { tur: 'taksit', tutar: 30000, tarih: '2024-03-15', odendi: false },
           { tur: 'taksit', tutar: 30000, tarih: '2024-04-15', odendi: false },
           { tur: 'kalan', tutar: 60000, tarih: '2024-05-15', odendi: false },
-        ]);
-
-        setContractPages([
-          {
-            id: 1,
-            title: 'Sayfa 1 - Ön Kapak',
-            url: 'https://via.placeholder.com/500x700?text=Sayfa+1',
-          },
-          {
-            id: 2,
-            title: 'Sayfa 2 - Sözleşme Maddeleri',
-            url: 'https://via.placeholder.com/500x700?text=Sayfa+2',
-          },
-          {
-            id: 3,
-            title: 'Sayfa 3 - Müşteri İmzası',
-            url: 'https://via.placeholder.com/500x700?text=Sayfa+3',
-          },
         ]);
 
         return;
@@ -113,8 +99,9 @@ const CustomerContract = () => {
           sozlesme_no,
           tarih,
           toplam_tutar,
-          durum,
-          tasarim_id,
+          status,
+          signed_pdf_urls,
+          design_id,
           designs(
             id,
             ad,
@@ -126,8 +113,8 @@ const CustomerContract = () => {
           )
         `
         )
-        .eq('musteri_id', customerData.id)
-        .eq('durum', 'aktif')
+        .eq('customer_id', customerData.id)
+        .eq('status', 'aktif')
         .single();
 
       if (contractData) {
@@ -152,17 +139,6 @@ const CustomerContract = () => {
           odendi: p.durum === 'odendi',
         }));
         setPaymentPlan(formattedPayments);
-      }
-
-      // Fetch contract pages
-      const { data: pagesData } = await supabase
-        .from('contract_pages')
-        .select('*')
-        .eq('sozlesme_id', contractData?.id)
-        .order('sira', { ascending: true });
-
-      if (pagesData) {
-        setContractPages(pagesData);
       }
     } catch (err) {
       setError(err.message || 'Sözleşme yüklenirken hata oluştu');
@@ -420,25 +396,25 @@ const CustomerContract = () => {
             </div>
 
             {/* Contract Pages Gallery */}
-            {contractPages.length > 0 && (
+            {contract.signed_pdf_urls && contract.signed_pdf_urls.length > 0 && (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
                   İmzalı Sözleşme Sayfaları
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {contractPages.map((page) => (
+                  {contract.signed_pdf_urls.map((url, idx) => (
                     <div
-                      key={page.id}
+                      key={idx}
                       className="border border-gray-200 rounded-lg overflow-hidden group hover:shadow-lg transition-shadow"
                     >
                       <div className="relative bg-gray-100 aspect-[1/1.4]">
                         <img
-                          src={page.dosya_url || page.url}
-                          alt={page.title}
+                          src={url}
+                          alt={`Sözleşme Sayfası ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />
                         <button
-                          onClick={() => setSelectedImage(page)}
+                          onClick={() => setSelectedImage({ url, title: `Sözleşme Sayfası ${idx + 1}` })}
                           className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all"
                         >
                           <Maximize2 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -446,7 +422,7 @@ const CustomerContract = () => {
                       </div>
                       <div className="p-3">
                         <p className="text-sm font-semibold text-gray-900">
-                          {page.title}
+                          Sözleşme Sayfası {idx + 1}
                         </p>
                       </div>
                     </div>
@@ -472,7 +448,7 @@ const CustomerContract = () => {
               <X className="w-6 h-6 text-gray-700" />
             </button>
             <img
-              src={selectedImage.dosya_url || selectedImage.url}
+              src={selectedImage.url}
               alt={selectedImage.title}
               className="w-full h-full object-contain"
             />

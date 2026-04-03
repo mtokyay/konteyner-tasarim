@@ -59,7 +59,7 @@ export default function ContractCreate() {
       if (designError) throw designError;
       setDesign(designData);
       setCustomer(designData.customers);
-      setTotalPrice(designData.price || 0);
+      setTotalPrice(designData.toplam_fiyat || 0);
 
       // Load company info
       const { data: companyData } = await supabase
@@ -172,23 +172,14 @@ export default function ContractCreate() {
       const supabase = getSupabase();
 
       const contractData = {
-        contract_no: contractNo,
+        sozlesme_no: contractNo,
         design_id: designId,
         customer_id: customer?.id,
-        contract_date: contractDate,
+        tarih: contractDate,
         status: isDraft ? 'hazirlanda' : 'imzalandi',
-        total_price: totalPrice,
-        discount: discountType === 'amount' ? discount : (totalPrice * discount) / 100,
-        net_price: netPrice,
-        vat_rate: vatRate,
-        vat_amount: vatAmount,
-        total_with_vat: totalWithVat,
-        down_payment: downPayment,
-        down_payment_date: downPaymentDate,
-        delivery_date: deliveryDate,
-        special_notes: specialNotes,
-        contract_terms: contractTerms,
-        year: new Date().getFullYear()
+        toplam_tutar: totalWithVat,
+        terms: JSON.stringify(contractTerms),
+        signed_pdf_urls: null
       };
 
       const { data: savedContract, error: contractError } = await supabase
@@ -202,20 +193,22 @@ export default function ContractCreate() {
       // Save payment records
       const paymentRecords = [
         {
-          contract_id: savedContract.id,
-          payment_no: 0,
-          amount: downPayment,
-          due_date: downPaymentDate,
-          status: 'bekliyor',
-          type: 'pesinat'
+          sozlesme_id: savedContract.id,
+          musteri_id: customer?.id,
+          tur: 'pesinat',
+          tutar: downPayment,
+          odenen_tutar: 0,
+          vade: downPaymentDate,
+          durum: 'bekliyor'
         },
         ...installments.map((inst, idx) => ({
-          contract_id: savedContract.id,
-          payment_no: idx + 1,
-          amount: inst.amount,
-          due_date: inst.dueDate,
-          status: 'bekliyor',
-          type: 'taksit'
+          sozlesme_id: savedContract.id,
+          musteri_id: customer?.id,
+          tur: 'taksit',
+          tutar: inst.amount,
+          odenen_tutar: 0,
+          vade: inst.dueDate,
+          durum: 'bekliyor'
         }))
       ];
 
@@ -304,10 +297,10 @@ export default function ContractCreate() {
           <div>
             <h4 className="font-medium text-gray-700 mb-3">Müşteri Bilgileri</h4>
             <div className="space-y-2 text-sm">
-              <p><span className="font-medium">Ad:</span> {customer.name}</p>
-              <p><span className="font-medium">E-posta:</span> {customer.email}</p>
-              <p><span className="font-medium">Telefon:</span> {customer.phone}</p>
-              <p><span className="font-medium">Adres:</span> {customer.address}</p>
+              <p><span className="font-medium">Ad:</span> {customer.ad} {customer.soyad}</p>
+              <p><span className="font-medium">E-posta:</span> {customer.eposta}</p>
+              <p><span className="font-medium">Telefon:</span> {customer.telefon}</p>
+              <p><span className="font-medium">Adres:</span> {customer.adres}</p>
             </div>
           </div>
 

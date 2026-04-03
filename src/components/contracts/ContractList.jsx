@@ -28,7 +28,7 @@ export default function ContractList() {
 
       const { data, error } = await supabase
         .from('contracts')
-        .select('*, customers(name, email)')
+        .select('*, customers(ad, eposta)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -51,8 +51,8 @@ export default function ContractList() {
 
   const filteredContracts = contracts.filter(contract => {
     const matchesSearch =
-      contract.contract_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.customers?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      contract.sozlesme_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.customers?.ad?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'all' || contract.status === statusFilter;
@@ -131,10 +131,10 @@ export default function ContractList() {
             <tbody className="divide-y divide-gray-200">
               {filteredContracts.map((contract) => (
                 <tr key={contract.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{contract.contract_no}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{contract.customers?.name}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{contract.sozlesme_no}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{contract.customers?.ad}</td>
                   <td className="px-6 py-4 text-sm font-medium text-amber-600">
-                    {contract.total_with_vat?.toLocaleString('tr-TR', {
+                    {contract.toplam_tutar?.toLocaleString('tr-TR', {
                       style: 'currency',
                       currency: 'TRY',
                       minimumFractionDigits: 2
@@ -146,7 +146,7 @@ export default function ContractList() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(contract.contract_date).toLocaleDateString('tr-TR')}
+                    {new Date(contract.tarih).toLocaleDateString('tr-TR')}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">

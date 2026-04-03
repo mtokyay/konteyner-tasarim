@@ -216,9 +216,9 @@ export async function verifyCustomerAccount(customerId) {
         id,
         customer_code,
         assigned_user_id,
-        first_name,
-        last_name,
-        email,
+        ad,
+        soyad,
+        eposta,
         profiles:assigned_user_id(role, full_name)
       `
       )

@@ -113,10 +113,10 @@ const CustomerList = () => {
         throw customersError;
       }
 
-      // Fetch orders to determine status
+      // Fetch production orders to determine status
       const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('customer_id, status');
+        .from('production_orders')
+        .select('musteri_id, durum');
 
       if (ordersError) {
         console.warn('Could not fetch orders:', ordersError);
@@ -125,17 +125,16 @@ const CustomerList = () => {
       // Map customers with design count and status
       const formattedCustomers = customersData.map((customer) => {
         const customerOrders = ordersData
-          ? ordersData.filter((order) => order.customer_id === customer.id)
+          ? ordersData.filter((order) => order.musteri_id === customer.id)
           : [];
 
         // Determine status based on orders
         let durum = 'yeni';
         if (customerOrders.length > 0) {
-          const statuses = customerOrders.map((o) => o.status);
-          if (statuses.includes('delivered')) durum = 'teslim_edildi';
-          else if (statuses.includes('production')) durum = 'uretimde';
-          else if (statuses.includes('contract')) durum = 'sozlesme';
-          else if (statuses.includes('offer')) durum = 'teklif_verildi';
+          const statuses = customerOrders.map((o) => o.durum);
+          if (statuses.includes('sevk_edildi')) durum = 'teslim_edildi';
+          else if (statuses.includes('devam_ediyor') || statuses.includes('basladi')) durum = 'uretimde';
+          else if (statuses.includes('bekliyor')) durum = 'sozlesme';
         }
 
         return {

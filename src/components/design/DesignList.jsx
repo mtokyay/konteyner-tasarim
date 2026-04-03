@@ -97,16 +97,16 @@ const DesignList = () => {
             customer_id,
             design_data,
             status,
-            price,
-            discount,
-            net_price,
-            delivery_date,
+            toplam_fiyat,
+            indirim,
+            net_fiyat,
+            teslim_tarihi,
             created_at,
             updated_at,
             customers (
               id,
-              first_name,
-              last_name
+              ad,
+              soyad
             )
           `
           )
@@ -121,13 +121,13 @@ const DesignList = () => {
           id: design.id,
           ref_no: design.ref_no,
           customer_name: design.customers
-            ? `${design.customers.first_name} ${design.customers.last_name}`
+            ? `${design.customers.ad} ${design.customers.soyad}`
             : 'Bilinmiyor',
           customer_id: design.customer_id,
           design_data: design.design_data,
           dimensions: extractDimensions(design.design_data),
           status: design.status,
-          price: design.net_price || design.price || 0,
+          price: design.net_fiyat || design.toplam_fiyat || 0,
           date: new Date(design.created_at).toLocaleDateString('tr-TR'),
         }));
 

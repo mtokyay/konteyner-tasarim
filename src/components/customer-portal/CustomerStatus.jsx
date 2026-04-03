@@ -267,9 +267,9 @@ const CustomerStatus = () => {
         .from('order_messages')
         .insert({
           siparis_id: order.id,
-          gonderen: `${customerData?.ad} ${customerData?.soyad}`,
-          rol: 'musteri',
-          mesaj: newMessage,
+          musteri_id: customerData?.id,
+          sender: `${customerData?.ad} ${customerData?.soyad}`,
+          message: newMessage,
           created_at: new Date().toISOString(),
         });
 
@@ -303,7 +303,7 @@ const CustomerStatus = () => {
 
   const daysUntilDelivery = order
     ? Math.ceil(
-        (new Date(order.tahmini_teslim_tarihi) - new Date()) /
+        (new Date(order.teslim_tarihi) - new Date()) /
           (1000 * 60 * 60 * 24)
       )
     : 0;
@@ -381,7 +381,7 @@ const CustomerStatus = () => {
                 <div className="text-right">
                   <p className="text-sm text-gray-600">Tahmini Teslim</p>
                   <p className="text-lg font-bold text-amber-600">
-                    {formatDate(order.tahmini_teslim_tarihi)}
+                    {formatDate(order.teslim_tarihi)}
                   </p>
                   {daysUntilDelivery > 0 && (
                     <p className="text-sm text-gray-600 mt-1">
@@ -417,10 +417,12 @@ const CustomerStatus = () => {
               </h2>
               <div className="space-y-4">
                 {steps.map((step, idx) => {
-                  const stepConfig = stepsConfig[step.ad];
-                  const statusInfo = getStepStatus(step.durum);
-                  const isCompleted = step.durum === 'tamamlandı';
-                  const isActive = step.durum === 'devam_ediyor';
+                  const stepConfig = stepsConfig[step.step_name];
+                  const isCompleted = step.completed_at !== null;
+                  const isActive = !isCompleted;
+                  const statusInfo = isCompleted
+                    ? { label: 'Tamamlandı', color: 'green', icon: '✓' }
+                    : { label: 'Devam Ediyor', color: 'blue', icon: '⟳' };
 
                   return (
                     <div key={step.id}>
@@ -464,14 +466,14 @@ const CustomerStatus = () => {
                               {statusInfo.label}
                             </span>
                           </div>
-                          {step.isci && (
+                          {step.completed_by && (
                             <p className="text-sm text-gray-600 mt-1">
-                              Sorumlu: <span className="font-semibold">{step.isci}</span>
+                              Sorumlu: <span className="font-semibold">{step.completed_by}</span>
                             </p>
                           )}
-                          {step.tamamlama_tarihi && (
+                          {step.completed_at && (
                             <p className="text-sm text-gray-600 mt-1">
-                              Tamamlama: {formatDate(step.tamamlama_tarihi)}
+                              Tamamlama: {formatDate(step.completed_at)}
                             </p>
                           )}
                         </div>
@@ -504,8 +506,8 @@ const CustomerStatus = () => {
                     >
                       <div className="relative bg-gray-100 aspect-[4/3]">
                         <img
-                          src={photo.resim_url || photo.dosya_url}
-                          alt={photo.baslik}
+                          src={photo.photo_url}
+                          alt={photo.aciklama}
                           className="w-full h-full object-cover"
                         />
                         <button
@@ -517,10 +519,10 @@ const CustomerStatus = () => {
                       </div>
                       <div className="p-3">
                         <p className="text-sm font-semibold text-gray-900">
-                          {photo.baslik}
+                          {photo.aciklama}
                         </p>
                         <p className="text-xs text-gray-600 mt-1">
-                          {formatDate(photo.tarih || photo.created_at)}
+                          {formatDate(photo.created_at)}
                         </p>
                       </div>
                     </div>
@@ -547,14 +549,12 @@ const CustomerStatus = () => {
                     <div key={message.id} className="flex gap-3">
                       <div
                         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white text-xs ${
-                          message.rol === 'musteri'
-                            ? 'bg-blue-500'
-                            : message.rol === 'işçi'
-                            ? 'bg-amber-500'
-                            : 'bg-gray-500'
+                          message.sender === 'Sistem'
+                            ? 'bg-gray-500'
+                            : 'bg-blue-500'
                         }`}
                       >
-                        {message.gonderen
+                        {message.sender
                           .split(' ')
                           .map((n) => n[0])
                           .join('')
@@ -563,13 +563,13 @@ const CustomerStatus = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-gray-900">
-                            {message.gonderen}
+                            {message.sender}
                           </p>
                           <p className="text-xs text-gray-600">
-                            {new Date(message.tarih || message.created_at).toLocaleString('tr-TR')}
+                            {new Date(message.created_at).toLocaleString('tr-TR')}
                           </p>
                         </div>
-                        <p className="text-gray-700 mt-1">{message.mesaj}</p>
+                        <p className="text-gray-700 mt-1">{message.message}</p>
                       </div>
                     </div>
                   ))
@@ -619,13 +619,13 @@ const CustomerStatus = () => {
               <X className="w-6 h-6 text-gray-700" />
             </button>
             <img
-              src={selectedImage.resim_url || selectedImage.dosya_url}
-              alt={selectedImage.baslik}
+              src={selectedImage.photo_url}
+              alt={selectedImage.aciklama}
               className="w-full h-full object-contain"
             />
             <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-50 text-white p-3 rounded-lg">
-              <p className="font-semibold">{selectedImage.baslik}</p>
-              <p className="text-sm">{formatDate(selectedImage.tarih || selectedImage.created_at)}</p>
+              <p className="font-semibold">{selectedImage.aciklama}</p>
+              <p className="text-sm">{formatDate(selectedImage.created_at)}</p>
             </div>
           </div>
         </div>

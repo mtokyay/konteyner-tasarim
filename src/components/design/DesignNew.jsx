@@ -19,48 +19,48 @@ const DesignNew = () => {
 
   // New customer form
   const [newCustomer, setNewCustomer] = useState({
-    first_name: '',
-    last_name: '',
-    phone: '',
-    source: '',
+    ad: '',
+    soyad: '',
+    telefon: '',
+    nereden_geldi: '',
   });
 
   // Placeholder customers
   const placeholderCustomers = [
     {
       id: 1,
-      first_name: 'Ahmet',
-      last_name: 'Yılmaz',
-      phone: '0312 555 0001',
-      source: 'Web',
+      ad: 'Ahmet',
+      soyad: 'Yılmaz',
+      telefon: '0312 555 0001',
+      nereden_geldi: 'Web',
     },
     {
       id: 2,
-      first_name: 'İbrahim',
-      last_name: 'Demir',
-      phone: '0312 555 0002',
-      source: 'Telefon',
+      ad: 'İbrahim',
+      soyad: 'Demir',
+      telefon: '0312 555 0002',
+      nereden_geldi: 'Telefon',
     },
     {
       id: 3,
-      first_name: 'Fatma',
-      last_name: 'Kaya',
-      phone: '0312 555 0003',
-      source: 'Referans',
+      ad: 'Fatma',
+      soyad: 'Kaya',
+      telefon: '0312 555 0003',
+      nereden_geldi: 'Referans',
     },
     {
       id: 4,
-      first_name: 'Murat',
-      last_name: 'Ağıl',
-      phone: '0312 555 0004',
-      source: 'Web',
+      ad: 'Murat',
+      soyad: 'Ağıl',
+      telefon: '0312 555 0004',
+      nereden_geldi: 'Web',
     },
     {
       id: 5,
-      first_name: 'Zeynep',
-      last_name: 'Çetinkaya',
-      phone: '0312 555 0005',
-      source: 'Telefon',
+      ad: 'Zeynep',
+      soyad: 'Çetinkaya',
+      telefon: '0312 555 0005',
+      nereden_geldi: 'Telefon',
     },
   ];
 
@@ -81,7 +81,7 @@ const DesignNew = () => {
         const { data, error: fetchError } = await supabase
           .from('customers')
           .select('*')
-          .order('first_name');
+          .order('ad');
 
         if (fetchError) {
           throw fetchError;
@@ -102,7 +102,7 @@ const DesignNew = () => {
 
   // Filter customers based on search
   const filteredCustomers = customers.filter((customer) =>
-    `${customer.first_name} ${customer.last_name}`
+    `${customer.ad} ${customer.soyad}`
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
   );
@@ -115,7 +115,7 @@ const DesignNew = () => {
   };
 
   const handleCreateNewCustomer = async () => {
-    if (!newCustomer.first_name || !newCustomer.last_name) {
+    if (!newCustomer.ad || !newCustomer.soyad) {
       setError('Adı ve soyadı zorunludur');
       return;
     }
@@ -136,10 +136,10 @@ const DesignNew = () => {
         setStep(2);
         setShowNewCustomerForm(false);
         setNewCustomer({
-          first_name: '',
-          last_name: '',
-          phone: '',
-          source: '',
+          ad: '',
+          soyad: '',
+          telefon: '',
+          nereden_geldi: '',
         });
         setLoading(false);
         return;
@@ -159,10 +159,10 @@ const DesignNew = () => {
       setStep(2);
       setShowNewCustomerForm(false);
       setNewCustomer({
-        first_name: '',
-        last_name: '',
-        phone: '',
-        source: '',
+        ad: '',
+        soyad: '',
+        telefon: '',
+        nereden_geldi: '',
       });
     } catch (err) {
       console.error('Error creating customer:', err);
@@ -255,14 +255,14 @@ const DesignNew = () => {
                         className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-amber-50 hover:border-amber-300 transition-colors"
                       >
                         <div className="font-medium text-gray-900">
-                          {customer.first_name} {customer.last_name}
+                          {customer.ad} {customer.soyad}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {customer.phone}
+                          {customer.telefon}
                         </div>
-                        {customer.source && (
+                        {customer.nereden_geldi && (
                           <div className="text-xs text-gray-500 mt-1">
-                            Kaynak: {customer.source}
+                            Kaynak: {customer.nereden_geldi}
                           </div>
                         )}
                       </button>
@@ -298,10 +298,10 @@ const DesignNew = () => {
                     onClick={() => {
                       setShowNewCustomerForm(false);
                       setNewCustomer({
-                        first_name: '',
-                        last_name: '',
-                        phone: '',
-                        source: '',
+                        ad: '',
+                        soyad: '',
+                        telefon: '',
+                        nereden_geldi: '',
                       });
                     }}
                     className="text-gray-400 hover:text-gray-600"
@@ -318,11 +318,11 @@ const DesignNew = () => {
                     </label>
                     <input
                       type="text"
-                      value={newCustomer.first_name}
+                      value={newCustomer.ad}
                       onChange={(e) =>
                         setNewCustomer({
                           ...newCustomer,
-                          first_name: e.target.value,
+                          ad: e.target.value,
                         })
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
@@ -336,11 +336,11 @@ const DesignNew = () => {
                     </label>
                     <input
                       type="text"
-                      value={newCustomer.last_name}
+                      value={newCustomer.soyad}
                       onChange={(e) =>
                         setNewCustomer({
                           ...newCustomer,
-                          last_name: e.target.value,
+                          soyad: e.target.value,
                         })
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
@@ -354,11 +354,11 @@ const DesignNew = () => {
                     </label>
                     <input
                       type="tel"
-                      value={newCustomer.phone}
+                      value={newCustomer.telefon}
                       onChange={(e) =>
                         setNewCustomer({
                           ...newCustomer,
-                          phone: e.target.value,
+                          telefon: e.target.value,
                         })
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
@@ -371,11 +371,11 @@ const DesignNew = () => {
                       Kaynak
                     </label>
                     <select
-                      value={newCustomer.source}
+                      value={newCustomer.nereden_geldi}
                       onChange={(e) =>
                         setNewCustomer({
                           ...newCustomer,
-                          source: e.target.value,
+                          nereden_geldi: e.target.value,
                         })
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
@@ -402,10 +402,10 @@ const DesignNew = () => {
                       onClick={() => {
                         setShowNewCustomerForm(false);
                         setNewCustomer({
-                          first_name: '',
-                          last_name: '',
-                          phone: '',
-                          source: '',
+                          ad: '',
+                          soyad: '',
+                          telefon: '',
+                          nereden_geldi: '',
                         });
                       }}
                       className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium"
@@ -423,7 +423,7 @@ const DesignNew = () => {
         {step === 2 && selectedCustomer && (
           <DesignEditor
             customerId={selectedCustomer.id}
-            customerName={`${selectedCustomer.first_name} ${selectedCustomer.last_name}`}
+            customerName={`${selectedCustomer.ad} ${selectedCustomer.soyad}`}
             onSave={handleDesignSaved}
             onCancel={handleBackToCustomers}
           />

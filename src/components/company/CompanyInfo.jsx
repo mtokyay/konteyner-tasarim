@@ -117,12 +117,12 @@ export default function CompanyInfo() {
       if (logoFile) {
         const fileName = `company-logo-${Date.now()}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('company-files')
+          .from('company')
           .upload(fileName, logoFile);
 
         if (uploadError) throw uploadError;
         const { data: publicUrl } = supabase.storage
-          .from('company-files')
+          .from('company')
           .getPublicUrl(fileName);
         logoUrl = publicUrl.publicUrl;
       }

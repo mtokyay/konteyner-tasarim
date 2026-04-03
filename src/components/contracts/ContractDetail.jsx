@@ -54,23 +54,18 @@ export default function ContractDetail() {
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
-        .eq('contract_id', contractId)
-        .order('payment_no');
+        .eq('sozlesme_id', contractId)
+        .order('created_at');
 
       if (!paymentsError) {
         setPayments(paymentsData || []);
       }
 
-      // Load signed pages
-      const { data: pagesData, error: pagesError } = await supabase
-        .from('contract_signed_pages')
-        .select('*')
-        .eq('contract_id', contractId)
-        .order('created_at');
-
-      if (!pagesError) {
-        setSignedPages(pagesData || []);
-      }
+      // Set signed pages from contract.signed_pdf_urls
+      setSignedPages((contractData.signed_pdf_urls || []).map((url, idx) => ({
+        id: idx,
+        page_url: url
+      })));
     } catch (error) {
       console.error('Sözleşme yükleme hatası:', error);
       setMessage({ type: 'error', text: 'Sözleşme yüklenirken hata oluştu' });
@@ -87,27 +82,32 @@ export default function ContractDetail() {
       setUploading(true);
       const supabase = getSupabase();
 
+      const uploadedUrls = [];
+
       for (const file of files) {
         const fileName = `contracts/${contractId}/${Date.now()}-${file.name}`;
 
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('contract-pages')
+          .from('contracts')
           .upload(fileName, file);
 
         if (uploadError) throw uploadError;
 
         const { data: publicUrl } = supabase.storage
-          .from('contract-pages')
+          .from('contracts')
           .getPublicUrl(fileName);
 
-        await supabase
-          .from('contract_signed_pages')
-          .insert({
-            contract_id: contractId,
-            page_url: publicUrl.publicUrl,
-            file_name: file.name
-          });
+        uploadedUrls.push(publicUrl.publicUrl);
       }
+
+      // Update contract with signed_pdf_urls
+      const existingUrls = contract.signed_pdf_urls || [];
+      const { error: updateError } = await supabase
+        .from('contracts')
+        .update({ signed_pdf_urls: [...existingUrls, ...uploadedUrls] })
+        .eq('id', contractId);
+
+      if (updateError) throw updateError;
 
       setMessage({ type: 'success', text: 'Sayfalar başarıyla yüklendi' });
       loadContract();
@@ -119,15 +119,19 @@ export default function ContractDetail() {
     }
   };
 
-  const handleDeletePage = async (pageId) => {
+  const handleDeletePage = async (pageUrl) => {
     if (!window.confirm('Bu sayfayı silmek istediğinize emin misiniz?')) return;
 
     try {
       const supabase = getSupabase();
+
+      // Remove URL from signed_pdf_urls array
+      const updatedUrls = (contract.signed_pdf_urls || []).filter(url => url !== pageUrl);
+
       const { error } = await supabase
-        .from('contract_signed_pages')
-        .delete()
-        .eq('id', pageId);
+        .from('contracts')
+        .update({ signed_pdf_urls: updatedUrls })
+        .eq('id', contractId);
 
       if (error) throw error;
 
@@ -187,13 +191,13 @@ export default function ContractDetail() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{contract.contract_no}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{contract.sozlesme_no}</h1>
           <div className="flex items-center gap-3">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_MAP[contract.status]?.color}`}>
               {STATUS_MAP[contract.status]?.label}
             </span>
             <span className="text-sm text-gray-600">
-              {new Date(contract.contract_date).toLocaleDateString('tr-TR')}
+              {new Date(contract.tarih).toLocaleDateString('tr-TR')}
             </span>
           </div>
         </div>
@@ -254,10 +258,10 @@ export default function ContractDetail() {
               <h3 className="text-lg font-semibold mb-4">Müşteri Bilgileri</h3>
               {customer && (
                 <div className="space-y-3">
-                  <p><span className="font-medium text-gray-700">Ad:</span> {customer.name}</p>
-                  <p><span className="font-medium text-gray-700">E-posta:</span> {customer.email}</p>
-                  <p><span className="font-medium text-gray-700">Telefon:</span> {customer.phone}</p>
-                  <p><span className="font-medium text-gray-700">Adres:</span> {customer.address}</p>
+                  <p><span className="font-medium text-gray-700">Ad:</span> {customer.ad} {customer.soyad}</p>
+                  <p><span className="font-medium text-gray-700">E-posta:</span> {customer.eposta}</p>
+                  <p><span className="font-medium text-gray-700">Telefon:</span> {customer.telefon}</p>
+                  <p><span className="font-medium text-gray-700">Adres:</span> {customer.adres}</p>
                 </div>
               )}
             </div>
@@ -267,9 +271,9 @@ export default function ContractDetail() {
               <h3 className="text-lg font-semibold mb-4">Tasarım Bilgileri</h3>
               {design && (
                 <div className="space-y-3">
-                  <p><span className="font-medium text-gray-700">Model:</span> {design.model_name}</p>
-                  <p><span className="font-medium text-gray-700">Ölçüler:</span> {design.width}m x {design.length}m</p>
-                  <p><span className="font-medium text-gray-700">Teslim Tarihi:</span> {new Date(contract.delivery_date).toLocaleDateString('tr-TR')}</p>
+                  <p><span className="font-medium text-gray-700">Model:</span> {design.ad}</p>
+                  <p><span className="font-medium text-gray-700">Ölçüler:</span> {design.genislik}m x {design.uzunluk}m</p>
+                  <p><span className="font-medium text-gray-700">Teslim Tarihi:</span> {new Date(design.teslim_tarihi).toLocaleDateString('tr-TR')}</p>
                 </div>
               )}
             </div>
@@ -279,7 +283,7 @@ export default function ContractDetail() {
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h3 className="text-lg font-semibold mb-4">Sözleşme Maddeleri</h3>
             <ol className="space-y-2">
-              {contract.contract_terms?.map((term, idx) => (
+              {contract.terms?.map((term, idx) => (
                 <li key={idx} className="text-gray-700">
                   <span className="font-medium">{idx + 1}.</span> {term}
                 </li>
@@ -288,41 +292,21 @@ export default function ContractDetail() {
           </div>
 
           {/* Special Notes */}
-          {contract.special_notes && (
+          {contract.notlar && (
             <div className="bg-white p-6 rounded-lg border border-gray-200">
               <h3 className="text-lg font-semibold mb-4">Özel Notlar</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{contract.special_notes}</p>
+              <p className="text-gray-700 whitespace-pre-wrap">{contract.notlar}</p>
             </div>
           )}
 
           {/* Financial Summary */}
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h3 className="text-lg font-semibold mb-4">Finansal Özet</h3>
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Toplam Fiyat</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {contract.total_price?.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    minimumFractionDigits: 2
-                  })}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">KDV Dahil Toplam</p>
+                <p className="text-sm text-gray-600 mb-1">Toplam Tutar</p>
                 <p className="text-2xl font-bold text-amber-600">
-                  {contract.total_with_vat?.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    minimumFractionDigits: 2
-                  })}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Peşinat</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {contract.down_payment?.toLocaleString('tr-TR', {
+                  {contract.toplam_tutar?.toLocaleString('tr-TR', {
                     style: 'currency',
                     currency: 'TRY',
                     minimumFractionDigits: 2
@@ -354,12 +338,12 @@ export default function ContractDetail() {
                   <tr key={payment.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <span className="text-sm font-medium text-gray-900">
-                        {payment.type === 'pesinat' ? 'Peşinat' : `Taksit ${payment.payment_no}`}
+                        {payment.tur === 'pesinat' ? 'Peşinat' : `${payment.tur}`}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm font-semibold text-amber-600">
-                        {payment.amount?.toLocaleString('tr-TR', {
+                        {payment.tutar?.toLocaleString('tr-TR', {
                           style: 'currency',
                           currency: 'TRY',
                           minimumFractionDigits: 2
@@ -368,12 +352,12 @@ export default function ContractDetail() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-600">
-                        {new Date(payment.due_date).toLocaleDateString('tr-TR')}
+                        {new Date(payment.vade).toLocaleDateString('tr-TR')}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-sm font-medium ${PAYMENT_STATUS_MAP[payment.status]?.color}`}>
-                        {PAYMENT_STATUS_MAP[payment.status]?.label}
+                      <span className={`text-sm font-medium ${PAYMENT_STATUS_MAP[payment.durum]?.color}`}>
+                        {PAYMENT_STATUS_MAP[payment.durum]?.label}
                       </span>
                     </td>
                   </tr>
@@ -410,8 +394,8 @@ export default function ContractDetail() {
             <div className="bg-white p-6 rounded-lg border border-gray-200">
               <h3 className="text-lg font-semibold mb-4">Yüklü Sayfalar ({signedPages.length})</h3>
               <div className="grid grid-cols-4 gap-4">
-                {signedPages.map((page) => (
-                  <div key={page.id} className="relative group">
+                {signedPages.map((page, idx) => (
+                  <div key={idx} className="relative group">
                     <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square">
                       {page.page_url.includes('pdf') ? (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -420,19 +404,19 @@ export default function ContractDetail() {
                       ) : (
                         <img
                           src={page.page_url}
-                          alt={page.file_name}
+                          alt={`Sayfa ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />
                       )}
                     </div>
                     <button
-                      onClick={() => handleDeletePage(page.id)}
+                      onClick={() => handleDeletePage(page.page_url)}
                       className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition"
                       title="Sil"
                     >
                       <Trash2 size={16} />
                     </button>
-                    <p className="text-xs text-gray-600 mt-2 truncate">{page.file_name}</p>
+                    <p className="text-xs text-gray-600 mt-2 truncate">Sayfa {idx + 1}</p>
                   </div>
                 ))}
               </div>

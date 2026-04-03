@@ -118,7 +118,6 @@ const CustomerCreate = () => {
             nereden_geldi: formData.nereden_geldi,
             adres: formData.adres.trim() || null,
             notlar: formData.notlar.trim() || null,
-            created_at: new Date().toISOString(),
           },
         ])
         .select();

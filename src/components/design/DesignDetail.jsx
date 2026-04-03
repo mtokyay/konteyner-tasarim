@@ -27,17 +27,17 @@ const DesignDetail = () => {
   // Form states
   const [formData, setFormData] = useState({
     status: 'taslak',
-    price: 0,
-    discount: 0,
-    net_price: 0,
-    delivery_date: '',
-    notes: '',
+    toplam_fiyat: 0,
+    indirim: 0,
+    net_fiyat: 0,
+    teslim_tarihi: '',
+    notlar: '',
   });
 
   const [editablePrices, setEditablePrices] = useState({
-    price: 0,
-    discount: 0,
-    net_price: 0,
+    toplam_fiyat: 0,
+    indirim: 0,
+    net_fiyat: 0,
   });
 
   // Placeholder design
@@ -47,21 +47,21 @@ const DesignDetail = () => {
     customer_id: 1,
     design_data: { width: 400, height: 300, items: [] },
     status: 'taslak',
-    price: 5000,
-    discount: 0,
-    net_price: 5000,
-    delivery_date: '2024-05-01',
-    notes: '',
+    toplam_fiyat: 5000,
+    indirim: 0,
+    net_fiyat: 5000,
+    teslim_tarihi: '2024-05-01',
+    notlar: '',
     created_at: '2024-04-01',
     updated_at: '2024-04-01',
   };
 
   const placeholderCustomer = {
     id: 1,
-    first_name: 'Ahmet',
-    last_name: 'Yılmaz',
-    phone: '0312 555 0001',
-    source: 'Web',
+    ad: 'Ahmet',
+    soyad: 'Yılmaz',
+    telefon: '0312 555 0001',
+    nereden_geldi: 'Web',
   };
 
   useEffect(() => {
@@ -79,16 +79,16 @@ const DesignDetail = () => {
           setCustomer(placeholderCustomer);
           setFormData({
             status: placeholderDesign.status,
-            price: placeholderDesign.price,
-            discount: placeholderDesign.discount,
-            net_price: placeholderDesign.net_price,
-            delivery_date: placeholderDesign.delivery_date,
-            notes: placeholderDesign.notes || '',
+            toplam_fiyat: placeholderDesign.toplam_fiyat,
+            indirim: placeholderDesign.indirim,
+            net_fiyat: placeholderDesign.net_fiyat,
+            teslim_tarihi: placeholderDesign.teslim_tarihi,
+            notlar: placeholderDesign.notlar || '',
           });
           setEditablePrices({
-            price: placeholderDesign.price,
-            discount: placeholderDesign.discount,
-            net_price: placeholderDesign.net_price,
+            toplam_fiyat: placeholderDesign.toplam_fiyat,
+            indirim: placeholderDesign.indirim,
+            net_fiyat: placeholderDesign.net_fiyat,
           });
           setLoading(false);
           return;
@@ -104,19 +104,19 @@ const DesignDetail = () => {
             customer_id,
             design_data,
             status,
-            price,
-            discount,
-            net_price,
-            delivery_date,
-            notes,
+            toplam_fiyat,
+            indirim,
+            net_fiyat,
+            teslim_tarihi,
+            notlar,
             created_at,
             updated_at,
             customers (
               id,
-              first_name,
-              last_name,
-              phone,
-              source
+              ad,
+              soyad,
+              telefon,
+              nereden_geldi
             )
           `
           )
@@ -134,17 +134,17 @@ const DesignDetail = () => {
 
         setFormData({
           status: designData.status,
-          price: designData.price || 0,
-          discount: designData.discount || 0,
-          net_price: designData.net_price || 0,
-          delivery_date: designData.delivery_date || '',
-          notes: designData.notes || '',
+          toplam_fiyat: designData.toplam_fiyat || 0,
+          indirim: designData.indirim || 0,
+          net_fiyat: designData.net_fiyat || 0,
+          teslim_tarihi: designData.teslim_tarihi || '',
+          notlar: designData.notlar || '',
         });
 
         setEditablePrices({
-          price: designData.price || 0,
-          discount: designData.discount || 0,
-          net_price: designData.net_price || 0,
+          toplam_fiyat: designData.toplam_fiyat || 0,
+          indirim: designData.indirim || 0,
+          net_fiyat: designData.net_fiyat || 0,
         });
       } catch (err) {
         console.error('Error fetching design:', err);
@@ -161,12 +161,12 @@ const DesignDetail = () => {
 
   // Auto-calculate net price
   useEffect(() => {
-    const calculated = editablePrices.price - editablePrices.discount;
+    const calculated = editablePrices.toplam_fiyat - editablePrices.indirim;
     setEditablePrices((prev) => ({
       ...prev,
-      net_price: Math.max(0, calculated),
+      net_fiyat: Math.max(0, calculated),
     }));
-  }, [editablePrices.price, editablePrices.discount]);
+  }, [editablePrices.toplam_fiyat, editablePrices.indirim]);
 
   const handleSavePrices = async () => {
     setIsSaving(true);
@@ -185,9 +185,9 @@ const DesignDetail = () => {
       const { error: updateError } = await supabase
         .from('designs')
         .update({
-          price: editablePrices.price,
-          discount: editablePrices.discount,
-          net_price: editablePrices.net_price,
+          toplam_fiyat: editablePrices.toplam_fiyat,
+          indirim: editablePrices.indirim,
+          net_fiyat: editablePrices.net_fiyat,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -198,9 +198,9 @@ const DesignDetail = () => {
 
       setFormData((prev) => ({
         ...prev,
-        price: editablePrices.price,
-        discount: editablePrices.discount,
-        net_price: editablePrices.net_price,
+        toplam_fiyat: editablePrices.toplam_fiyat,
+        indirim: editablePrices.indirim,
+        net_fiyat: editablePrices.net_fiyat,
       }));
     } catch (err) {
       console.error('Error updating prices:', err);
@@ -305,7 +305,7 @@ const DesignDetail = () => {
           customerId={design.customer_id}
           customerName={
             customer
-              ? `${customer.first_name} ${customer.last_name}`
+              ? `${customer.ad} ${customer.soyad}`
               : 'Bilinmiyor'
           }
           designId={design.id}
@@ -393,13 +393,13 @@ const DesignDetail = () => {
               <div>
                 <p className="text-sm text-gray-600">Müşteri</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {customer.first_name} {customer.last_name}
+                  {customer.ad} {customer.soyad}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Telefon</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {customer.phone}
+                  {customer.telefon}
                 </p>
               </div>
             </div>
@@ -483,18 +483,18 @@ const DesignDetail = () => {
               <div className="flex gap-2">
                 <input
                   type="number"
-                  value={editablePrices.price}
+                  value={editablePrices.toplam_fiyat}
                   onChange={(e) =>
                     setEditablePrices({
                       ...editablePrices,
-                      price: parseFloat(e.target.value) || 0,
+                      toplam_fiyat: parseFloat(e.target.value) || 0,
                     })
                   }
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {formatPrice(editablePrices.price)}
+                {formatPrice(editablePrices.toplam_fiyat)}
               </p>
             </div>
 
@@ -506,18 +506,18 @@ const DesignDetail = () => {
               <div className="flex gap-2">
                 <input
                   type="number"
-                  value={editablePrices.discount}
+                  value={editablePrices.indirim}
                   onChange={(e) =>
                     setEditablePrices({
                       ...editablePrices,
-                      discount: parseFloat(e.target.value) || 0,
+                      indirim: parseFloat(e.target.value) || 0,
                     })
                   }
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {formatPrice(editablePrices.discount)}
+                {formatPrice(editablePrices.indirim)}
               </p>
             </div>
 
@@ -528,7 +528,7 @@ const DesignDetail = () => {
               </label>
               <div className="px-4 py-2 bg-gray-100 rounded-lg border border-gray-300">
                 <p className="font-semibold text-gray-900">
-                  {formatPrice(editablePrices.net_price)}
+                  {formatPrice(editablePrices.net_fiyat)}
                 </p>
               </div>
               <p className="text-xs text-gray-500 mt-1">Otomatik hesaplanır</p>
@@ -551,9 +551,9 @@ const DesignDetail = () => {
           </h2>
           <input
             type="date"
-            value={formData.delivery_date}
+            value={formData.teslim_tarihi}
             onChange={(e) =>
-              setFormData({ ...formData, delivery_date: e.target.value })
+              setFormData({ ...formData, teslim_tarihi: e.target.value })
             }
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
           />
@@ -563,8 +563,8 @@ const DesignDetail = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Notlar</h2>
           <textarea
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            value={formData.notlar}
+            onChange={(e) => setFormData({ ...formData, notlar: e.target.value })}
             rows="4"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
             placeholder="Tasarımla ilgili notları buraya yazın..."
