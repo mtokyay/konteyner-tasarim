@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Users,
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../App';
 
-const AppLayout = () => {
+const AppLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -183,7 +183,7 @@ const AppLayout = () => {
 
         {/* Page content */}
         <main className="flex-1">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
