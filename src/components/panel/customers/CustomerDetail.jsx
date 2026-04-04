@@ -259,7 +259,7 @@ const CustomerDetail = () => {
   };
 
   const renderStatusBadge = (status, config = statusBadgeConfig) => {
-    const badgeConfig = config[status] || config.yeni;
+    const badgeConfig = config[status] || config.yeni || { bg: 'bg-gray-100', text: 'text-gray-700', label: status || '—' };
     return (
       <span
         className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeConfig.bg} ${badgeConfig.text}`}
