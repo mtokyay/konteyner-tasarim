@@ -1348,7 +1348,7 @@
           </g>);
         });
       };
-      const tabs=[{id:"container",label:"Konteyner"},{id:"walls",label:"Boluntu/WC"},{id:"doors",label:"Kapilar"},{id:"windows",label:"Pencereler"},{id:"extras",label:"Ekstra"},{id:"markers",label:"Isaretler"}];
+      const tabs=[{id:"container",label:"Konteyner"},{id:"walls",label:"Bölüntü"},{id:"doors",label:"Kapı"},{id:"windows",label:"Pencere"},{id:"extras",label:"Ekstra"},{id:"markers",label:"İşaret"}];
       return (
         <div className="flex flex-col h-screen bg-gray-50 text-gray-800 text-sm select-none">
           <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm flex-shrink-0">
@@ -1467,8 +1467,8 @@
             </div>
             {/* RIGHT PANEL */}
             <div className="w-72 bg-white border-l border-gray-200 flex flex-col overflow-hidden flex-shrink-0">
-              <div className="flex border-b border-gray-200 bg-gray-50 overflow-x-auto flex-shrink-0">
-                {tabs.map(tab=>(<button key={tab.id} onClick={()=>setActiveTab(tab.id)} className={`flex-1 py-2 px-1 text-xs font-medium whitespace-nowrap ${activeTab===tab.id?"text-blue-600 border-b-2 border-blue-600 bg-white":"text-gray-500 hover:text-gray-700"}`}>{tab.label}</button>))}
+              <div className="flex border-b border-gray-200 bg-gray-50 overflow-x-auto flex-shrink-0" style={{height:"32px"}}>
+                {tabs.map(tab=>(<button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{height:"32px",lineHeight:"30px",padding:"0 5px",fontSize:"11px"}} className={`font-medium whitespace-nowrap ${activeTab===tab.id?"text-blue-600 border-b-2 border-blue-600 bg-white":"text-gray-500 hover:text-gray-700"}`}>{tab.label}</button>))}
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
                 {activeTab==="container" && <>
