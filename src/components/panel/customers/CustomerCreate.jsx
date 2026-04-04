@@ -6,6 +6,7 @@ import { useTenant } from '../../../contexts/TenantContext';
 
 const CustomerCreate = () => {
   const navigate = useNavigate();
+  const { tenantId } = useTenant();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -103,7 +104,6 @@ const CustomerCreate = () => {
 
     try {
       const supabase = getSupabase();
-  const { tenantId } = useTenant();
 
       if (!supabase) {
         throw new Error('Supabase konfigürasyonu bulunamadı');

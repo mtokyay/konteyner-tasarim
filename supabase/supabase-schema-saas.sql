@@ -20,6 +20,10 @@ DROP TABLE IF EXISTS plans CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
 DROP FUNCTION IF EXISTS get_user_tenant_id() CASCADE;
 DROP FUNCTION IF EXISTS get_user_role() CASCADE;
+DROP FUNCTION IF EXISTS is_super_admin() CASCADE;
+DROP FUNCTION IF EXISTS is_tenant_member(UUID) CASCADE;
+DROP FUNCTION IF EXISTS is_tenant_owner(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_owned_tenant_ids() CASCADE;
 DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
 DROP FUNCTION IF EXISTS handle_new_tenant() CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at() CASCADE;
@@ -346,6 +350,33 @@ RETURNS BOOLEAN AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
+-- Kullanici bu tenant'in uyesi mi? (RLS bypass — dongu onlemi)
+CREATE OR REPLACE FUNCTION is_tenant_member(t_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM tenant_members
+    WHERE tenant_id = t_id
+      AND user_id = auth.uid()
+      AND is_active = true
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Kullanici bu tenant'in sahibi mi? (RLS bypass — dongu onlemi)
+CREATE OR REPLACE FUNCTION is_tenant_owner(t_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM tenants
+    WHERE id = t_id
+      AND owner_id = auth.uid()
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Kullanicinin sahip oldugu tenant ID'leri (RLS bypass)
+CREATE OR REPLACE FUNCTION get_owned_tenant_ids()
+RETURNS SETOF UUID AS $$
+  SELECT id FROM tenants WHERE owner_id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
 -- updated_at otomatik guncelleme
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS trigger AS $$
@@ -461,9 +492,12 @@ CREATE POLICY "Super admin manages plans" ON plans
   FOR ALL USING (is_super_admin());
 
 -- TENANTS: Uye oldugu tenant'i gorur, super admin hepsini gorur
+-- NOT: is_tenant_member() SECURITY DEFINER fonksiyonu kullanilir,
+--      boylece tenants<->tenant_members arasi dongu olusmaz.
 CREATE POLICY "Members see own tenant" ON tenants
   FOR SELECT USING (
-    id IN (SELECT tenant_id FROM tenant_members WHERE user_id = auth.uid())
+    is_tenant_member(id)
+    OR owner_id = auth.uid()
     OR is_super_admin()
   );
 CREATE POLICY "Owner updates tenant" ON tenants
@@ -476,17 +510,25 @@ CREATE POLICY "Super admin delete tenant" ON tenants
   FOR DELETE USING (is_super_admin());
 
 -- TENANT_MEMBERS: Ayni tenant uyeleri birbirini gorur
+-- NOT: is_tenant_owner() SECURITY DEFINER fonksiyonu kullanilir,
+--      boylece tenant_members<->tenants arasi dongu olusmaz.
 CREATE POLICY "Members see co-members" ON tenant_members
   FOR SELECT USING (
-    tenant_id = get_user_tenant_id() OR is_super_admin()
-  );
-CREATE POLICY "Owner manages members" ON tenant_members
-  FOR ALL USING (
-    tenant_id IN (SELECT id FROM tenants WHERE owner_id = auth.uid())
+    tenant_id = get_user_tenant_id()
     OR is_super_admin()
   );
-CREATE POLICY "System insert member" ON tenant_members
-  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Owner manages members" ON tenant_members
+  FOR UPDATE USING (
+    is_tenant_owner(tenant_id)
+    OR is_super_admin()
+  );
+CREATE POLICY "Owner deletes members" ON tenant_members
+  FOR DELETE USING (
+    is_tenant_owner(tenant_id)
+    OR is_super_admin()
+  );
+CREATE POLICY "Authenticated insert member" ON tenant_members
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 -- COMPANY_INFO: Tenant izolasyonu
 CREATE POLICY "Tenant isolation" ON company_info
@@ -519,13 +561,16 @@ CREATE POLICY "Tenant isolation" ON payment_notifications
 -- SUBSCRIPTION_PAYMENTS: Owner ve super admin gorur
 CREATE POLICY "Owner sees sub payments" ON subscription_payments
   FOR SELECT USING (
-    tenant_id IN (SELECT id FROM tenants WHERE owner_id = auth.uid())
+    tenant_id IN (SELECT get_owned_tenant_ids())
+    OR tenant_id = get_user_tenant_id()
     OR is_super_admin()
   );
 CREATE POLICY "System insert sub payment" ON subscription_payments
   FOR INSERT WITH CHECK (true);
-CREATE POLICY "Super admin manage sub payments" ON subscription_payments
-  FOR ALL USING (is_super_admin());
+CREATE POLICY "Super admin update sub payments" ON subscription_payments
+  FOR UPDATE USING (is_super_admin());
+CREATE POLICY "Super admin delete sub payments" ON subscription_payments
+  FOR DELETE USING (is_super_admin());
 
 -- ============================================================
 -- STORAGE BUCKETS
