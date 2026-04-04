@@ -44,7 +44,7 @@ exports.handler = async (event) => {
     const user_phone = '05000000000';
 
     // Callback URLs
-    const siteUrl = process.env.URL || process.env.SITE_URL || 'https://konteynertasarim.netlify.app';
+    const siteUrl = process.env.URL || process.env.SITE_URL || 'https://konteynertasarim.com.tr';
     const merchant_ok_url = `${siteUrl}/panel/subscription?status=success`;
     const merchant_fail_url = `${siteUrl}/panel/subscription?status=fail`;
 

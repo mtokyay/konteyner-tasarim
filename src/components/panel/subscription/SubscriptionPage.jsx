@@ -300,7 +300,7 @@ const SubscriptionPage = () => {
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
         <p className="text-sm text-amber-800">
           Plan değişiklikleriniz hemen geçerli olur. Yükseltme durumunda fark tutarı tahsil edilir.
-          İstediğiniz zaman planınızı değiştirebilirsiniz. Sorularınız için destek@konteynertasarim.com adresine yazabilirsiniz.
+          İstediğiniz zaman planınızı değiştirebilirsiniz. Sorularınız için destek@konteynertasarim.com.tr adresine yazabilirsiniz.
         </p>
       </div>
     </div>

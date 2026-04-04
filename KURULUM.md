@@ -127,6 +127,16 @@ git push -u origin main
    - `VITE_SUPABASE_ANON_KEY`
 6. "Deploy" butonuna basin
 
+### 6.1 Custom Domain (konteynertasarim.com.tr)
+
+1. Netlify dashboard > Domain settings > Add custom domain
+2. `konteynertasarim.com.tr` girin
+3. DNS ayarlari (domain saglayicinizda):
+   - A kaydi: `75.2.60.5` (Netlify load balancer)
+   - CNAME kaydi: `www` -> `konteyner-tasarim.netlify.app`
+4. Netlify otomatik SSL sertifikasi olusturacaktir (Let's Encrypt)
+5. "Force HTTPS" secenegini aktif edin
+
 ### 7. Tasarim Editoru Entegrasyonu
 
 Mevcut `app/index.html` dosyasi tasarim editoru olarak iframe icinde kullanilir.
