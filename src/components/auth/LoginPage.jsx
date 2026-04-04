@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Box, Loader2, AlertCircle } from 'lucide-react';
@@ -8,13 +8,23 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Already logged in
-  if (isAuthenticated) {
-    navigate('/dashboard', { replace: true });
-    return null;
+  // Already logged in — useEffect ile yönlendir (render sırasında navigate çağrılmamalı)
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  // Auth yükleniyorsa veya zaten giriş yapılmışsa spinner göster
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
+      </div>
+    );
   }
 
   const handleSubmit = async (e) => {

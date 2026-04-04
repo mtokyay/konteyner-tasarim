@@ -69,10 +69,11 @@ function RequireAdmin({ children }) {
 }
 
 function AuthRedirect() {
-  const { isAuthenticated, loading, isSuperAdmin } = useAuth();
+  const { isAuthenticated, loading: authLoading, isSuperAdmin } = useAuth();
   const { tenant, loading: tenantLoading, role } = useTenant();
 
-  if (loading || tenantLoading) return <LoadingScreen />;
+  // Her iki context de yüklenene kadar bekle
+  if (authLoading || tenantLoading) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/giris" replace />;
   if (isSuperAdmin) return <Navigate to="/admin" replace />;
   if (!tenant) return <Navigate to="/kayit?step=tenant" replace />;
