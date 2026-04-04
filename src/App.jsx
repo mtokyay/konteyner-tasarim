@@ -16,6 +16,7 @@ import CompanyInfo from './components/company/CompanyInfo';
 import ContractCreate from './components/contracts/ContractCreate';
 import ContractList from './components/contracts/ContractList';
 import ContractDetail from './components/contracts/ContractDetail';
+import ContractPDF from './components/contracts/ContractPDF';
 import PaymentList from './components/payments/PaymentList';
 import PaymentEntry from './components/payments/PaymentEntry';
 import FinanceDashboard from './components/payments/FinanceDashboard';
@@ -475,6 +476,14 @@ const App = () => {
             }
           />
           <Route
+            path="/contracts/new"
+            element={
+              <ProtectedRoute>
+                <ContractCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/contracts/new/:designId"
             element={
               <ProtectedRoute>
@@ -488,6 +497,14 @@ const App = () => {
               <ProtectedRoute>
                 <ContractDetail />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contracts/:id/pdf"
+            element={
+              <AuthOnly>
+                <ContractPDF />
+              </AuthOnly>
             }
           />
 

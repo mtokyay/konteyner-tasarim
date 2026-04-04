@@ -20,7 +20,7 @@ const ContractList = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('contracts')
-        .select('*, customers(ad, soyad, eposta)')
+        .select('*, customers:customer_id(ad, soyad, eposta)')
         .order('tarih', { ascending: false });
 
       if (error) throw error;
@@ -92,7 +92,7 @@ const ContractList = () => {
           <p className="text-gray-600 mt-1">Tüm sözleşmeleri yönetin ve takip edin</p>
         </div>
         <button
-          onClick={() => navigate('/designs')}
+          onClick={() => navigate('/contracts/new')}
           className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition"
         >
           <Plus size={20} />

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Check, AlertCircle, FileText, Download } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 import { useAuth } from '../../App';
 
@@ -17,16 +17,30 @@ const DesignEditor = () => {
   const [message, setMessage] = useState(null);
   const [design, setDesign] = useState(null);
   const [customerName, setCustomerName] = useState('');
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [pendingDesignData, setPendingDesignData] = useState(null);
+
+  // Extra fields for saving
+  const [extraFields, setExtraFields] = useState({
+    ad: '',
+    aciklama: '',
+    toplam_fiyat: '',
+    indirim: '',
+    teslim_tarihi: '',
+    notlar: '',
+    status: 'taslak',
+  });
 
   // Get customer info from location state (for new designs)
   const customerId = location.state?.customerId;
   const customerInfo = location.state?.customerInfo;
+  const isNew = !designId;
 
   useEffect(() => {
     if (customerInfo) {
       setCustomerName(`${customerInfo.ad} ${customerInfo.soyad}`);
     }
-    if (designId && designId !== 'new') {
+    if (designId) {
       loadDesign();
     } else {
       setLoading(false);
@@ -40,7 +54,7 @@ const DesignEditor = () => {
 
       const { data, error } = await supabase
         .from('designs')
-        .select('*, customers(ad, soyad)')
+        .select('*, customers:customer_id(ad, soyad)')
         .eq('id', designId)
         .single();
 
@@ -49,6 +63,15 @@ const DesignEditor = () => {
       if (data.customers) {
         setCustomerName(`${data.customers.ad} ${data.customers.soyad}`);
       }
+      setExtraFields({
+        ad: data.ad || '',
+        aciklama: data.aciklama || '',
+        toplam_fiyat: data.toplam_fiyat || '',
+        indirim: data.indirim || '',
+        teslim_tarihi: data.teslim_tarihi || '',
+        notlar: data.notlar || '',
+        status: data.status || 'taslak',
+      });
     } catch (err) {
       console.error('Design load error:', err);
       setMessage({ type: 'error', text: 'Tasarım yüklenemedi: ' + err.message });
@@ -76,16 +99,26 @@ const DesignEditor = () => {
       }
 
       if (event.data.type === 'DESIGN_DATA') {
-        // Save design data to Supabase
-        saveDesign(event.data.designData);
+        // Show save modal with extra fields
+        setPendingDesignData(event.data.designData);
+        // Auto-generate name from container dimensions
+        const c = event.data.designData?.container;
+        if (c && !extraFields.ad) {
+          setExtraFields(prev => ({
+            ...prev,
+            ad: prev.ad || `Konteyner ${c.width}x${c.length}x${c.height}cm`,
+          }));
+        }
+        setShowSaveModal(true);
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [design]);
+  }, [design, extraFields.ad]);
 
-  const saveDesign = async (designData) => {
+  const saveDesign = async () => {
+    if (!pendingDesignData) return;
     setSaving(true);
     setMessage(null);
 
@@ -94,45 +127,61 @@ const DesignEditor = () => {
       if (!supabase) {
         setMessage({ type: 'success', text: 'Demo modda kaydedildi' });
         setSaving(false);
+        setShowSaveModal(false);
         return;
       }
 
-      const containerInfo = designData?.container || {};
+      const containerInfo = pendingDesignData?.container || {};
       const genislik = containerInfo.width ? containerInfo.width / 100 : null;
       const uzunluk = containerInfo.length ? containerInfo.length / 100 : null;
       const yukseklik = containerInfo.height ? containerInfo.height / 100 : null;
       const alan = genislik && uzunluk ? parseFloat((genislik * uzunluk).toFixed(2)) : null;
 
-      // Generate a name from container dimensions
-      const designName = `Konteyner ${containerInfo.width || ''}x${containerInfo.length || ''}x${containerInfo.height || ''}cm`;
+      const netFiyat = extraFields.toplam_fiyat && extraFields.indirim
+        ? parseFloat(extraFields.toplam_fiyat) - parseFloat(extraFields.indirim || 0)
+        : extraFields.toplam_fiyat ? parseFloat(extraFields.toplam_fiyat) : null;
 
-      if (designId && designId !== 'new' && design) {
+      const ozellikler = {
+        panelType: containerInfo.panelType,
+        roofType: containerInfo.roofType,
+        roofColor: containerInfo.roofColor,
+        roofHeight: containerInfo.roofHeight,
+        hasVeranda: pendingDesignData.veranda?.enabled || false,
+        verandaSize: pendingDesignData.veranda?.enabled ? `${pendingDesignData.veranda.width}x${pendingDesignData.veranda.depth}` : null,
+        isCombo: pendingDesignData.combo?.enabled || false,
+        itemCount: pendingDesignData.items?.length || 0,
+        doorCount: (pendingDesignData.items || []).filter(i => i.type === 'door').length,
+        windowCount: (pendingDesignData.items || []).filter(i => i.type === 'window').length,
+        partitionCount: pendingDesignData.partitions?.length || 0,
+        wcZoneCount: pendingDesignData.wcZones?.length || 0,
+      };
+
+      if (design?.id) {
         // Update existing design
         const { error } = await supabase
           .from('designs')
           .update({
-            design_data: designData,
-            ad: design.ad || designName,
+            design_data: pendingDesignData,
+            ad: extraFields.ad || `Konteyner ${containerInfo.width}x${containerInfo.length}`,
+            aciklama: extraFields.aciklama || null,
             genislik,
             yukseklik,
             uzunluk,
             alan,
-            ozellikler: {
-              panelType: containerInfo.panelType,
-              roofType: containerInfo.roofType,
-              roofColor: containerInfo.roofColor,
-              hasVeranda: designData.veranda?.enabled || false,
-              isCombo: designData.combo?.enabled || false,
-              itemCount: designData.items?.length || 0,
-              partitionCount: designData.partitions?.length || 0,
-              wcZoneCount: designData.wcZones?.length || 0,
-            },
+            ozellikler,
+            toplam_fiyat: extraFields.toplam_fiyat ? parseFloat(extraFields.toplam_fiyat) : null,
+            indirim: extraFields.indirim ? parseFloat(extraFields.indirim) : null,
+            net_fiyat: netFiyat,
+            teslim_tarihi: extraFields.teslim_tarihi || null,
+            notlar: extraFields.notlar || null,
+            status: extraFields.status,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', designId);
+          .eq('id', design.id);
 
         if (error) throw error;
-        setMessage({ type: 'success', text: 'Tasarım kaydedildi!' });
+        setDesign(prev => ({ ...prev, ad: extraFields.ad, design_data: pendingDesignData }));
+        setMessage({ type: 'success', text: 'Tasarım güncellendi!' });
       } else {
         // Create new design
         const refNo = 'TH-' + Date.now().toString().slice(-6);
@@ -141,23 +190,20 @@ const DesignEditor = () => {
           .insert({
             customer_id: customerId,
             ref_no: refNo,
-            ad: designName,
-            design_data: designData,
-            status: 'taslak',
+            ad: extraFields.ad || `Konteyner ${containerInfo.width}x${containerInfo.length}`,
+            aciklama: extraFields.aciklama || null,
+            design_data: pendingDesignData,
+            status: extraFields.status || 'taslak',
             genislik,
             yukseklik,
             uzunluk,
             alan,
-            ozellikler: {
-              panelType: containerInfo.panelType,
-              roofType: containerInfo.roofType,
-              roofColor: containerInfo.roofColor,
-              hasVeranda: designData.veranda?.enabled || false,
-              isCombo: designData.combo?.enabled || false,
-              itemCount: designData.items?.length || 0,
-              partitionCount: designData.partitions?.length || 0,
-              wcZoneCount: designData.wcZones?.length || 0,
-            },
+            ozellikler,
+            toplam_fiyat: extraFields.toplam_fiyat ? parseFloat(extraFields.toplam_fiyat) : null,
+            indirim: extraFields.indirim ? parseFloat(extraFields.indirim) : null,
+            net_fiyat: netFiyat,
+            teslim_tarihi: extraFields.teslim_tarihi || null,
+            notlar: extraFields.notlar || null,
             created_by: user?.id,
           })
           .select()
@@ -169,6 +215,7 @@ const DesignEditor = () => {
         // Update URL to reflect the new design ID
         window.history.replaceState(null, '', `/designs/${newDesign.id}/editor`);
       }
+      setShowSaveModal(false);
     } catch (err) {
       console.error('Save error:', err);
       setMessage({ type: 'error', text: 'Kaydetme hatası: ' + err.message });
@@ -188,6 +235,10 @@ const DesignEditor = () => {
     }
   };
 
+  const handleExtraChange = (field, value) => {
+    setExtraFields(prev => ({ ...prev, [field]: value }));
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
@@ -202,7 +253,7 @@ const DesignEditor = () => {
   return (
     <div className="h-screen flex flex-col">
       {/* Top bar */}
-      <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm flex-shrink-0 z-10">
+      <div className="h-11 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm flex-shrink-0 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={handleBack}
@@ -211,14 +262,13 @@ const DesignEditor = () => {
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <div className="w-7 h-7 bg-amber-700 rounded flex items-center justify-center text-white text-xs font-bold">TK</div>
           <div>
             <span className="font-semibold text-gray-800 text-sm">
-              {design?.ad || 'Yeni Tasarım'}
+              {design?.ad || extraFields.ad || 'Yeni Tasarım'}
             </span>
             {customerName && (
               <span className="text-xs text-gray-500 ml-2">
-                - {customerName}
+                — {customerName}
               </span>
             )}
           </div>
@@ -232,7 +282,7 @@ const DesignEditor = () => {
         <div className="flex items-center gap-2">
           {message && (
             <div className={`flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-lg ${
-              message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+              message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
             }`}>
               {message.type === 'success' ? <Check className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
               {message.text}
@@ -257,6 +307,147 @@ const DesignEditor = () => {
           allow="fullscreen"
         />
       </div>
+
+      {/* Save Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowSaveModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">Tasarımı Kaydet</h2>
+              <p className="text-sm text-gray-500 mt-1">Tasarım bilgilerini tamamlayın</p>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Tasarım Adı */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tasarım Adı *</label>
+                <input
+                  type="text"
+                  value={extraFields.ad}
+                  onChange={e => handleExtraChange('ad', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                  placeholder="Örn: Modern Konteyner Ev 3x7"
+                />
+              </div>
+
+              {/* Açıklama */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
+                <textarea
+                  value={extraFields.aciklama}
+                  onChange={e => handleExtraChange('aciklama', e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                  placeholder="Tasarım hakkında kısa açıklama..."
+                />
+              </div>
+
+              {/* Fiyat */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Toplam Fiyat (₺)</label>
+                  <input
+                    type="number"
+                    value={extraFields.toplam_fiyat}
+                    onChange={e => handleExtraChange('toplam_fiyat', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">İndirim (₺)</label>
+                  <input
+                    type="number"
+                    value={extraFields.indirim}
+                    onChange={e => handleExtraChange('indirim', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Net Fiyat (calculated) */}
+              {extraFields.toplam_fiyat && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+                  <span className="text-amber-700 font-medium">Net Fiyat: </span>
+                  <span className="text-amber-900 font-bold">
+                    ₺{((parseFloat(extraFields.toplam_fiyat) || 0) - (parseFloat(extraFields.indirim) || 0)).toLocaleString('tr-TR')}
+                  </span>
+                </div>
+              )}
+
+              {/* Teslim Tarihi & Durum */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Teslim Tarihi</label>
+                  <input
+                    type="date"
+                    value={extraFields.teslim_tarihi}
+                    onChange={e => handleExtraChange('teslim_tarihi', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Durum</label>
+                  <select
+                    value={extraFields.status}
+                    onChange={e => handleExtraChange('status', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                  >
+                    <option value="taslak">Taslak</option>
+                    <option value="teklif">Teklif</option>
+                    <option value="onaylandi">Onaylandı</option>
+                    <option value="uretimde">Üretimde</option>
+                    <option value="tamamlandi">Tamamlandı</option>
+                    <option value="teslim_edildi">Teslim Edildi</option>
+                    <option value="iptal">İptal</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Notlar */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notlar</label>
+                <textarea
+                  value={extraFields.notlar}
+                  onChange={e => handleExtraChange('notlar', e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                  placeholder="Ek notlar..."
+                />
+              </div>
+
+              {/* Design Summary */}
+              {pendingDesignData?.container && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-600 space-y-1">
+                  <p className="font-medium text-gray-700">Tasarım Özeti:</p>
+                  <p>Boyut: {pendingDesignData.container.width}x{pendingDesignData.container.length}x{pendingDesignData.container.height}cm ({(pendingDesignData.container.width * pendingDesignData.container.length / 10000).toFixed(1)}m²)</p>
+                  <p>Kapı: {(pendingDesignData.items || []).filter(i => i.type === 'door').length} | Pencere: {(pendingDesignData.items || []).filter(i => i.type === 'window').length} | Bölüntü: {(pendingDesignData.partitions || []).length} | WC: {(pendingDesignData.wcZones || []).length}</p>
+                  {pendingDesignData.veranda?.enabled && <p>Veranda: {pendingDesignData.veranda.width}x{pendingDesignData.veranda.depth}cm</p>}
+                  {pendingDesignData.combo?.enabled && <p>Combo: Aktif</p>}
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={saveDesign}
+                disabled={saving || !extraFields.ad}
+                className="flex items-center gap-2 px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white rounded-lg text-sm font-semibold transition-colors"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {design?.id ? 'Güncelle' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

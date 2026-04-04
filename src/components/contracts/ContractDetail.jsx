@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Upload, Download, Loader } from 'lucide-react';
+import { ArrowLeft, FileText, Upload, Download, Loader, Printer } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 
 const ContractDetail = () => {
@@ -24,7 +24,7 @@ const ContractDetail = () => {
 
       const { data: contractData, error: contractError } = await supabase
         .from('contracts')
-        .select('*, customers(ad, soyad, telefon, eposta, adres), designs(ad, ref_no, genislik, uzunluk, teslim_tarihi)')
+        .select('*, customers:customer_id(ad, soyad, telefon, eposta, adres), designs:design_id(ad, ref_no, genislik, uzunluk, teslim_tarihi)')
         .eq('id', id)
         .single();
 
@@ -195,7 +195,16 @@ const ContractDetail = () => {
             <p className="text-gray-600 mt-1">{formatDate(contract.tarih)}</p>
           </div>
         </div>
-        <div>{getStatusBadge(contract.status)}</div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(`/contracts/${id}/pdf`)}
+            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition"
+          >
+            <Printer size={18} />
+            PDF Oluştur
+          </button>
+          {getStatusBadge(contract.status)}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

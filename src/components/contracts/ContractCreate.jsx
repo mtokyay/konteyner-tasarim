@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
+import { useAuth } from '../../App';
 
 const ContractCreate = () => {
   const [designs, setDesigns] = useState([]);
@@ -16,6 +17,7 @@ const ContractCreate = () => {
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
   const [installmentCount, setInstallmentCount] = useState(3);
   const navigate = useNavigate();
+  const { user } = useAuth();
   const supabase = getSupabase();
 
   useEffect(() => {
@@ -41,7 +43,7 @@ const ContractCreate = () => {
 
       const { data: designsData, error: designsError } = await supabase
         .from('designs')
-        .select('*, customers(ad, soyad, telefon, eposta, adres)')
+        .select('*, customers:customer_id(ad, soyad, telefon, eposta, adres)')
         .eq('status', 'onaylandi')
         .order('created_at', { ascending: false });
 
@@ -133,17 +135,20 @@ const ContractCreate = () => {
     try {
       setSubmitting(true);
 
+      const sozlesmeNo = 'SK-' + Date.now().toString().slice(-8);
+
       const { data: contractData, error: contractError } = await supabase
         .from('contracts')
         .insert([
           {
             design_id: selectedDesign.id,
             customer_id: customer.id,
+            sozlesme_no: sozlesmeNo,
             tarih: new Date().toISOString().split('T')[0],
             toplam_tutar: selectedDesign.net_fiyat,
             terms: contractTerms,
             status: 'hazirlandi',
-            created_by: 'user',
+            created_by: user?.id || null,
           },
         ])
         .select('id');
@@ -154,11 +159,12 @@ const ContractCreate = () => {
       const paymentRecords = paymentSchedule.map((payment) => ({
         sozlesme_id: contractId,
         musteri_id: customer.id,
-        tur: payment.type,
+        tur: payment.type === 'pesinat' ? 'pesinat' : 'taksit',
         tutar: payment.tutar,
         odenen_tutar: 0,
         vade: payment.vade,
         durum: 'bekliyor',
+        recorded_by: user?.id || null,
       }));
 
       const { error: paymentError } = await supabase.from('payments').insert(paymentRecords);
@@ -325,7 +331,7 @@ const ContractCreate = () => {
                       {paymentSchedule.map((payment, idx) => (
                         <tr key={idx} className="border-b border-gray-200">
                           <td className="px-3 py-2">
-                            {payment.tur === 'pesinat' ? 'Peşinat' : `Taksit ${idx}`}
+                            {payment.type === 'pesinat' ? 'Peşinat' : `Taksit ${idx}`}
                           </td>
                           <td className="px-3 py-2 font-medium">{formatCurrency(payment.tutar)}</td>
                           <td className="px-3 py-2">{payment.vade}</td>

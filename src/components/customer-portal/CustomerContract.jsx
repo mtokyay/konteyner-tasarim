@@ -43,7 +43,7 @@ const CustomerContract = () => {
           design_id: 1,
           tarih: '2024-01-15',
           toplam_tutar: 200000,
-          durum: 'aktif',
+          status: 'aktif',
         });
 
         setDesign({
@@ -57,7 +57,7 @@ const CustomerContract = () => {
         });
 
         setPaymentPlan([
-          { tur: 'pesin', tutar: 50000, vade: '2024-01-15', durum: 'odendi' },
+          { tur: 'pesinat', tutar: 50000, vade: '2024-01-15', durum: 'odendi' },
           { tur: 'taksit', tutar: 30000, vade: '2024-02-15', durum: 'odendi' },
           { tur: 'taksit', tutar: 30000, vade: '2024-03-15', durum: 'bekliyor' },
           { tur: 'taksit', tutar: 30000, vade: '2024-04-15', durum: 'bekliyor' },
@@ -113,9 +113,11 @@ const CustomerContract = () => {
           sozlesme_no,
           tarih,
           toplam_tutar,
-          durum,
-          tasarim_id,
-          designs(
+          status,
+          terms,
+          signed_pdf_urls,
+          design_id,
+          designs:design_id(
             id,
             ad,
             genislik,
@@ -127,7 +129,7 @@ const CustomerContract = () => {
         `
         )
         .eq('customer_id', customerData.id)
-        .eq('durum', 'aktif')
+        .eq('status', 'aktif')
         .single();
 
       if (contractData) {
@@ -154,15 +156,14 @@ const CustomerContract = () => {
         setPaymentPlan(formattedPayments);
       }
 
-      // Fetch contract pages
-      const { data: pagesData } = await supabase
-        .from('contract_pages')
-        .select('*')
-        .eq('sozlesme_id', contractData?.id)
-        .order('sira', { ascending: true });
-
-      if (pagesData) {
-        setContractPages(pagesData);
+      // Use signed_pdf_urls from contract data
+      if (contractData?.signed_pdf_urls && contractData.signed_pdf_urls.length > 0) {
+        const pages = contractData.signed_pdf_urls.map((url, idx) => ({
+          id: idx + 1,
+          title: `İmzalı Sözleşme ${idx + 1}`,
+          url: url,
+        }));
+        setContractPages(pages);
       }
     } catch (err) {
       setError(err.message || 'Sözleşme yüklenirken hata oluştu');
@@ -335,31 +336,20 @@ const CustomerContract = () => {
             )}
 
             {/* Sözleşme Maddeleri */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Sözleşme Maddeleri
-              </h2>
-              <ol className="space-y-3 list-decimal list-inside">
-                <li className="text-gray-700">
-                  Taraflar sözleşmeyi tamamen kabul edip anlamış sayılırlar.
-                </li>
-                <li className="text-gray-700">
-                  Ödeme planı tabloda belirtildiği şekilde yapılacaktır.
-                </li>
-                <li className="text-gray-700">
-                  İş başlangıcı ön ödemenin tamamlanmasından sonra başlayacaktır.
-                </li>
-                <li className="text-gray-700">
-                  Taşıma ve kurulum müşterinin sorumluluğundadır.
-                </li>
-                <li className="text-gray-700">
-                  Garanti süresi teslimat tarihinden itibaren 1 yıldır.
-                </li>
-                <li className="text-gray-700">
-                  Her iki taraf da yazılı bildiri ile sözleşmeyi feshedebilir.
-                </li>
-              </ol>
-            </div>
+            {contract.terms && contract.terms.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                  Sözleşme Maddeleri
+                </h2>
+                <ol className="space-y-3 list-decimal list-inside">
+                  {contract.terms.map((term, idx) => (
+                    <li key={idx} className="text-gray-700">
+                      {term}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
 
             {/* Payment Plan Table */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -388,7 +378,7 @@ const CustomerContract = () => {
                     {paymentPlan.map((payment, idx) => (
                       <tr key={idx} className="hover:bg-amber-50">
                         <td className="px-4 py-3 text-gray-900 font-semibold">
-                          {payment.tur === 'pesin'
+                          {payment.tur === 'pesinat'
                             ? 'Peşinat'
                             : payment.tur === 'taksit'
                             ? 'Taksit'

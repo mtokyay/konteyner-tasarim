@@ -373,8 +373,65 @@ export default function DesignDetail() {
               </div>
             </div>
 
-            {/* Features Card */}
-            {design.ozellikler && design.ozellikler.length > 0 && (
+            {/* Design Data Summary Card */}
+            {design.ozellikler && typeof design.ozellikler === 'object' && !Array.isArray(design.ozellikler) && (
+              <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Konteyner Detayları</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {design.ozellikler.panelType && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-xs text-gray-500">Panel</div>
+                      <div className="font-semibold text-blue-700 text-sm">{design.ozellikler.panelType}</div>
+                    </div>
+                  )}
+                  {design.ozellikler.roofType && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-xs text-gray-500">Çatı</div>
+                      <div className="font-semibold text-blue-700 text-sm">{design.ozellikler.roofType}</div>
+                    </div>
+                  )}
+                  {design.ozellikler.doorCount > 0 && (
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-xs text-gray-500">Kapı</div>
+                      <div className="font-semibold text-green-700 text-sm">{design.ozellikler.doorCount} adet</div>
+                    </div>
+                  )}
+                  {design.ozellikler.windowCount > 0 && (
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-xs text-gray-500">Pencere</div>
+                      <div className="font-semibold text-green-700 text-sm">{design.ozellikler.windowCount} adet</div>
+                    </div>
+                  )}
+                  {design.ozellikler.partitionCount > 0 && (
+                    <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                      <div className="text-xs text-gray-500">Bölüntü</div>
+                      <div className="font-semibold text-purple-700 text-sm">{design.ozellikler.partitionCount} adet</div>
+                    </div>
+                  )}
+                  {design.ozellikler.wcZoneCount > 0 && (
+                    <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                      <div className="text-xs text-gray-500">WC</div>
+                      <div className="font-semibold text-purple-700 text-sm">{design.ozellikler.wcZoneCount} adet</div>
+                    </div>
+                  )}
+                  {design.ozellikler.hasVeranda && (
+                    <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <div className="text-xs text-gray-500">Veranda</div>
+                      <div className="font-semibold text-amber-700 text-sm">{design.ozellikler.verandaSize || 'Var'}</div>
+                    </div>
+                  )}
+                  {design.ozellikler.isCombo && (
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                      <div className="text-xs text-gray-500">Combo</div>
+                      <div className="font-semibold text-red-700 text-sm">Aktif</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Features Card (legacy array format) */}
+            {design.ozellikler && Array.isArray(design.ozellikler) && design.ozellikler.length > 0 && (
               <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Özellikler</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

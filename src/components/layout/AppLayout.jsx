@@ -15,6 +15,9 @@ import {
   X,
   LogOut,
   ChevronRight,
+  ChevronLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { useAuth } from '../../App';
 
@@ -23,6 +26,7 @@ const AppLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const roleItems = {
     patron: [
@@ -94,19 +98,26 @@ const AppLayout = ({ children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-amber-800 to-amber-900 text-white transform transition-transform duration-300 ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 bg-gradient-to-b from-amber-800 to-amber-900 text-white transform transition-all duration-300 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        } ${collapsed ? 'w-16' : 'w-64'}`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-amber-700">
+        <div className={`border-b border-amber-700 ${collapsed ? 'p-3' : 'p-6'}`}>
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold">Tokyay Kereste</h1>
-              <p className="text-amber-300 text-sm">Konteyner Portalı</p>
-            </div>
+            {!collapsed && (
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold truncate">Tokyay Kereste</h1>
+                <p className="text-amber-300 text-sm">Konteyner Portalı</p>
+              </div>
+            )}
+            {collapsed && (
+              <div className="w-10 h-10 bg-amber-700 rounded-lg flex items-center justify-center font-bold text-sm mx-auto">
+                TK
+              </div>
+            )}
             <button
-              className="lg:hidden text-amber-300 hover:text-white"
+              className="lg:hidden text-amber-300 hover:text-white flex-shrink-0"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-6 h-6" />
@@ -115,20 +126,22 @@ const AppLayout = ({ children }) => {
         </div>
 
         {/* User info */}
-        <div className="p-4 border-b border-amber-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center font-bold text-lg">
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{user?.name || 'Kullanıcı'}</p>
-              <p className="text-amber-300 text-xs">{getRoleLabel(user?.role)}</p>
+        {!collapsed && (
+          <div className="p-4 border-b border-amber-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-sm truncate">{user?.name || 'Kullanıcı'}</p>
+                <p className="text-amber-300 text-xs">{getRoleLabel(user?.role)}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Navigation */}
-        <nav className="p-4 flex-1">
+        <nav className={`flex-1 overflow-y-auto ${collapsed ? 'p-2' : 'p-4'}`}>
           <ul className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -139,15 +152,18 @@ const AppLayout = ({ children }) => {
                   <Link
                     to={item.path}
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    title={collapsed ? item.label : ''}
+                    className={`flex items-center gap-3 rounded-lg transition-colors ${
+                      collapsed ? 'px-2 py-3 justify-center' : 'px-4 py-3'
+                    } ${
                       isActive
                         ? 'bg-amber-700 text-white'
                         : 'text-amber-200 hover:bg-amber-700/50 hover:text-white'
                     }`}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    <span className="font-medium">{item.label}</span>
-                    {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+                    {!collapsed && <span className="font-medium">{item.label}</span>}
+                    {!collapsed && isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
                   </Link>
                 </li>
               );
@@ -155,20 +171,35 @@ const AppLayout = ({ children }) => {
           </ul>
         </nav>
 
+        {/* Collapse toggle (desktop only) */}
+        <div className="hidden lg:block border-t border-amber-700 p-2">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="flex items-center justify-center w-full px-3 py-2 text-amber-300 hover:bg-amber-700/50 hover:text-white rounded-lg transition-colors"
+            title={collapsed ? 'Menüyü Genişlet' : 'Menüyü Daralt'}
+          >
+            {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+            {!collapsed && <span className="ml-2 text-sm font-medium">Daralt</span>}
+          </button>
+        </div>
+
         {/* Logout */}
-        <div className="p-4 border-t border-amber-700">
+        <div className={`border-t border-amber-700 ${collapsed ? 'p-2' : 'p-4'}`}>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 text-amber-200 hover:bg-amber-700/50 hover:text-white rounded-lg transition-colors"
+            title={collapsed ? 'Çıkış Yap' : ''}
+            className={`flex items-center gap-3 w-full text-amber-200 hover:bg-amber-700/50 hover:text-white rounded-lg transition-colors ${
+              collapsed ? 'px-2 py-3 justify-center' : 'px-4 py-3'
+            }`}
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Çıkış Yap</span>
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && <span className="font-medium">Çıkış Yap</span>}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Top bar (mobile) */}
         <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
           <button
@@ -182,7 +213,7 @@ const AppLayout = ({ children }) => {
         </header>
 
         {/* Page content */}
-        <main className="flex-1">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>

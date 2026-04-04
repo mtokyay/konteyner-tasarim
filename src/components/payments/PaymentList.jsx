@@ -27,7 +27,7 @@ export default function PaymentList() {
         .select('*, customers:musteri_id(ad, soyad), contracts:sozlesme_id(sozlesme_no)');
 
       if (filterStatus) {
-        query = query.eq('status', filterStatus);
+        query = query.eq('durum', filterStatus);
       }
 
       const { data, error: fetchError } = await query;
