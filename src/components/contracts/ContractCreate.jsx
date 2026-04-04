@@ -135,6 +135,10 @@ const ContractCreate = () => {
     try {
       setSubmitting(true);
 
+      // Get the actual Supabase auth user for FK references
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const authUserId = authUser?.id || null;
+
       const sozlesmeNo = 'SK-' + Date.now().toString().slice(-8);
 
       const { data: contractData, error: contractError } = await supabase
@@ -148,7 +152,7 @@ const ContractCreate = () => {
             toplam_tutar: selectedDesign.net_fiyat,
             terms: contractTerms,
             status: 'hazirlandi',
-            created_by: user?.id || null,
+            created_by: authUserId,
           },
         ])
         .select('id');
@@ -164,7 +168,7 @@ const ContractCreate = () => {
         odenen_tutar: 0,
         vade: payment.vade,
         durum: 'bekliyor',
-        recorded_by: user?.id || null,
+        recorded_by: authUserId,
       }));
 
       const { error: paymentError } = await supabase.from('payments').insert(paymentRecords);

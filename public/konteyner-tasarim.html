@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tokyay Kereste - Konteyner Tasarim Portali</title>
-            <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; margin: 0; }
@@ -35,7 +34,7 @@
 </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root"><div id="app-loader"><div class="spinner"></div></div></div>
     <script type="text/babel">
     const { useState, useRef, useCallback, useMemo, useEffect } = React;
     const SCALE=1.8,GRID_SIZE=10,SNAP_SIZE=5;

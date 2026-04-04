@@ -131,6 +131,10 @@ const DesignEditor = () => {
         return;
       }
 
+      // Get the actual Supabase auth user for FK references
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const authUserId = authUser?.id || null;
+
       const containerInfo = pendingDesignData?.container || {};
       const genislik = containerInfo.width ? containerInfo.width / 100 : null;
       const uzunluk = containerInfo.length ? containerInfo.length / 100 : null;
@@ -142,10 +146,10 @@ const DesignEditor = () => {
         : extraFields.toplam_fiyat ? parseFloat(extraFields.toplam_fiyat) : null;
 
       const ozellikler = {
-        panelType: containerInfo.panelType,
-        roofType: containerInfo.roofType,
-        roofColor: containerInfo.roofColor,
-        roofHeight: containerInfo.roofHeight,
+        panelType: containerInfo.panelType || null,
+        roofType: containerInfo.roofType || null,
+        roofColor: containerInfo.roofColor || null,
+        roofHeight: containerInfo.roofHeight || null,
         hasVeranda: pendingDesignData.veranda?.enabled || false,
         verandaSize: pendingDesignData.veranda?.enabled ? `${pendingDesignData.veranda.width}x${pendingDesignData.veranda.depth}` : null,
         isCombo: pendingDesignData.combo?.enabled || false,
@@ -156,25 +160,30 @@ const DesignEditor = () => {
         wcZoneCount: pendingDesignData.wcZones?.length || 0,
       };
 
+      // Common fields for both insert and update
+      const designFields = {
+        design_data: pendingDesignData,
+        ad: extraFields.ad || `Konteyner ${containerInfo.width}x${containerInfo.length}`,
+        aciklama: extraFields.aciklama || null,
+        genislik,
+        yukseklik,
+        uzunluk,
+        alan,
+        ozellikler,
+        toplam_fiyat: extraFields.toplam_fiyat ? parseFloat(extraFields.toplam_fiyat) : null,
+        indirim: extraFields.indirim ? parseFloat(extraFields.indirim) : null,
+        net_fiyat: netFiyat,
+        teslim_tarihi: extraFields.teslim_tarihi || null,
+        notlar: extraFields.notlar || null,
+        status: extraFields.status,
+      };
+
       if (design?.id) {
         // Update existing design
         const { error } = await supabase
           .from('designs')
           .update({
-            design_data: pendingDesignData,
-            ad: extraFields.ad || `Konteyner ${containerInfo.width}x${containerInfo.length}`,
-            aciklama: extraFields.aciklama || null,
-            genislik,
-            yukseklik,
-            uzunluk,
-            alan,
-            ozellikler,
-            toplam_fiyat: extraFields.toplam_fiyat ? parseFloat(extraFields.toplam_fiyat) : null,
-            indirim: extraFields.indirim ? parseFloat(extraFields.indirim) : null,
-            net_fiyat: netFiyat,
-            teslim_tarihi: extraFields.teslim_tarihi || null,
-            notlar: extraFields.notlar || null,
-            status: extraFields.status,
+            ...designFields,
             updated_at: new Date().toISOString(),
           })
           .eq('id', design.id);
@@ -183,28 +192,20 @@ const DesignEditor = () => {
         setDesign(prev => ({ ...prev, ad: extraFields.ad, design_data: pendingDesignData }));
         setMessage({ type: 'success', text: 'Tasarım güncellendi!' });
       } else {
-        // Create new design
+        // Create new design - customer_id is required
+        const effectiveCustomerId = customerId || design?.customer_id;
+        if (!effectiveCustomerId) {
+          throw new Error('Müşteri bilgisi bulunamadı. Lütfen tasarım sayfasından müşteri seçerek tekrar deneyin.');
+        }
+
         const refNo = 'TH-' + Date.now().toString().slice(-6);
         const { data: newDesign, error } = await supabase
           .from('designs')
           .insert({
-            customer_id: customerId,
+            ...designFields,
+            customer_id: effectiveCustomerId,
             ref_no: refNo,
-            ad: extraFields.ad || `Konteyner ${containerInfo.width}x${containerInfo.length}`,
-            aciklama: extraFields.aciklama || null,
-            design_data: pendingDesignData,
-            status: extraFields.status || 'taslak',
-            genislik,
-            yukseklik,
-            uzunluk,
-            alan,
-            ozellikler,
-            toplam_fiyat: extraFields.toplam_fiyat ? parseFloat(extraFields.toplam_fiyat) : null,
-            indirim: extraFields.indirim ? parseFloat(extraFields.indirim) : null,
-            net_fiyat: netFiyat,
-            teslim_tarihi: extraFields.teslim_tarihi || null,
-            notlar: extraFields.notlar || null,
-            created_by: user?.id,
+            created_by: authUserId,
           })
           .select()
           .single();
@@ -429,6 +430,12 @@ const DesignEditor = () => {
               )}
             </div>
 
+            {message && message.type === 'error' && (
+              <div className="mx-5 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-red-700">{message.text}</p>
+              </div>
+            )}
             <div className="p-5 border-t border-gray-200 flex justify-end gap-3">
               <button
                 onClick={() => setShowSaveModal(false)}
