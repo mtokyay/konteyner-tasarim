@@ -1,640 +1,167 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSupabase, isConfigured } from './lib/supabase';
-import AppLayout from './components/layout/AppLayout';
-import PatronDashboard from './components/dashboard/PatronDashboard';
-import TasarimciDashboard from './components/dashboard/TasarimciDashboard';
-import MusteriDashboard from './components/dashboard/MusteriDashboard';
-import CustomerList from './components/customers/CustomerList';
-import CustomerCreate from './components/customers/CustomerCreate';
-import CustomerDetail from './components/customers/CustomerDetail';
-import DesignList from './components/design/DesignList';
-import DesignNew from './components/design/DesignNew';
-import DesignDetail from './components/design/DesignDetail';
-import DesignEditor from './components/design/DesignEditor';
-import CompanyInfo from './components/company/CompanyInfo';
-import ContractCreate from './components/contracts/ContractCreate';
-import ContractList from './components/contracts/ContractList';
-import ContractDetail from './components/contracts/ContractDetail';
-import ContractPDF from './components/contracts/ContractPDF';
-import PaymentList from './components/payments/PaymentList';
-import PaymentEntry from './components/payments/PaymentEntry';
-import FinanceDashboard from './components/payments/FinanceDashboard';
-import CustomerPaymentNotification from './components/payments/CustomerPaymentNotification';
-import CustomerContract from './components/customer-portal/CustomerContract';
-import CustomerStatus from './components/customer-portal/CustomerStatus';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TenantProvider, useTenant } from './contexts/TenantContext';
 
-// Auth Context
-const AuthContext = createContext();
+// Layouts
+import PanelLayout from './components/layout/PanelLayout';
+import AdminLayout from './components/layout/AdminLayout';
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+// Public pages
+import LandingPage from './components/landing/LandingPage';
+import LoginPage from './components/auth/LoginPage';
+import RegisterPage from './components/auth/RegisterPage';
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem('user');
-    const authToken = localStorage.getItem('authToken');
+// Panel pages (firma)
+import PanelDashboard from './components/panel/dashboard/PanelDashboard';
+import CustomerList from './components/panel/customers/CustomerList';
+import CustomerCreate from './components/panel/customers/CustomerCreate';
+import CustomerDetail from './components/panel/customers/CustomerDetail';
+import DesignList from './components/panel/design/DesignList';
+import DesignNew from './components/panel/design/DesignNew';
+import DesignDetail from './components/panel/design/DesignDetail';
+import DesignEditor from './components/panel/design/DesignEditor';
+import ContractList from './components/panel/contracts/ContractList';
+import ContractCreate from './components/panel/contracts/ContractCreate';
+import ContractDetail from './components/panel/contracts/ContractDetail';
+import ContractPDF from './components/panel/contracts/ContractPDF';
+import PaymentList from './components/panel/payments/PaymentList';
+import PaymentEntry from './components/panel/payments/PaymentEntry';
+import FinanceDashboard from './components/panel/payments/FinanceDashboard';
+import CompanyInfo from './components/panel/settings/CompanyInfo';
+import TeamManagement from './components/panel/team/TeamManagement';
+import SubscriptionPage from './components/panel/subscription/SubscriptionPage';
 
-    if (storedUser && authToken) {
-      setUser(JSON.parse(storedUser));
-    }
+// Admin pages (super admin)
+import AdminDashboard from './components/admin/AdminDashboard';
+import TenantList from './components/admin/TenantList';
+import TenantDetail from './components/admin/TenantDetail';
+import PlanManager from './components/admin/PlanManager';
 
-    setLoading(false);
-  }, []);
+// Portal pages (müşteri)
+import PortalDashboard from './components/portal/PortalDashboard';
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('authToken', userData.token);
-  };
-
-  const logout = async () => {
-    try {
-      const supabase = getSupabase();
-      if (supabase) await supabase.auth.signOut();
-    } catch (err) { console.warn('Supabase signOut error:', err); }
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
-
-// Protected Route Component
-const ProtectedRoute = ({ children, requiredRole }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  return <AppLayout user={user}>{children}</AppLayout>;
-};
-
-// Auth-only wrapper (no AppLayout - for full-screen views)
-const AuthOnly = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-700 mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
-  if (!user) return <Navigate to="/login" replace />;
+// Route guards
+function RequireAuth({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/giris" replace />;
   return children;
-};
+}
 
-// Placeholder Component for Routes Not Yet Built
-const ComingSoon = () => (
-  <div className="flex flex-col items-center justify-center h-full text-center">
-    <div className="mb-6">
-      <div className="text-6xl mb-4">🏗️</div>
-      <h2 className="text-3xl font-bold text-gray-900 mb-2">Yakında...</h2>
-      <p className="text-gray-600 text-lg">Bu sayfa yakında hazır olacaktır.</p>
-    </div>
-  </div>
-);
+function RequireTenant({ children }) {
+  const { isAuthenticated, loading: authLoading, isSuperAdmin } = useAuth();
+  const { tenant, loading: tenantLoading } = useTenant();
 
-// Login Page
-const LoginPage = () => {
-  const { user, login } = useAuth();
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState('patron');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  if (authLoading || tenantLoading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/giris" replace />;
+  if (isSuperAdmin && !tenant) return <Navigate to="/admin" replace />;
+  if (!tenant) return <Navigate to="/kayit?step=tenant" replace />;
+  return children;
+}
 
-  const supabaseReady = isConfigured();
+function RequireAdmin({ children }) {
+  const { isAuthenticated, loading, isSuperAdmin } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/giris" replace />;
+  if (!isSuperAdmin) return <Navigate to="/panel" replace />;
+  return children;
+}
 
-  // Zaten giris yapmissa dashboard'a yonlendir
-  useEffect(() => {
-    if (user) navigate('/dashboard', { replace: true });
-  }, [user, navigate]);
+function AuthRedirect() {
+  const { isAuthenticated, loading, isSuperAdmin } = useAuth();
+  const { tenant, loading: tenantLoading, role } = useTenant();
 
-  const roles = [
-    { value: 'patron', label: 'Patron (İşletme Sahibi)' },
-    { value: 'tasarimci', label: 'Tasarımcı' },
-    { value: 'muhasebeci', label: 'Muhasebeci' },
-    { value: 'kalite_kontrolcu', label: 'Kalite Kontrolcü' },
-    { value: 'usta', label: 'Usta' },
-    { value: 'musteri', label: 'Müşteri' },
-  ];
+  if (loading || tenantLoading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/giris" replace />;
+  if (isSuperAdmin) return <Navigate to="/admin" replace />;
+  if (!tenant) return <Navigate to="/kayit?step=tenant" replace />;
+  if (role === 'customer') return <Navigate to="/portal" replace />;
+  return <Navigate to="/panel" replace />;
+}
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    if (!email || !password) {
-      setError('Lütfen e-mail ve şifreyi girin');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const supabase = getSupabase();
-
-      if (supabase) {
-        // Gercek Supabase auth
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (authError) {
-          setError('Giriş başarısız: ' + authError.message);
-          setLoading(false);
-          return;
-        }
-
-        if (data.user) {
-          // Profil tablosundan rol bilgisini al
-          let profileRole = 'patron';
-          let profileName = data.user.email.split('@')[0];
-
-          try {
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('full_name, role')
-              .eq('id', data.user.id)
-              .single();
-
-            if (profile && !profileError) {
-              profileRole = profile.role || 'patron';
-              profileName = profile.full_name || profileName;
-            }
-          } catch (profileErr) {
-            console.warn('Profil okunamadi, varsayilan rol kullaniliyor:', profileErr);
-          }
-
-          const userData = {
-            id: data.user.id,
-            name: profileName,
-            email: data.user.email,
-            role: profileRole,
-            token: data.session.access_token,
-          };
-
-          login(userData);
-          navigate('/dashboard', { replace: true });
-        }
-      } else {
-        // Demo mod - Supabase baglantisi yok
-        const userData = {
-          id: 'demo-' + Date.now(),
-          name: email.split('@')[0],
-          email: email,
-          role: selectedRole,
-          token: 'demo-token-' + Date.now(),
-        };
-
-        login(userData);
-        navigate('/dashboard', { replace: true });
-      }
-    } catch (err) {
-      setError('Bağlantı hatası: ' + (err.message || 'Bilinmeyen hata'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
+function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-700 to-amber-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-block bg-white rounded-full w-16 h-16 flex items-center justify-center mb-4">
-            <span className="text-3xl font-bold text-amber-700">TK</span>
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Tokyay Kereste</h1>
-          <p className="text-amber-100">Tinyhouse Yönetim Sistemi</p>
-        </div>
-
-        {/* Login Form */}
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Giriş Yapın</h2>
-
-          {/* Baglanti durumu */}
-          <div className={`mb-4 p-3 rounded-lg text-sm flex items-center gap-2 ${supabaseReady ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}>
-            <span className={`w-2 h-2 rounded-full ${supabaseReady ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
-            {supabaseReady ? 'Veritabanı bağlantısı aktif' : 'Demo mod - Veritabanı bağlantısı yok'}
-          </div>
-
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Rol secimi sadece demo modda gosterilir */}
-            {!supabaseReady && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rol Seçin (Demo)
-                </label>
-                <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
-                >
-                  {roles.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                E-mail
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ornek@tokyaykereste.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Şifre
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-700"
-                disabled={loading}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-amber-700 text-white py-2 rounded-lg hover:bg-amber-800 transition-colors font-semibold mt-6 disabled:opacity-50"
-            >
-              {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-            </button>
-          </form>
-
-          {!supabaseReady && (
-            <p className="text-xs text-gray-500 text-center mt-6">
-              Demo modu aktif. Herhangi bir e-mail ve şifre ile giriş yapabilirsiniz.
-            </p>
-          )}
-        </div>
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600 mx-auto mb-3"></div>
+        <p className="text-gray-500 text-sm">Yükleniyor...</p>
       </div>
     </div>
   );
-};
+}
 
-// Dashboard Router Component
-const DashboardRouter = () => {
-  const { user } = useAuth();
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/giris" element={<LoginPage />} />
+      <Route path="/kayit" element={<RegisterPage />} />
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+      {/* Auth redirect */}
+      <Route path="/dashboard" element={<AuthRedirect />} />
 
-  switch (user.role) {
-    case 'patron':
-      return <PatronDashboard />;
-    case 'tasarimci':
-      return <TasarimciDashboard />;
-    case 'muhasebeci':
-      return <ComingSoon />;
-    case 'kalite_kontrolcu':
-      return <ComingSoon />;
-    case 'usta':
-      return <ComingSoon />;
-    case 'musteri':
-      return <MusteriDashboard />;
-    default:
-      return <ComingSoon />;
-  }
-};
+      {/* Panel — Firma (tenant required) */}
+      <Route path="/panel" element={<RequireTenant><PanelLayout /></RequireTenant>}>
+        <Route index element={<PanelDashboard />} />
+        <Route path="customers" element={<CustomerList />} />
+        <Route path="customers/new" element={<CustomerCreate />} />
+        <Route path="customers/:id" element={<CustomerDetail />} />
+        <Route path="designs" element={<DesignList />} />
+        <Route path="designs/new" element={<DesignNew />} />
+        <Route path="designs/:id" element={<DesignDetail />} />
+        <Route path="contracts" element={<ContractList />} />
+        <Route path="contracts/new" element={<ContractCreate />} />
+        <Route path="contracts/new/:designId" element={<ContractCreate />} />
+        <Route path="contracts/:id" element={<ContractDetail />} />
+        <Route path="payments" element={<PaymentList />} />
+        <Route path="payments/entry" element={<PaymentEntry />} />
+        <Route path="payments/entry/:paymentId" element={<PaymentEntry />} />
+        <Route path="finance" element={<FinanceDashboard />} />
+        <Route path="team" element={<TeamManagement />} />
+        <Route path="settings" element={<CompanyInfo />} />
+        <Route path="subscription" element={<SubscriptionPage />} />
+      </Route>
 
-// Unauthorized Page
-const UnauthorizedPage = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-100">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold text-gray-900 mb-2">403</h1>
-      <p className="text-gray-600 mb-6">Bu sayfaya erişim izni yok</p>
-      <a href="/dashboard" className="text-amber-700 hover:text-amber-800 font-semibold">
-        Dashboard'a Dön →
-      </a>
-    </div>
-  </div>
-);
+      {/* Design editor — full screen, no sidebar */}
+      <Route path="/panel/designs/:id/editor" element={
+        <RequireTenant><DesignEditor /></RequireTenant>
+      } />
+      <Route path="/panel/designs/new/editor" element={
+        <RequireTenant><DesignEditor /></RequireTenant>
+      } />
 
-// Main App Component
-const App = () => {
+      {/* Contract PDF — full screen for printing */}
+      <Route path="/panel/contracts/:id/pdf" element={
+        <RequireTenant><ContractPDF /></RequireTenant>
+      } />
+
+      {/* Admin — Super Admin */}
+      <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="tenants" element={<TenantList />} />
+        <Route path="tenants/:id" element={<TenantDetail />} />
+        <Route path="plans" element={<PlanManager />} />
+      </Route>
+
+      {/* Portal — Müşteri */}
+      <Route path="/portal" element={<RequireAuth><PortalDashboard /></RequireAuth>} />
+
+      {/* 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-          {/* Root - Redirect to Dashboard or Login */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Navigate to="/dashboard" replace />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Dashboard */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardRouter />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Customers */}
-          <Route
-            path="/customers"
-            element={
-              <ProtectedRoute>
-                <CustomerList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers/new"
-            element={
-              <ProtectedRoute>
-                <CustomerCreate />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers/:id"
-            element={
-              <ProtectedRoute>
-                <CustomerDetail />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Designs */}
-          <Route
-            path="/designs"
-            element={
-              <ProtectedRoute>
-                <DesignList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/designs/new"
-            element={
-              <ProtectedRoute>
-                <DesignNew />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/designs/:id"
-            element={
-              <ProtectedRoute>
-                <DesignDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/designs/:id/editor"
-            element={
-              <AuthOnly>
-                <DesignEditor />
-              </AuthOnly>
-            }
-          />
-          <Route
-            path="/designs/new/editor"
-            element={
-              <AuthOnly>
-                <DesignEditor />
-              </AuthOnly>
-            }
-          />
-
-          {/* Contracts */}
-          <Route
-            path="/contracts"
-            element={
-              <ProtectedRoute>
-                <ContractList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/contracts/new"
-            element={
-              <ProtectedRoute>
-                <ContractCreate />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/contracts/new/:designId"
-            element={
-              <ProtectedRoute>
-                <ContractCreate />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/contracts/:id"
-            element={
-              <ProtectedRoute>
-                <ContractDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/contracts/:id/pdf"
-            element={
-              <AuthOnly>
-                <ContractPDF />
-              </AuthOnly>
-            }
-          />
-
-          {/* Payments */}
-          <Route
-            path="/payments"
-            element={
-              <ProtectedRoute>
-                <PaymentList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payments/entry"
-            element={
-              <ProtectedRoute>
-                <PaymentEntry />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payments/entry/:paymentId"
-            element={
-              <ProtectedRoute>
-                <PaymentEntry />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/finance"
-            element={
-              <ProtectedRoute>
-                <FinanceDashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Production */}
-          <Route
-            path="/production"
-            element={
-              <ProtectedRoute>
-                <ComingSoon />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Quality */}
-          <Route
-            path="/quality"
-            element={
-              <ProtectedRoute>
-                <ComingSoon />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Company Info */}
-          <Route
-            path="/company"
-            element={
-              <ProtectedRoute>
-                <CompanyInfo />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Customer Routes */}
-          <Route
-            path="/my-contract"
-            element={
-              <ProtectedRoute requiredRole="musteri">
-                <CustomerContract />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-payments"
-            element={
-              <ProtectedRoute requiredRole="musteri">
-                <CustomerPaymentNotification />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-status"
-            element={
-              <ProtectedRoute requiredRole="musteri">
-                <CustomerStatus />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Craftsman Routes */}
-          <Route
-            path="/my-works"
-            element={
-              <ProtectedRoute requiredRole="usta">
-                <ComingSoon />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/messages"
-            element={
-              <ProtectedRoute requiredRole="usta">
-                <ComingSoon />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 404 - Not Found */}
-          <Route
-            path="*"
-            element={
-              <div className="min-h-screen flex items-center justify-center bg-gray-100">
-                <div className="text-center">
-                  <h1 className="text-4xl font-bold text-gray-900 mb-2">404</h1>
-                  <p className="text-gray-600 mb-6">Sayfa bulunamadı</p>
-                  <a href="/dashboard" className="text-amber-700 hover:text-amber-800 font-semibold">
-                    Dashboard'a Dön →
-                  </a>
-                </div>
-              </div>
-            }
-          />
-        </Routes>
+        <TenantProvider>
+          <AppRoutes />
+        </TenantProvider>
       </AuthProvider>
     </Router>
   );
-};
-
-export default App;
+}

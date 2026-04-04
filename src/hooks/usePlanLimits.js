@@ -1,0 +1,78 @@
+import { useState, useEffect } from 'react';
+import { getSupabase } from '../lib/supabase';
+import { useTenant } from '../contexts/TenantContext';
+
+export function usePlanLimits() {
+  const { tenantId, plan, hasFeature, getLimit, isSubscriptionActive } = useTenant();
+  const [counts, setCounts] = useState({
+    customers: 0,
+    designs: 0,
+    activeDesigns: 0,
+    contracts: 0,
+    members: 0,
+  });
+  const supabase = getSupabase();
+
+  useEffect(() => {
+    if (!tenantId || !supabase) return;
+    loadCounts();
+  }, [tenantId]);
+
+  const loadCounts = async () => {
+    try {
+      const [custRes, designRes, activeDesignRes, contractRes, memberRes] = await Promise.all([
+        supabase.from('customers').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('designs').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('designs').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).not('status', 'in', '("tamamlandi","iptal","teslim_edildi")'),
+        supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('tenant_members').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('is_active', true),
+      ]);
+
+      setCounts({
+        customers: custRes.count || 0,
+        designs: designRes.count || 0,
+        activeDesigns: activeDesignRes.count || 0,
+        contracts: contractRes.count || 0,
+        members: memberRes.count || 0,
+      });
+    } catch (err) {
+      console.error('Limit sayıları yüklenemedi:', err);
+    }
+  };
+
+  return {
+    // Feature checks
+    canSaveDesign: hasFeature('save_design'),
+    canExportPDF: hasFeature('pdf_export'),
+    canCreateContract: hasFeature('contracts'),
+    canTrackPayments: hasFeature('payments'),
+    canUsePortal: hasFeature('customer_portal'),
+    canManageTeam: hasFeature('team_management'),
+    canCustomBrand: hasFeature('custom_branding'),
+
+    // Limit checks
+    canAddCustomer: counts.customers < getLimit('max_customers'),
+    canAddDesign: counts.activeDesigns < getLimit('max_active_designs'),
+    canAddContract: counts.contracts < getLimit('max_contracts'),
+    canAddMember: counts.members < getLimit('max_members'),
+
+    // Current counts
+    counts,
+    limits: {
+      maxCustomers: getLimit('max_customers'),
+      maxDesigns: getLimit('max_designs'),
+      maxActiveDesigns: getLimit('max_active_designs'),
+      maxContracts: getLimit('max_contracts'),
+      maxMembers: getLimit('max_members'),
+      maxStorageMb: getLimit('max_storage_mb'),
+    },
+
+    // Plan info
+    planName: plan?.name || 'Ücretsiz',
+    planSlug: plan?.slug || 'free',
+    isActive: isSubscriptionActive(),
+
+    // Refresh
+    reloadCounts: loadCounts,
+  };
+}

@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2, Check, AlertCircle, FileText, Download } from 'lucide-react';
-import { getSupabase } from '../../lib/supabase';
-import { useAuth } from '../../App';
+import { getSupabase } from '../../../lib/supabase';
+import { useTenant } from '../../../contexts/TenantContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DesignEditor = () => {
   const { id: designId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const iframeRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,7 @@ const DesignEditor = () => {
         .from('designs')
         .select('*, customers:customer_id(ad, soyad)')
         .eq('id', designId)
+        .eq('tenant_id', tenantId)
         .single();
 
       if (error) throw error;
@@ -195,7 +198,8 @@ const DesignEditor = () => {
             ...designFields,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', design.id);
+          .eq('id', design.id)
+          .eq('tenant_id', tenantId);
 
         if (error) throw error;
         setDesign(prev => ({ ...prev, ad: extraFields.ad, design_data: pendingDesignData }));
@@ -210,6 +214,7 @@ const DesignEditor = () => {
         const refNo = 'TH-' + Date.now().toString().slice(-6);
         const insertData = {
           ...designFields,
+          tenant_id: tenantId,
           customer_id: effectiveCustomerId,
           ref_no: refNo,
         };
@@ -227,7 +232,7 @@ const DesignEditor = () => {
         setDesign(newDesign);
         setMessage({ type: 'success', text: 'Tasarım oluşturuldu!' });
         // Update URL to reflect the new design ID
-        window.history.replaceState(null, '', `/designs/${newDesign.id}/editor`);
+        window.history.replaceState(null, '', `/panel/designs/${newDesign.id}/editor`);
       }
       setShowSaveModal(false);
     } catch (err) {
@@ -241,11 +246,11 @@ const DesignEditor = () => {
 
   const handleBack = () => {
     if (design?.id) {
-      navigate(`/designs/${design.id}`);
+      navigate(`/panel/designs/${design.id}`);
     } else if (customerId) {
-      navigate(`/customers/${customerId}`);
+      navigate(`/panel/customers/${customerId}`);
     } else {
-      navigate('/designs');
+      navigate('/panel/designs');
     }
   };
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { getSupabase } from '../../lib/supabase';
-import { useAuth } from '../../App';
+import { getSupabase } from '../../../lib/supabase';
+import { useTenant } from '../../../contexts/TenantContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const ContractCreate = () => {
   const [designs, setDesigns] = useState([]);
@@ -19,6 +20,7 @@ const ContractCreate = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const supabase = getSupabase();
+  const { tenantId } = useTenant();
 
   useEffect(() => {
     loadData();
@@ -45,6 +47,7 @@ const ContractCreate = () => {
         .from('designs')
         .select('*, customers:customer_id(ad, soyad, telefon, eposta, adres)')
         .eq('status', 'onaylandi')
+        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false });
 
       if (designsError) throw designsError;
@@ -53,6 +56,7 @@ const ContractCreate = () => {
       const { data: companyData, error: companyError } = await supabase
         .from('company_info')
         .select('*')
+        .eq('tenant_id', tenantId)
         .single();
 
       if (companyError && companyError.code !== 'PGRST116') throw companyError;
@@ -73,6 +77,7 @@ const ContractCreate = () => {
         .from('customers')
         .select('*')
         .eq('id', customerId)
+        .eq('tenant_id', tenantId)
         .single();
 
       if (error) throw error;
@@ -151,6 +156,7 @@ const ContractCreate = () => {
       const sozlesmeNo = 'SK-' + Date.now().toString().slice(-8);
 
       const contractInsert = {
+        tenant_id: tenantId,
         design_id: selectedDesign.id,
         customer_id: customer.id,
         sozlesme_no: sozlesmeNo,
@@ -171,6 +177,7 @@ const ContractCreate = () => {
 
       const paymentRecords = paymentSchedule.map((payment) => {
         const rec = {
+          tenant_id: tenantId,
           sozlesme_id: contractId,
           musteri_id: customer.id,
           tur: payment.type === 'pesinat' ? 'pesinat' : 'taksit',
@@ -187,7 +194,7 @@ const ContractCreate = () => {
 
       if (paymentError) throw paymentError;
 
-      navigate(`/contracts/${contractId}`);
+      navigate(`/panel/contracts/${contractId}`);
     } catch (err) {
       console.error('Sözleşme oluşturma hatası:', err);
       alert('Sözleşme oluşturulurken hata oluştu: ' + err.message);
@@ -217,7 +224,7 @@ const ContractCreate = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate('/contracts')}
+          onClick={() => navigate('/panel/contracts')}
           className="p-2 hover:bg-gray-100 rounded-lg transition"
         >
           <ArrowLeft size={20} />
@@ -406,7 +413,7 @@ const ContractCreate = () => {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => navigate('/contracts')}
+            onClick={() => navigate('/panel/contracts')}
             className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition"
           >
             İptal Et
