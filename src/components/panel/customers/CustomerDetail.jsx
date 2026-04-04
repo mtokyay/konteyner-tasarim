@@ -73,8 +73,10 @@ const CustomerDetail = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    loadCustomerData();
-  }, [customerId]);
+    if (tenantId) {
+      loadCustomerData();
+    }
+  }, [customerId, tenantId]);
 
   const loadCustomerData = async () => {
     setLoading(true);

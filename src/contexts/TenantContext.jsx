@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 const TenantContext = createContext(null);
 
 export function TenantProvider({ children }) {
-  const { user, isAuthenticated, isSuperAdmin } = useAuth();
+  const { user, isAuthenticated, isSuperAdmin, loading: authLoading } = useAuth();
   const [tenant, setTenant] = useState(null);       // tenants row
   const [membership, setMembership] = useState(null); // tenant_members row
   const [plan, setPlan] = useState(null);            // plans row
@@ -13,12 +13,18 @@ export function TenantProvider({ children }) {
   const supabase = getSupabase();
 
   useEffect(() => {
+    // Auth henüz yükleniyorsa bekle — erken false döndürme
+    if (authLoading) return;
+
     if (!isAuthenticated || !supabase) {
+      setTenant(null);
+      setMembership(null);
+      setPlan(null);
       setLoading(false);
       return;
     }
     loadTenantData();
-  }, [isAuthenticated, user?.id]);
+  }, [authLoading, isAuthenticated, user?.id]);
 
   const loadTenantData = async () => {
     try {

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Check, Crown, Loader2, AlertCircle, CreditCard, Calendar, ArrowRight } from 'lucide-react';
 import { getSupabase } from '../../../lib/supabase';
 import { useTenant } from '../../../contexts/TenantContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const SubscriptionPage = () => {
   const { tenant, plan, membership, isSubscriptionActive } = useTenant();
+  const { user } = useAuth();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(null);
@@ -77,8 +79,8 @@ const SubscriptionPage = () => {
           plan_id: selectedPlan.id,
           plan_name: selectedPlan.name,
           amount: selectedPlan.price_monthly * 100,
-          email: membership?.profiles?.email || '',
-          user_name: membership?.profiles?.full_name || '',
+          email: user?.email || '',
+          user_name: user?.user_metadata?.full_name || tenant?.name || '',
         }),
       });
 

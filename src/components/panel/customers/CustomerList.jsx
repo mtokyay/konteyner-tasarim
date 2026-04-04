@@ -346,7 +346,7 @@ const CustomerList = () => {
                             </Link>
                             <button
                               onClick={() =>
-                                navigate(`/customers/${customer.id}`)
+                                navigate(`/panel/customers/${customer.id}`)
                               }
                               className="p-2 hover:bg-green-100 text-green-600 rounded-lg transition-colors"
                               title="Düzenle"
