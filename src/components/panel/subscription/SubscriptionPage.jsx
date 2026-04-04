@@ -104,24 +104,26 @@ const SubscriptionPage = () => {
     }
   };
 
+  // 99999+ değerleri "Sınırsız" olarak göster
+  const isUnlimited = (val) => val === -1 || val >= 99999;
+
   const getPlanFeatures = (p) => {
     const all = [];
-    if (p.limits?.max_customers === -1) all.push('Sınırsız müşteri');
+    if (isUnlimited(p.limits?.max_customers)) all.push('Sınırsız müşteri');
     else if (p.limits?.max_customers) all.push(`${p.limits.max_customers} müşteri`);
 
-    if (p.limits?.max_designs === -1) all.push('Sınırsız tasarım');
+    if (isUnlimited(p.limits?.max_designs)) all.push('Sınırsız tasarım');
     else if (p.limits?.max_designs) all.push(`${p.limits.max_designs} aktif tasarım`);
 
     if (p.features?.save_design) all.push('Tasarım kaydetme');
-    else all.push('Tasarım kaydetme (yok)');
-
     if (p.features?.export_pdf) all.push('PDF çıktı');
     if (p.features?.contracts) all.push('Sözleşme oluşturma');
     if (p.features?.payments) all.push('Ödeme takibi');
     if (p.features?.customer_portal) all.push('Müşteri portalı');
     if (p.features?.team_management) {
       const maxMembers = p.limits?.max_members;
-      all.push(maxMembers ? `${maxMembers} çalışana kadar` : 'Ekip yönetimi');
+      if (isUnlimited(maxMembers)) all.push('Sınırsız ekip üyesi');
+      else all.push(maxMembers ? `${maxMembers} çalışana kadar` : 'Ekip yönetimi');
     }
     if (p.features?.api_access) all.push('API erişimi');
     if (p.slug === 'enterprise') all.push('Öncelikli destek');

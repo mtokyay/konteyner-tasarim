@@ -14,25 +14,25 @@ const features = [
 const plans = [
   {
     name: 'Ücretsiz', price: '0', period: '',
-    features: ['5 müşteri', '3 tasarım', 'Tasarım editörü', 'Demo kullanım'],
+    features: ['5 müşteri', '3 aktif tasarım', 'Tasarım editörü', 'Demo kullanım'],
     notIncluded: ['Tasarım kaydetme', 'PDF çıktı', 'Sözleşme', 'Ödeme takibi'],
     cta: 'Ücretsiz Başla', highlight: false,
   },
   {
     name: 'Başlangıç', price: '299', period: '/ay',
-    features: ['50 müşteri', '20 aktif tasarım', 'Tasarım kaydetme', 'PDF çıktı', 'Sözleşme oluşturma', 'Ödeme takibi'],
+    features: ['50 müşteri', 'Sınırsız tasarım', 'Tasarım kaydetme', 'PDF çıktı', 'Sözleşme oluşturma', 'Ödeme takibi'],
     notIncluded: ['Müşteri portalı', 'Ekip yönetimi'],
     cta: 'Planı Seç', highlight: false,
   },
   {
     name: 'Profesyonel', price: '599', period: '/ay',
-    features: ['200 müşteri', 'Sınırsız tasarım', 'Müşteri portalı', '5 çalışana kadar', 'Firma markası', 'Tüm Başlangıç özellikleri'],
+    features: ['200 müşteri', 'Sınırsız tasarım', 'Müşteri portalı', '5 çalışana kadar', 'Tüm Başlangıç özellikleri'],
     notIncluded: [],
     cta: 'Planı Seç', highlight: true,
   },
   {
     name: 'Kurumsal', price: '999', period: '/ay',
-    features: ['Sınırsız her şey', '20 çalışana kadar', 'API erişimi', 'Öncelikli destek', 'Özel entegrasyon', 'Tüm Pro özellikleri'],
+    features: ['Sınırsız müşteri', 'Sınırsız tasarım', '20 çalışana kadar', 'API erişimi', 'Öncelikli destek', 'Tüm Pro özellikleri'],
     notIncluded: [],
     cta: 'İletişime Geç', highlight: false,
   },
