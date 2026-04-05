@@ -16,9 +16,11 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; margin: 0; }
-        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #aaa; border-radius: 3px; }
+        .tab-bar { scrollbar-width: none; -ms-overflow-style: none; }
+        .tab-bar::-webkit-scrollbar { display: none; }
         @media print {
             .print\:hidden { display: none !important; }
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -1780,136 +1782,136 @@
         });
       };
       const tabs=[{id:"container",label:"Konteyner"},{id:"walls",label:"Bölüntü"},{id:"doors",label:"Kapı"},{id:"windows",label:"Pencere"},{id:"extras",label:"Ekstra"},{id:"markers",label:"İşaret"}];
-      return (
-        <div className="flex flex-col h-screen bg-gray-50 text-gray-800 text-sm select-none">
-          <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-amber-700 rounded flex items-center justify-center text-white text-xs font-bold">TK</div>
-              <span className="font-bold text-gray-800">Konteyner Tasarim</span>
-              <span className="text-gray-400 text-xs ml-2">{totalW}x{totalL}x{container.height}cm | Ev:{(totalW*totalL/10000).toFixed(1)}m²{veranda.enabled?" + Veranda:"+(veranda.width*veranda.depth/10000).toFixed(1)+"m²":""}</span>
-            </div>
-            <div className="flex gap-1.5 items-center">
-              <div className="flex bg-gray-100 rounded-lg p-0.5 mr-2">
-                {[{id:"2d",label:"2D Plan"},{id:"3d",label:"3D"},{id:"walls",label:"Duvarlar"},{id:"roof",label:"Cati"}].map(v=>(
-                  <button key={v.id} onClick={()=>setViewMode(v.id)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${viewMode===v.id?"bg-white text-blue-700 shadow-sm":"text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
-                ))}
-              </div>
-              <button onClick={()=>{
+      return (
+        <div className="flex flex-col h-screen bg-gray-50 text-gray-800 text-sm select-none">
+          <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-amber-700 rounded flex items-center justify-center text-white text-xs font-bold">TK</div>
+              <span className="font-bold text-gray-800">Konteyner Tasarim</span>
+              <span className="text-gray-400 text-xs ml-2">{totalW}x{totalL}x{container.height}cm | Ev:{(totalW*totalL/10000).toFixed(1)}m²{veranda.enabled?" + Veranda:"+(veranda.width*veranda.depth/10000).toFixed(1)+"m²":""}</span>
+            </div>
+            <div className="flex gap-1.5 items-center">
+              <div className="flex bg-gray-100 rounded-lg p-0.5 mr-2">
+                {[{id:"2d",label:"2D Plan"},{id:"3d",label:"3D"},{id:"walls",label:"Duvarlar"},{id:"roof",label:"Cati"}].map(v=>(
+                  <button key={v.id} onClick={()=>setViewMode(v.id)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${viewMode===v.id?"bg-white text-blue-700 shadow-sm":"text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
+                ))}
+              </div>
+              <button onClick={()=>{
                 if(window.parent!==window){
                   const state=window.__getDesignState?window.__getDesignState():{};
                   window.parent.postMessage({type:'DESIGN_DATA',designData:state},'*');
                 }else{alert('Kaydetmek icin portal uzerinden acin')}
               }} className="px-3 py-1.5 bg-amber-700 text-white rounded-lg text-xs font-medium hover:bg-amber-800">Kaydet</button>
               <button onClick={()=>setShowPrint(true)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">PDF / Yazdir</button>
-              <button onClick={()=>setShowExport(true)} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700">Ozet</button>
-            </div>
-          </div>
-          <div className="flex flex-1 overflow-hidden">
-            <div className="flex-1 relative overflow-auto bg-gray-100 p-2">
-              {viewMode==="2d" && (
-                <svg ref={svgRef} viewBox={`0 0 ${viewW} ${viewH}`} className="w-full bg-white rounded-lg shadow-inner" style={{cursor:mode==="place"?"crosshair":"default",minHeight:"400px",aspectRatio:`${viewW}/${viewH}`}} onMouseMove={handleMouseMove} onMouseUp={()=>setIsDragging(false)} onClick={handleSvgClick} onMouseLeave={()=>setIsDragging(false)}>
-                  <defs>
-                    <pattern id="grid" width={GRID_SIZE*SCALE} height={GRID_SIZE*SCALE} patternUnits="userSpaceOnUse"><path d={`M ${GRID_SIZE*SCALE} 0 L 0 0 0 ${GRID_SIZE*SCALE}`} fill="none" stroke="#e8e8e8" strokeWidth="0.3"/></pattern>
-                    <pattern id="ptile" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#E0F2F1"/><rect x="0" y="0" width="6" height="6" fill="#B2DFDB" stroke="#80CBC4" strokeWidth="0.3"/><rect x="7" y="7" width="6" height="6" fill="#B2DFDB" stroke="#80CBC4" strokeWidth="0.3"/></pattern>
-                    <marker id="ah" markerWidth="8" markerHeight="5" refX="8" refY="2.5" orient="auto"><polygon points="0 0,8 2.5,0 5" fill="#94a3b8"/></marker>
-                    <marker id="ahr" markerWidth="8" markerHeight="5" refX="0" refY="2.5" orient="auto"><polygon points="8 0,0 2.5,8 5" fill="#94a3b8"/></marker>
-                  </defs>
-                  <rect x={padding} y={padding} width={cl} height={cw} fill="url(#grid)"/>
-                  <rect x={padding} y={padding} width={cl} height={cw} fill={panelInfo?.color||"#F0F0F0"} opacity="0.1" rx="2"/>
-                  <rect x={padding} y={padding} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="5" rx="2"/>
-                  <rect x={padding+2.5} y={padding+2.5} width={cl-5} height={cw-5} fill="none" stroke={panelInfo?.color||"#E0E0E0"} strokeWidth="1.5"/>
-                  {combo.enabled && combo.direction==="width" &&
-                    <line x1={padding} y1={padding+c2s(container.width)} x2={padding+cl} y2={padding+c2s(container.width)} stroke="#78909C" strokeWidth="1" strokeDasharray="6,4" opacity="0.4"/>
-                  }
-                  {combo.enabled && combo.direction==="length" &&
-                    <line x1={padding+c2s(container.length)} y1={padding} x2={padding+c2s(container.length)} y2={padding+cw} stroke="#78909C" strokeWidth="1" strokeDasharray="6,4" opacity="0.4"/>
-                  }
-                  {veranda.enabled && <g>
-                    {(()=>{
-                      const vw=c2s(veranda.width),vd=c2s(veranda.depth);
-                      const vx=padding+(cl-vw)/2;
-                      const vy=veranda.position==="front"?padding+cw:padding-vd;
-                      return (<g>
-                        <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="1.5" strokeDasharray="6,3" rx="2"/>
-                        {[0,1,2,3].map(i=>{
-                          const cx=vx+i*(vw/3);
-                          const cy=veranda.position==="front"?vy+vd:vy;
-                          return <rect key={"vc-"+i} x={cx-3} y={cy-3} width={6} height={6} fill="#795548" stroke="#5D4037" strokeWidth="0.5" rx="1"/>;
-                        })}
-                        <text x={vx+vw/2} y={vy+vd/2+3} textAnchor="middle" fontSize="10" fill="#2E7D32" fontWeight="600">VERANDA</text>
-                        <text x={vx+vw/2} y={vy+vd/2+14} textAnchor="middle" fontSize="8" fill="#4CAF50">{veranda.width}x{veranda.depth} cm</text>
-                      </g>);
-                    })()}
-                  </g>}
-                  {container.roofType==="besik" && <g opacity="0.2"><line x1={padding} y1={padding+cw/2} x2={padding+cl} y2={padding+cw/2} stroke="#455A64" strokeWidth="1" strokeDasharray="8,4"/><text x={padding+cl/2} y={padding+cw/2-4} textAnchor="middle" fontSize="8" fill="#455A64">Mahya</text></g>}
-                  {wcZones.map(renderWcZone)}
-                  {partitions.map(renderPartition)}
-                  {items.map(renderItem)}
-                  {/* Wall dimension lines + labels */}
-                  {renderWallDims()}
-                  {renderWallLabels()}
-                  {mode==="place"&&placingItem&&(placingItem.type==="outlet"||placingItem.type==="marker"?<circle cx={c2s(mousePos.x)+padding} cy={c2s(mousePos.y)+padding} r={placingItem.type==="marker"?10:7} fill="rgba(59,130,246,0.2)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3"/>:<rect x={c2s(mousePos.x)+padding} y={c2s(mousePos.y)+padding} width={c2s(placingItem.width||20)} height={c2s(placingItem.height||10)} fill="rgba(59,130,246,0.15)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3" rx="2"/>)}
-                  <line x1={padding} y1={padding+cw+25} x2={padding+cl} y2={padding+cw+25} stroke="#64748b" strokeWidth="0.8" markerStart="url(#ahr)" markerEnd="url(#ah)"/>
-                  <rect x={padding+cl/2-28} y={padding+cw+16} width="56" height="16" fill="white" rx="3" stroke="#cbd5e1" strokeWidth="0.5"/>
-                  <text x={padding+cl/2} y={padding+cw+28} textAnchor="middle" fontSize="10" fill="#475569" fontWeight="500">{container.length} cm</text>
-                  <line x1={padding+cl+25} y1={padding} x2={padding+cl+25} y2={padding+cw} stroke="#64748b" strokeWidth="0.8" markerStart="url(#ahr)" markerEnd="url(#ah)"/>
-                  <rect x={padding+cl+14} y={padding+cw/2-8} width="56" height="16" fill="white" rx="3" stroke="#cbd5e1" strokeWidth="0.5"/>
-                  <text x={padding+cl+42} y={padding+cw/2+4} textAnchor="middle" fontSize="10" fill="#475569" fontWeight="500">{container.width} cm</text>
-                  <text x={padding+cl/2} y={padding+cw/2+(wcZones.length>0?40:0)} textAnchor="middle" fontSize="13" fill="#37474F" opacity="0.2" fontWeight="600">{(totalW*totalL/10000).toFixed(1)} m²{veranda.enabled?" + "+(veranda.width*veranda.depth/10000).toFixed(1)+" m²":""}</text>
-                  <text x={padding} y={padding-10} fontSize="9" fill="#64748b">{container.height}cm | {ROOF_TYPES.find(r=>r.id===container.roofType)?.name} | {panelInfo?.name}</text>
-                  {mode==="place" && <text x={padding+cl-5} y={padding-6} textAnchor="end" fontSize="9" fill="#3b82f6">{mousePos.x}, {mousePos.y} cm</text>}
-                </svg>
-              )}
-              {viewMode==="3d" && <div className="w-full h-full bg-white rounded-lg shadow-inner" style={{minHeight:"400px"}}><View3D container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda}/></div>}
-              {viewMode==="walls" && (
-                <div className="w-full bg-white rounded-lg shadow-inner p-4 space-y-3 overflow-auto" style={{minHeight:"400px"}}>
-                  <div className="text-sm font-bold text-gray-700 text-center mb-2">Duvar Cephe Gorunumleri</div>
-                  <div className="text-xs font-semibold text-gray-500 mb-1">Dis Duvarlar</div>
-                  <div className="grid grid-cols-1 gap-3">
-                    {["A","B","C","D"].map(w=><WallElevationView key={w} wall={w} container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>)}
-                  </div>
-                  {(partitions.length>0 || wcZones.length>0) && <>
-                    <div className="text-xs font-semibold text-gray-500 mt-4 mb-1">Ic Duvarlar</div>
-                    <div className="grid grid-cols-1 gap-3">
-                      {partitions.map(p=><WallElevationView key={"P-"+p.position} wall={"P-"+p.position} container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>)}
-                      {wcZones.flatMap(wc=>{
-                        const walls=[];
-                        if(wc.x>20) walls.push("WC-V-"+wc.x);
-                        if(wc.x+wc.w<totalL-20) walls.push("WC-V-"+(wc.x+wc.w));
-                        if(wc.y>20) walls.push("WC-H-"+wc.y);
-                        if(wc.y+wc.h<totalW-20) walls.push("WC-H-"+(wc.y+wc.h));
-                        return walls;
-                      }).filter((v,i,a)=>a.indexOf(v)===i).map(w=><WallElevationView key={w} wall={w} container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>)}
-                    </div>
-                  </>}
-                </div>
-              )}
-              {viewMode==="roof" && (
-                <div className="w-full h-full bg-white rounded-lg shadow-inner p-6 flex flex-col items-center justify-center gap-4" style={{minHeight:"400px"}}>
-                  <div className="text-base font-bold text-gray-700">Cati Gorunumu</div>
-                  <div className="w-full max-w-md"><RoofPreview roofType={container.roofType} roofColor={container.roofColor} roofLayers={container.roofLayers||1} panelColor={panelInfo?.color||"#F0F0F0"}/></div>
-                  <div className="bg-gray-50 rounded-lg p-4 max-w-md w-full space-y-3 text-xs">
-                    <div className="flex justify-between"><span className="text-gray-500">Cati Tipi:</span><span className="font-medium">{ROOF_TYPES.find(r=>r.id===container.roofType)?.name}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Renk:</span><span className="font-medium flex items-center gap-1"><span className="w-3 h-3 rounded-full inline-block border border-gray-300" style={{backgroundColor:ROOF_COLORS.find(r=>r.id===container.roofColor)?.color}}></span>{ROOF_COLORS.find(r=>r.id===container.roofColor)?.name}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Panel Kat:</span><div className="flex gap-1">{[1,2].map(n=><button key={n} onClick={()=>setContainer({...container,roofLayers:n})} className={`px-2 py-0.5 rounded text-xs ${(container.roofLayers||1)===n?"bg-blue-100 text-blue-700 font-medium":"bg-gray-200 text-gray-600"}`}>{n===1?"Tek":"Cift"}</button>)}</div></div>
-                  </div>
-                </div>
-              )}
-              {viewMode==="2d" && <>
-                <div className="absolute top-4 left-4 bg-white rounded-lg shadow border border-gray-200 p-1 flex gap-1">
-                  <button onClick={()=>{setMode("select");setPlacingItem(null)}} className={`px-2 py-1 rounded text-xs ${mode==="select"?"bg-blue-100 text-blue-700 font-medium":"text-gray-500 hover:bg-gray-100"}`}>Sec</button>
-                </div>
-                <div className="absolute bottom-3 right-3 bg-white/90 rounded-lg shadow border border-gray-200 px-3 py-1.5 text-xs text-gray-500 flex gap-3"><span>ESC: Iptal</span><span>DEL: Sil</span><span>R: Dondur</span></div>
-              </>}
-            </div>
-            {/* RIGHT PANEL */}
-            <div className="w-72 bg-white border-l border-gray-200 flex flex-col overflow-hidden flex-shrink-0">
-              <div className="flex border-b border-gray-200 bg-gray-50 overflow-x-auto flex-shrink-0" style={{height:"32px"}}>
-                {tabs.map(tab=>(<button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{height:"32px",lineHeight:"30px",padding:"0 5px",fontSize:"11px"}} className={`font-medium whitespace-nowrap ${activeTab===tab.id?"text-blue-600 border-b-2 border-blue-600 bg-white":"text-gray-500 hover:text-gray-700"}`}>{tab.label}</button>))}
-              </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {activeTab==="container" && <>
-                  <div><div style={{fontSize:"0.75rem",fontWeight:600,color:"#4b5563",marginBottom:"0.5rem"}}>Dis Olculer</div>
+              <button onClick={()=>setShowExport(true)} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700">Ozet</button>
+            </div>
+          </div>
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 relative overflow-auto bg-gray-100 p-2">
+              {viewMode==="2d" && (
+                <svg ref={svgRef} viewBox={`0 0 ${viewW} ${viewH}`} className="w-full bg-white rounded-lg shadow-inner" style={{cursor:mode==="place"?"crosshair":"default",minHeight:"400px",aspectRatio:`${viewW}/${viewH}`}} onMouseMove={handleMouseMove} onMouseUp={()=>setIsDragging(false)} onClick={handleSvgClick} onMouseLeave={()=>setIsDragging(false)}>
+                  <defs>
+                    <pattern id="grid" width={GRID_SIZE*SCALE} height={GRID_SIZE*SCALE} patternUnits="userSpaceOnUse"><path d={`M ${GRID_SIZE*SCALE} 0 L 0 0 0 ${GRID_SIZE*SCALE}`} fill="none" stroke="#e8e8e8" strokeWidth="0.3"/></pattern>
+                    <pattern id="ptile" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#E0F2F1"/><rect x="0" y="0" width="6" height="6" fill="#B2DFDB" stroke="#80CBC4" strokeWidth="0.3"/><rect x="7" y="7" width="6" height="6" fill="#B2DFDB" stroke="#80CBC4" strokeWidth="0.3"/></pattern>
+                    <marker id="ah" markerWidth="8" markerHeight="5" refX="8" refY="2.5" orient="auto"><polygon points="0 0,8 2.5,0 5" fill="#94a3b8"/></marker>
+                    <marker id="ahr" markerWidth="8" markerHeight="5" refX="0" refY="2.5" orient="auto"><polygon points="8 0,0 2.5,8 5" fill="#94a3b8"/></marker>
+                  </defs>
+                  <rect x={padding} y={padding} width={cl} height={cw} fill="url(#grid)"/>
+                  <rect x={padding} y={padding} width={cl} height={cw} fill={panelInfo?.color||"#F0F0F0"} opacity="0.1" rx="2"/>
+                  <rect x={padding} y={padding} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="5" rx="2"/>
+                  <rect x={padding+2.5} y={padding+2.5} width={cl-5} height={cw-5} fill="none" stroke={panelInfo?.color||"#E0E0E0"} strokeWidth="1.5"/>
+                  {combo.enabled && combo.direction==="width" &&
+                    <line x1={padding} y1={padding+c2s(container.width)} x2={padding+cl} y2={padding+c2s(container.width)} stroke="#78909C" strokeWidth="1" strokeDasharray="6,4" opacity="0.4"/>
+                  }
+                  {combo.enabled && combo.direction==="length" &&
+                    <line x1={padding+c2s(container.length)} y1={padding} x2={padding+c2s(container.length)} y2={padding+cw} stroke="#78909C" strokeWidth="1" strokeDasharray="6,4" opacity="0.4"/>
+                  }
+                  {veranda.enabled && <g>
+                    {(()=>{
+                      const vw=c2s(veranda.width),vd=c2s(veranda.depth);
+                      const vx=padding+(cl-vw)/2;
+                      const vy=veranda.position==="front"?padding+cw:padding-vd;
+                      return (<g>
+                        <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="1.5" strokeDasharray="6,3" rx="2"/>
+                        {[0,1,2,3].map(i=>{
+                          const cx=vx+i*(vw/3);
+                          const cy=veranda.position==="front"?vy+vd:vy;
+                          return <rect key={"vc-"+i} x={cx-3} y={cy-3} width={6} height={6} fill="#795548" stroke="#5D4037" strokeWidth="0.5" rx="1"/>;
+                        })}
+                        <text x={vx+vw/2} y={vy+vd/2+3} textAnchor="middle" fontSize="10" fill="#2E7D32" fontWeight="600">VERANDA</text>
+                        <text x={vx+vw/2} y={vy+vd/2+14} textAnchor="middle" fontSize="8" fill="#4CAF50">{veranda.width}x{veranda.depth} cm</text>
+                      </g>);
+                    })()}
+                  </g>}
+                  {container.roofType==="besik" && <g opacity="0.2"><line x1={padding} y1={padding+cw/2} x2={padding+cl} y2={padding+cw/2} stroke="#455A64" strokeWidth="1" strokeDasharray="8,4"/><text x={padding+cl/2} y={padding+cw/2-4} textAnchor="middle" fontSize="8" fill="#455A64">Mahya</text></g>}
+                  {wcZones.map(renderWcZone)}
+                  {partitions.map(renderPartition)}
+                  {items.map(renderItem)}
+                  {/* Wall dimension lines + labels */}
+                  {renderWallDims()}
+                  {renderWallLabels()}
+                  {mode==="place"&&placingItem&&(placingItem.type==="outlet"||placingItem.type==="marker"?<circle cx={c2s(mousePos.x)+padding} cy={c2s(mousePos.y)+padding} r={placingItem.type==="marker"?10:7} fill="rgba(59,130,246,0.2)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3"/>:<rect x={c2s(mousePos.x)+padding} y={c2s(mousePos.y)+padding} width={c2s(placingItem.width||20)} height={c2s(placingItem.height||10)} fill="rgba(59,130,246,0.15)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3" rx="2"/>)}
+                  <line x1={padding} y1={padding+cw+25} x2={padding+cl} y2={padding+cw+25} stroke="#64748b" strokeWidth="0.8" markerStart="url(#ahr)" markerEnd="url(#ah)"/>
+                  <rect x={padding+cl/2-28} y={padding+cw+16} width="56" height="16" fill="white" rx="3" stroke="#cbd5e1" strokeWidth="0.5"/>
+                  <text x={padding+cl/2} y={padding+cw+28} textAnchor="middle" fontSize="10" fill="#475569" fontWeight="500">{container.length} cm</text>
+                  <line x1={padding+cl+25} y1={padding} x2={padding+cl+25} y2={padding+cw} stroke="#64748b" strokeWidth="0.8" markerStart="url(#ahr)" markerEnd="url(#ah)"/>
+                  <rect x={padding+cl+14} y={padding+cw/2-8} width="56" height="16" fill="white" rx="3" stroke="#cbd5e1" strokeWidth="0.5"/>
+                  <text x={padding+cl+42} y={padding+cw/2+4} textAnchor="middle" fontSize="10" fill="#475569" fontWeight="500">{container.width} cm</text>
+                  <text x={padding+cl/2} y={padding+cw/2+(wcZones.length>0?40:0)} textAnchor="middle" fontSize="13" fill="#37474F" opacity="0.2" fontWeight="600">{(totalW*totalL/10000).toFixed(1)} m²{veranda.enabled?" + "+(veranda.width*veranda.depth/10000).toFixed(1)+" m²":""}</text>
+                  <text x={padding} y={padding-10} fontSize="9" fill="#64748b">{container.height}cm | {ROOF_TYPES.find(r=>r.id===container.roofType)?.name} | {panelInfo?.name}</text>
+                  {mode==="place" && <text x={padding+cl-5} y={padding-6} textAnchor="end" fontSize="9" fill="#3b82f6">{mousePos.x}, {mousePos.y} cm</text>}
+                </svg>
+              )}
+              {viewMode==="3d" && <div className="w-full h-full bg-white rounded-lg shadow-inner" style={{minHeight:"400px"}}><View3D container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda}/></div>}
+              {viewMode==="walls" && (
+                <div className="w-full bg-white rounded-lg shadow-inner p-4 space-y-3 overflow-auto" style={{minHeight:"400px"}}>
+                  <div className="text-sm font-bold text-gray-700 text-center mb-2">Duvar Cephe Gorunumleri</div>
+                  <div className="text-xs font-semibold text-gray-500 mb-1">Dis Duvarlar</div>
+                  <div className="grid grid-cols-1 gap-3">
+                    {["A","B","C","D"].map(w=><WallElevationView key={w} wall={w} container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>)}
+                  </div>
+                  {(partitions.length>0 || wcZones.length>0) && <>
+                    <div className="text-xs font-semibold text-gray-500 mt-4 mb-1">Ic Duvarlar</div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {partitions.map(p=><WallElevationView key={"P-"+p.position} wall={"P-"+p.position} container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>)}
+                      {wcZones.flatMap(wc=>{
+                        const walls=[];
+                        if(wc.x>20) walls.push("WC-V-"+wc.x);
+                        if(wc.x+wc.w<totalL-20) walls.push("WC-V-"+(wc.x+wc.w));
+                        if(wc.y>20) walls.push("WC-H-"+wc.y);
+                        if(wc.y+wc.h<totalW-20) walls.push("WC-H-"+(wc.y+wc.h));
+                        return walls;
+                      }).filter((v,i,a)=>a.indexOf(v)===i).map(w=><WallElevationView key={w} wall={w} container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>)}
+                    </div>
+                  </>}
+                </div>
+              )}
+              {viewMode==="roof" && (
+                <div className="w-full h-full bg-white rounded-lg shadow-inner p-6 flex flex-col items-center justify-center gap-4" style={{minHeight:"400px"}}>
+                  <div className="text-base font-bold text-gray-700">Cati Gorunumu</div>
+                  <div className="w-full max-w-md"><RoofPreview roofType={container.roofType} roofColor={container.roofColor} roofLayers={container.roofLayers||1} panelColor={panelInfo?.color||"#F0F0F0"}/></div>
+                  <div className="bg-gray-50 rounded-lg p-4 max-w-md w-full space-y-3 text-xs">
+                    <div className="flex justify-between"><span className="text-gray-500">Cati Tipi:</span><span className="font-medium">{ROOF_TYPES.find(r=>r.id===container.roofType)?.name}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Renk:</span><span className="font-medium flex items-center gap-1"><span className="w-3 h-3 rounded-full inline-block border border-gray-300" style={{backgroundColor:ROOF_COLORS.find(r=>r.id===container.roofColor)?.color}}></span>{ROOF_COLORS.find(r=>r.id===container.roofColor)?.name}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Panel Kat:</span><div className="flex gap-1">{[1,2].map(n=><button key={n} onClick={()=>setContainer({...container,roofLayers:n})} className={`px-2 py-0.5 rounded text-xs ${(container.roofLayers||1)===n?"bg-blue-100 text-blue-700 font-medium":"bg-gray-200 text-gray-600"}`}>{n===1?"Tek":"Cift"}</button>)}</div></div>
+                  </div>
+                </div>
+              )}
+              {viewMode==="2d" && <>
+                <div className="absolute top-4 left-4 bg-white rounded-lg shadow border border-gray-200 p-1 flex gap-1">
+                  <button onClick={()=>{setMode("select");setPlacingItem(null)}} className={`px-2 py-1 rounded text-xs ${mode==="select"?"bg-blue-100 text-blue-700 font-medium":"text-gray-500 hover:bg-gray-100"}`}>Sec</button>
+                </div>
+                <div className="absolute bottom-3 right-3 bg-white/90 rounded-lg shadow border border-gray-200 px-3 py-1.5 text-xs text-gray-500 flex gap-3"><span>ESC: Iptal</span><span>DEL: Sil</span><span>R: Dondur</span></div>
+              </>}
+            </div>
+            {/* RIGHT PANEL */}
+            <div className="w-72 bg-white border-l border-gray-200 flex flex-col overflow-hidden flex-shrink-0 min-h-0">
+              <div className="tab-bar flex border-b border-gray-200 bg-gray-50 overflow-x-auto flex-shrink-0" style={{height:"32px"}}>
+                {tabs.map(tab=>(<button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{height:"32px",lineHeight:"30px",padding:"0 5px",fontSize:"11px"}} className={`font-medium whitespace-nowrap ${activeTab===tab.id?"text-blue-600 border-b-2 border-blue-600 bg-white":"text-gray-500 hover:text-gray-700"}`}>{tab.label}</button>))}
+              </div>
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3">
+                {activeTab==="container" && <>
+                  <div><div style={{fontSize:"0.75rem",fontWeight:600,color:"#4b5563",marginBottom:"0.5rem"}}>Dis Olculer</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px"}}>
                       <div><label style={{fontSize:"0.75rem",color:"#9ca3af",display:"block"}}>Gen</label><input type="number" value={container.width} onChange={e=>setContainer({...container,width:+e.target.value})} style={{width:"100%",border:"1px solid #d1d5db",borderRadius:"4px",padding:"4px 6px",fontSize:"0.75rem",boxSizing:"border-box"}} step="10"/></div>
                       <div><label style={{fontSize:"0.75rem",color:"#9ca3af",display:"block"}}>Uz</label><input type="number" value={container.length} onChange={e=>setContainer({...container,length:+e.target.value})} style={{width:"100%",border:"1px solid #d1d5db",borderRadius:"4px",padding:"4px 6px",fontSize:"0.75rem",boxSizing:"border-box"}} step="10"/></div>
@@ -1917,155 +1919,155 @@
                     </div>
                     <div style={{display:"flex",gap:"4px",marginTop:"8px",flexWrap:"wrap"}}>{[{w:300,l:600,lb:"3\u00d76"},{w:300,l:700,lb:"3\u00d77"},{w:300,l:800,lb:"3\u00d78"},{w:300,l:1200,lb:"3\u00d712"}].map(p=><button key={p.lb} onClick={()=>setContainer({...container,width:p.w,length:p.l})} style={{padding:"2px 8px",background:"#f3f4f6",border:"1px solid #e5e7eb",borderRadius:"4px",fontSize:"0.75rem",color:"#4b5563",cursor:"pointer"}}>{p.lb}m</button>)}</div>
                   </div>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Cati Tipi</div><div className="space-y-1.5">{ROOF_TYPES.map(r=><button key={r.id} onClick={()=>setContainer({...container,roofType:r.id})} className={`w-full p-2 rounded border-2 text-left text-xs ${container.roofType===r.id?"border-blue-500 bg-blue-50 text-blue-700":"border-gray-200 hover:border-gray-300"}`}><div className="font-medium">{r.name}</div><div className="text-gray-400">{r.desc}</div></button>)}</div></div>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Cati Rengi</div><div className="flex gap-1.5">{ROOF_COLORS.map(rc=><button key={rc.id} onClick={()=>setContainer({...container,roofColor:rc.id})} className={`flex-1 p-1.5 rounded border-2 flex items-center gap-1.5 text-xs ${container.roofColor===rc.id?"border-blue-500 bg-blue-50":"border-gray-200"}`}><span className="w-4 h-4 rounded-full border border-gray-300" style={{backgroundColor:rc.color}}></span>{rc.name}</button>)}</div><div className="flex gap-1 mt-2"><span className="text-xs text-gray-400">Kat:</span>{[1,2].map(n=><button key={n} onClick={()=>setContainer({...container,roofLayers:n})} className={`px-2 py-0.5 rounded text-xs ${(container.roofLayers||1)===n?"bg-blue-100 text-blue-700":"bg-gray-100 text-gray-500"}`}>{n===1?"Tek":"Cift"}</button>)}</div></div>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Cati Yuksekligi</div>
-                    <div className="flex items-center gap-2">
-                      <input type="range" min="10" max="80" value={container.roofHeight||35} onChange={e=>setContainer({...container,roofHeight:+e.target.value})} className="flex-1"/>
-                      <input type="number" value={container.roofHeight||35} onChange={e=>setContainer({...container,roofHeight:+e.target.value})} className="w-16 border border-gray-300 rounded px-1.5 py-1 text-xs" min="10" max="80"/>
-                      <span className="text-xs text-gray-400">cm</span>
-                    </div>
-                  </div>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Dis Duvar</div><div className="space-y-1.5">{PANEL_TYPES.map(p=><button key={p.id} onClick={()=>setContainer({...container,panelType:p.id})} className={`w-full p-2 rounded border-2 flex items-center gap-2 text-xs ${container.panelType===p.id?"border-blue-500 bg-blue-50":"border-gray-200"}`}><span className="w-6 h-6 rounded border border-gray-300" style={{backgroundColor:p.color}}></span>{p.name}</button>)}</div></div>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Konteyner Birlestirme</div>
-                    <div className="flex gap-1.5">
-                      <button onClick={()=>setCombo({...combo,enabled:!combo.enabled})} className={`flex-1 p-1.5 rounded border-2 text-xs ${combo.enabled?"border-blue-500 bg-blue-50 text-blue-700":"border-gray-200 text-gray-500"}`}>
-                        {combo.enabled?"Birlesim Aktif":"Tek Konteyner"}
-                      </button>
-                    </div>
-                    {combo.enabled && <div className="mt-2 space-y-1.5">
-                      <div className="flex gap-1">{[{d:"width",lb:"Yan Yana (Genislik)"},{d:"length",lb:"Uc Uce (Uzunluk)"}].map(o=>
-                        <button key={o.d} onClick={()=>setCombo({...combo,direction:o.d})} className={`flex-1 px-2 py-1 rounded text-xs ${combo.direction===o.d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{o.lb}</button>
-                      )}</div>
-                      <div className="text-xs text-gray-400 bg-gray-50 p-1.5 rounded">
-                        {combo.direction==="width"?
-                          `${container.width*2}x${container.length} cm (${(container.width*2*container.length/10000).toFixed(1)} m²)`:
-                          `${container.width}x${container.length*2} cm (${(container.width*container.length*2/10000).toFixed(1)} m²)`
-                        }
-                      </div>
-                    </div>}
-                  </div>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Veranda</div>
-                    <div className="flex gap-1.5">
-                      <button onClick={()=>setVeranda({...veranda,enabled:!veranda.enabled})} className={`flex-1 p-1.5 rounded border-2 text-xs ${veranda.enabled?"border-green-500 bg-green-50 text-green-700":"border-gray-200 text-gray-500"}`}>
-                        {veranda.enabled?"Veranda Aktif":"Veranda Yok"}
-                      </button>
-                    </div>
-                    {veranda.enabled && <div className="mt-2 space-y-1.5">
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <div><label className="text-xs text-gray-400">Genislik</label><input type="number" value={veranda.width} onChange={e=>setVeranda({...veranda,width:+e.target.value})} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="10"/></div>
-                        <div><label className="text-xs text-gray-400">Derinlik</label><input type="number" value={veranda.depth} onChange={e=>setVeranda({...veranda,depth:+e.target.value})} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="10"/></div>
-                      </div>
-                      <div className="flex gap-1">{[{p:"front",lb:"On (A Duvari)"},{p:"back",lb:"Arka (C Duvari)"}].map(o=>
-                        <button key={o.p} onClick={()=>setVeranda({...veranda,position:o.p})} className={`flex-1 px-2 py-1 rounded text-xs ${veranda.position===o.p?"bg-green-100 text-green-700 font-medium":"bg-gray-100 text-gray-500"}`}>{o.lb}</button>
-                      )}</div>
-                      <div className="flex gap-1 flex-wrap">
-                        {[{w:600,d:200,lb:"6x2m"},{w:600,d:300,lb:"6x3m"},{w:300,d:200,lb:"3x2m"},{w:200,d:300,lb:"2x3m"}].map(p=>
-                          <button key={p.lb} onClick={()=>setVeranda({...veranda,width:p.w,depth:p.d})} className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs text-gray-600 hover:bg-green-50">{p.lb}</button>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-400 bg-gray-50 p-1.5 rounded">Veranda: {veranda.width}x{veranda.depth} cm ({(veranda.width*veranda.depth/10000).toFixed(1)} m²)</div>
-                    </div>}
-                  </div>
-                </>}
-                {activeTab==="walls" && <>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">WC Bolgesi</div>
-                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                      <div><label className="text-xs text-gray-400">Genislik (cm)</label><input type="number" value={wcW} onChange={e=>setWcW(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="60" max={container.length-50}/></div>
-                      <div><label className="text-xs text-gray-400">Derinlik (cm)</label><input type="number" value={wcH} onChange={e=>setWcH(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="60" max={container.width-50}/></div>
-                    </div>
-                    {combo.enabled && <div className="flex gap-1 mb-2">
-                      <button onClick={()=>setWcContainer(1)} className={`flex-1 px-2 py-1 rounded text-xs ${wcContainer===1?"bg-teal-100 text-teal-700 font-medium":"bg-gray-100 text-gray-500"}`}>1. Konteyner</button>
-                      <button onClick={()=>setWcContainer(2)} className={`flex-1 px-2 py-1 rounded text-xs ${wcContainer===2?"bg-teal-100 text-teal-700 font-medium":"bg-gray-100 text-gray-500"}`}>2. Konteyner</button>
-                    </div>}
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {["tl","tr","bl","br"].map(c=><button key={c} onClick={()=>addWcZone(c)} className="p-2 bg-teal-50 border-2 border-teal-200 rounded text-xs text-teal-700 hover:bg-teal-100">{c==="tl"?"Sol Ust":c==="tr"?"Sag Ust":c==="bl"?"Sol Alt":"Sag Alt"}</button>)}
-                    </div>
-                    {wcZones.length>0 && <div className="mt-2 space-y-1">{wcZones.map((wc,i)=><div key={i} className="flex justify-between items-center p-1.5 bg-teal-50 rounded text-xs"><span>WC {wc.w}x{wc.h} ({wc.corner})</span><button onClick={()=>setWcZones(p=>p.filter((_,idx)=>idx!==i))} className="text-red-500 px-1">x</button></div>)}</div>}
-                  </div>
-                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Duvar Ekleme</div>
-                    <div className="flex gap-1 mb-2">
-                      <button onClick={()=>setPartDir("vertical")} className={`flex-1 px-2 py-1 rounded text-xs ${partDir==="vertical"?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>Dikey (X)</button>
-                      <button onClick={()=>setPartDir("horizontal")} className={`flex-1 px-2 py-1 rounded text-xs ${partDir==="horizontal"?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>Yatay (Y)</button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                      <div>
-                        <label className="text-xs text-gray-400">{partDir==="vertical"?"X Konum (cm)":"Y Konum (cm)"}</label>
-                        <input type="number" value={partPos} onChange={e=>setPartPos(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5"/>
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-400">Baslangic (cm)</label>
-                        <input type="number" value={partStart} onChange={e=>setPartStart(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="0"/>
-                      </div>
-                    </div>
-                    <div className="flex gap-1.5 items-end">
-                      <div className="flex-1">
-                        <label className="text-xs text-gray-400">Uzunluk (cm)</label>
-                        <input type="number" value={partLen} onChange={e=>setPartLen(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="0"/>
-                      </div>
-                      <button onClick={()=>setPartitions(p=>[...p,{id:uid(),orientation:partDir,position:partPos,startPos:partStart,length:partLen||0,label:partDir==="vertical"?"Dikey Duvar":"Yatay Duvar"}])} className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">Ekle</button>
-                    </div>
-                  </div>
-                  {partitions.length>0 && <div><div className="text-xs font-semibold text-gray-600 mb-1">Mevcut</div>{partitions.map((p,i)=><div key={i} className="flex justify-between items-center p-1.5 bg-gray-50 rounded text-xs mb-1"><span>{p.label} - {p.position}cm (Bas:{p.startPos||0} Uz:{p.length||"Tam"})</span><button onClick={()=>setPartitions(ps=>ps.filter((_,idx)=>idx!==i))} className="text-red-500 px-1">x</button></div>)}</div>}
-                </>}
-                {activeTab==="doors" && <><div className="text-xs text-gray-400 mb-1">Secip krokiye yerlestirin.</div>{DOOR_TYPES.map(d=><button key={d.id} onClick={()=>startPlacing({type:"door",doorType:d.id,width:d.width,height:15,doorHeight:d.height,openDir:"sol",openInOut:"ic"})} className={`w-full p-2 rounded border-2 text-left flex justify-between items-center text-xs mb-1.5 ${mode==="place"&&placingItem?.doorType===d.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><div><div className="font-medium">{d.name}</div><div className="text-gray-400">{d.width}x{d.height}</div></div><span className="bg-gray-100 px-1.5 py-0.5 rounded">{d.type==="dis"?"Dis":d.type==="wc"?"WC":"Ic"}</span></button>)}{mode==="place"&&placingItem?.type==="door" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}</>}
-                {activeTab==="windows" && <><div className="text-xs text-gray-400 mb-1">Secip yerlestirin.</div>{WINDOW_TYPES.map(w=><button key={w.id} onClick={()=>startPlacing({type:"window",windowType:w.id,width:w.width,height:10,windowHeight:w.height,elevation:w.defaultElevation,openDir:"ic"})} className={`w-full p-2 rounded border-2 text-left flex justify-between items-center text-xs mb-1.5 ${mode==="place"&&placingItem?.windowType===w.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><div><div className="font-medium">{w.name}</div><div className="text-gray-400">{w.width}x{w.height} | Yerden: {w.defaultElevation}cm</div></div>{w.id==="w50x100" && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-xs">Vasistas</span>}</button>)}{mode==="place"&&placingItem?.type==="window" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}</>}
-                {activeTab==="extras" && <>
-                  <button onClick={()=>startPlacing({type:"outlet",width:10,height:10,elevation:40})} className={`w-full p-2 rounded border-2 text-left text-xs ${mode==="place"&&placingItem?.type==="outlet"?"border-orange-500 bg-orange-50":"border-gray-200 hover:border-gray-300"}`}><div className="font-medium">Priz Ekle</div><div className="text-gray-400">Varsayilan yerden: 40cm</div></button>
-                  <button onClick={()=>startPlacing({type:"watertank",width:60,height:40})} className="w-full p-2 rounded border-2 border-gray-200 hover:border-gray-300 text-left text-xs"><div className="font-medium">Su Deposu</div></button>
-                  <label className="flex items-center gap-2 p-2 bg-gray-50 rounded cursor-pointer text-xs"><input type="checkbox" checked={container.hasVeranda} onChange={e=>setContainer({...container,hasVeranda:e.target.checked})} className="w-3.5 h-3.5 text-blue-600 rounded"/><span className="font-medium">Veranda</span></label>
-                  {mode==="place"&&(placingItem?.type==="outlet"||placingItem?.type==="watertank") && <div className="bg-orange-50 border border-orange-200 rounded p-2 text-xs text-orange-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-orange-300 rounded">Iptal</button></div>}
-                </>}
-                {activeTab==="markers" && <>
-                  <div className="text-xs text-gray-400 mb-2">Isaret koyun, aciklama yazin.</div>
-                  {MARKER_TYPES.map(m=><button key={m.id} onClick={()=>startPlacing({type:"marker",markerType:m.id,width:20,height:20,note:m.id==="ozel"?"":m.name})} className={`w-full p-2 rounded border-2 text-left flex items-center gap-2 text-xs mb-1.5 ${mode==="place"&&placingItem?.markerType===m.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{backgroundColor:m.color}}>{m.icon}</span><span className="font-medium">{m.name}</span></button>)}
-                  {mode==="place"&&placingItem?.type==="marker" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700 space-y-2"><div>Tiklayarak yerlestirin.</div>{placingItem.markerType==="ozel" && <input type="text" value={markerNote} onChange={e=>{setMarkerNote(e.target.value);setPlacingItem({...placingItem,note:e.target.value})}} className="w-full border border-blue-300 rounded px-2 py-1 text-xs" placeholder="Not yazin..."/>}<button onClick={()=>{setMode("select");setPlacingItem(null);setMarkerNote("")}} className="px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}
-                </>}
-              </div>
-              {/* Selected item detail */}
-              {selectedItemData && (
-                <div className="border-t border-gray-200 p-3 bg-gray-50 flex-shrink-0 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-gray-700">{selectedItemData.type==="door"?"Kapi":selectedItemData.type==="window"?"Pencere":selectedItemData.type==="outlet"?"Priz":selectedItemData.type==="marker"?"Isaret":"Su Dep."}</span>
-                    <div className="flex gap-1"><button onClick={()=>handleRotateItem(selectedItem)} className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">Dondur</button><button onClick={()=>handleDeleteItem(selectedItem)} className="px-1.5 py-0.5 bg-red-50 border border-red-200 rounded text-xs text-red-600">Sil</button></div>
-                  </div>
-                  <div className="text-xs text-gray-500">Konum: {selectedItemData.x}, {selectedItemData.y} cm</div>
-                  {/* Door controls */}
-                  {selectedItemData.type==="door" && <>
-                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Sol/Sag:</label><div className="flex gap-1">{["sol","sag"].map(d=><button key={d} onClick={()=>updateItemProp(selectedItem,"openDir",d)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.openDir||"sol")===d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{d==="sol"?"Sola":"Saga"}</button>)}</div></div>
-                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Ic/Dis:</label><div className="flex gap-1">{["ic","dis"].map(d=><button key={d} onClick={()=>updateItemProp(selectedItem,"openInOut",d)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.openInOut||"ic")===d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{d==="ic"?"Ice":"Disa"}</button>)}</div></div>
-                  </>}
-                  {/* Window controls */}
-                  {selectedItemData.type==="window" && <>
-                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 whitespace-nowrap">Yerden:</label><input type="number" value={selectedItemData.elevation||90} onChange={e=>updateItemProp(selectedItem,"elevation",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="5"/><span className="text-xs text-gray-400">cm</span></div>
-                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Acilim:</label><div className="flex gap-1">{["ic","dis"].map(d=><button key={d} onClick={()=>updateItemProp(selectedItem,"openDir",d)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.openDir||"ic")===d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{d==="ic"?"Ice":"Disa"}</button>)}</div></div>
-                  </>}
-                  {selectedItemData.type==="outlet" && <div className="flex items-center gap-2"><label className="text-xs text-gray-500 whitespace-nowrap">Yerden:</label><input type="number" value={selectedItemData.elevation||40} onChange={e=>updateItemProp(selectedItem,"elevation",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="5"/><span className="text-xs text-gray-400">cm</span></div>}
-                  {selectedItemData.type==="marker" && <div><label className="text-xs text-gray-500 block mb-1">Not:</label><input type="text" value={selectedItemData.note||""} onChange={e=>updateItemProp(selectedItem,"note",e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-xs"/></div>}
-                </div>
-              )}
-            </div>
-          </div>
-          {showExport && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={()=>setShowExport(false)}>
-              <div className="bg-white rounded-xl shadow-2xl w-[520px] max-h-[75vh] overflow-hidden" onClick={e=>e.stopPropagation()}>
-                <div className="p-4 border-b border-gray-200"><div className="text-base font-bold">Tasarim Ozeti</div></div>
-                <div className="p-4 overflow-y-auto max-h-[45vh]"><pre className="bg-gray-50 p-3 rounded text-xs text-gray-700 whitespace-pre-wrap font-mono">{(()=>{
-                  const pi2=PANEL_TYPES.find(p=>p.id===container.panelType),ri2=ROOF_TYPES.find(r=>r.id===container.roofType),rc2=ROOF_COLORS.find(r=>r.id===container.roofColor);
-                  let t="KONTEYNER: "+container.width+"x"+container.length+"x"+container.height+"cm ("+(container.width*container.length/10000).toFixed(1)+"m2)\nPanel: "+(pi2?.name)+" | Cati: "+(ri2?.name)+" ("+(rc2?.name)+")\n\n";
-                  if(wcZones.length){t+="WC: ";wcZones.forEach(w=>t+=w.w+"x"+w.h+"cm("+w.corner+") ");t+="\n"}
-                  if(partitions.length){t+="Boluntu: ";partitions.forEach(p=>t+=p.label+"@"+p.position+"cm ");t+="\n"}
-                  items.forEach(i=>{if(i.type==="door"){const d=DOOR_TYPES.find(dt=>dt.id===i.doorType);t+="Kapi: "+(d?.name)+" ("+(i.openDir==="sag"?"Saga":"Sola")+","+(i.openInOut==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n"}if(i.type==="window")t+="Pencere: "+i.width+"x"+i.windowHeight+" h:"+(i.elevation||90)+"cm ("+(i.openDir==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n";if(i.type==="outlet")t+="Priz: h:"+(i.elevation||40)+"cm @"+i.x+","+i.y+"\n";if(i.type==="marker"){const mi=MARKER_TYPES.find(m=>m.id===i.markerType);t+=(mi?.name)+": "+(i.note||"-")+" @"+i.x+","+i.y+"\n"}});
-                  return t;
-                })()}</pre></div>
-                <div className="p-3 border-t flex justify-end gap-2"><button onClick={()=>setShowExport(false)} className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs">Kapat</button></div>
-              </div>
-            </div>
-          )}
-          {showPrint && <PrintView container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda} onClose={()=>setShowPrint(false)}/>}
-        </div>
-      );
-    }
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Cati Tipi</div><div className="space-y-1.5">{ROOF_TYPES.map(r=><button key={r.id} onClick={()=>setContainer({...container,roofType:r.id})} className={`w-full p-2 rounded border-2 text-left text-xs ${container.roofType===r.id?"border-blue-500 bg-blue-50 text-blue-700":"border-gray-200 hover:border-gray-300"}`}><div className="font-medium">{r.name}</div><div className="text-gray-400">{r.desc}</div></button>)}</div></div>
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Cati Rengi</div><div className="flex gap-1.5">{ROOF_COLORS.map(rc=><button key={rc.id} onClick={()=>setContainer({...container,roofColor:rc.id})} className={`flex-1 p-1.5 rounded border-2 flex items-center gap-1.5 text-xs ${container.roofColor===rc.id?"border-blue-500 bg-blue-50":"border-gray-200"}`}><span className="w-4 h-4 rounded-full border border-gray-300" style={{backgroundColor:rc.color}}></span>{rc.name}</button>)}</div><div className="flex gap-1 mt-2"><span className="text-xs text-gray-400">Kat:</span>{[1,2].map(n=><button key={n} onClick={()=>setContainer({...container,roofLayers:n})} className={`px-2 py-0.5 rounded text-xs ${(container.roofLayers||1)===n?"bg-blue-100 text-blue-700":"bg-gray-100 text-gray-500"}`}>{n===1?"Tek":"Cift"}</button>)}</div></div>
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Cati Yuksekligi</div>
+                    <div className="flex items-center gap-2">
+                      <input type="range" min="10" max="80" value={container.roofHeight||35} onChange={e=>setContainer({...container,roofHeight:+e.target.value})} className="flex-1"/>
+                      <input type="number" value={container.roofHeight||35} onChange={e=>setContainer({...container,roofHeight:+e.target.value})} className="w-16 border border-gray-300 rounded px-1.5 py-1 text-xs" min="10" max="80"/>
+                      <span className="text-xs text-gray-400">cm</span>
+                    </div>
+                  </div>
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Dis Duvar</div><div className="space-y-1.5">{PANEL_TYPES.map(p=><button key={p.id} onClick={()=>setContainer({...container,panelType:p.id})} className={`w-full p-2 rounded border-2 flex items-center gap-2 text-xs ${container.panelType===p.id?"border-blue-500 bg-blue-50":"border-gray-200"}`}><span className="w-6 h-6 rounded border border-gray-300" style={{backgroundColor:p.color}}></span>{p.name}</button>)}</div></div>
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Konteyner Birlestirme</div>
+                    <div className="flex gap-1.5">
+                      <button onClick={()=>setCombo({...combo,enabled:!combo.enabled})} className={`flex-1 p-1.5 rounded border-2 text-xs ${combo.enabled?"border-blue-500 bg-blue-50 text-blue-700":"border-gray-200 text-gray-500"}`}>
+                        {combo.enabled?"Birlesim Aktif":"Tek Konteyner"}
+                      </button>
+                    </div>
+                    {combo.enabled && <div className="mt-2 space-y-1.5">
+                      <div className="flex gap-1">{[{d:"width",lb:"Yan Yana (Genislik)"},{d:"length",lb:"Uc Uce (Uzunluk)"}].map(o=>
+                        <button key={o.d} onClick={()=>setCombo({...combo,direction:o.d})} className={`flex-1 px-2 py-1 rounded text-xs ${combo.direction===o.d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{o.lb}</button>
+                      )}</div>
+                      <div className="text-xs text-gray-400 bg-gray-50 p-1.5 rounded">
+                        {combo.direction==="width"?
+                          `${container.width*2}x${container.length} cm (${(container.width*2*container.length/10000).toFixed(1)} m²)`:
+                          `${container.width}x${container.length*2} cm (${(container.width*container.length*2/10000).toFixed(1)} m²)`
+                        }
+                      </div>
+                    </div>}
+                  </div>
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Veranda</div>
+                    <div className="flex gap-1.5">
+                      <button onClick={()=>setVeranda({...veranda,enabled:!veranda.enabled})} className={`flex-1 p-1.5 rounded border-2 text-xs ${veranda.enabled?"border-green-500 bg-green-50 text-green-700":"border-gray-200 text-gray-500"}`}>
+                        {veranda.enabled?"Veranda Aktif":"Veranda Yok"}
+                      </button>
+                    </div>
+                    {veranda.enabled && <div className="mt-2 space-y-1.5">
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <div><label className="text-xs text-gray-400">Genislik</label><input type="number" value={veranda.width} onChange={e=>setVeranda({...veranda,width:+e.target.value})} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="10"/></div>
+                        <div><label className="text-xs text-gray-400">Derinlik</label><input type="number" value={veranda.depth} onChange={e=>setVeranda({...veranda,depth:+e.target.value})} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="10"/></div>
+                      </div>
+                      <div className="flex gap-1">{[{p:"front",lb:"On (A Duvari)"},{p:"back",lb:"Arka (C Duvari)"}].map(o=>
+                        <button key={o.p} onClick={()=>setVeranda({...veranda,position:o.p})} className={`flex-1 px-2 py-1 rounded text-xs ${veranda.position===o.p?"bg-green-100 text-green-700 font-medium":"bg-gray-100 text-gray-500"}`}>{o.lb}</button>
+                      )}</div>
+                      <div className="flex gap-1 flex-wrap">
+                        {[{w:600,d:200,lb:"6x2m"},{w:600,d:300,lb:"6x3m"},{w:300,d:200,lb:"3x2m"},{w:200,d:300,lb:"2x3m"}].map(p=>
+                          <button key={p.lb} onClick={()=>setVeranda({...veranda,width:p.w,depth:p.d})} className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs text-gray-600 hover:bg-green-50">{p.lb}</button>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400 bg-gray-50 p-1.5 rounded">Veranda: {veranda.width}x{veranda.depth} cm ({(veranda.width*veranda.depth/10000).toFixed(1)} m²)</div>
+                    </div>}
+                  </div>
+                </>}
+                {activeTab==="walls" && <>
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">WC Bolgesi</div>
+                    <div className="grid grid-cols-2 gap-1.5 mb-2">
+                      <div><label className="text-xs text-gray-400">Genislik (cm)</label><input type="number" value={wcW} onChange={e=>setWcW(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="60" max={container.length-50}/></div>
+                      <div><label className="text-xs text-gray-400">Derinlik (cm)</label><input type="number" value={wcH} onChange={e=>setWcH(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="60" max={container.width-50}/></div>
+                    </div>
+                    {combo.enabled && <div className="flex gap-1 mb-2">
+                      <button onClick={()=>setWcContainer(1)} className={`flex-1 px-2 py-1 rounded text-xs ${wcContainer===1?"bg-teal-100 text-teal-700 font-medium":"bg-gray-100 text-gray-500"}`}>1. Konteyner</button>
+                      <button onClick={()=>setWcContainer(2)} className={`flex-1 px-2 py-1 rounded text-xs ${wcContainer===2?"bg-teal-100 text-teal-700 font-medium":"bg-gray-100 text-gray-500"}`}>2. Konteyner</button>
+                    </div>}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {["tl","tr","bl","br"].map(c=><button key={c} onClick={()=>addWcZone(c)} className="p-2 bg-teal-50 border-2 border-teal-200 rounded text-xs text-teal-700 hover:bg-teal-100">{c==="tl"?"Sol Ust":c==="tr"?"Sag Ust":c==="bl"?"Sol Alt":"Sag Alt"}</button>)}
+                    </div>
+                    {wcZones.length>0 && <div className="mt-2 space-y-1">{wcZones.map((wc,i)=><div key={i} className="flex justify-between items-center p-1.5 bg-teal-50 rounded text-xs"><span>WC {wc.w}x{wc.h} ({wc.corner})</span><button onClick={()=>setWcZones(p=>p.filter((_,idx)=>idx!==i))} className="text-red-500 px-1">x</button></div>)}</div>}
+                  </div>
+                  <div><div className="text-xs font-semibold text-gray-600 mb-2">Duvar Ekleme</div>
+                    <div className="flex gap-1 mb-2">
+                      <button onClick={()=>setPartDir("vertical")} className={`flex-1 px-2 py-1 rounded text-xs ${partDir==="vertical"?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>Dikey (X)</button>
+                      <button onClick={()=>setPartDir("horizontal")} className={`flex-1 px-2 py-1 rounded text-xs ${partDir==="horizontal"?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>Yatay (Y)</button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5 mb-2">
+                      <div>
+                        <label className="text-xs text-gray-400">{partDir==="vertical"?"X Konum (cm)":"Y Konum (cm)"}</label>
+                        <input type="number" value={partPos} onChange={e=>setPartPos(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5"/>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400">Baslangic (cm)</label>
+                        <input type="number" value={partStart} onChange={e=>setPartStart(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="0"/>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 items-end">
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400">Uzunluk (cm)</label>
+                        <input type="number" value={partLen} onChange={e=>setPartLen(+e.target.value)} className="w-full border border-gray-300 rounded px-1.5 py-1 text-xs" step="5" min="0"/>
+                      </div>
+                      <button onClick={()=>setPartitions(p=>[...p,{id:uid(),orientation:partDir,position:partPos,startPos:partStart,length:partLen||0,label:partDir==="vertical"?"Dikey Duvar":"Yatay Duvar"}])} className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">Ekle</button>
+                    </div>
+                  </div>
+                  {partitions.length>0 && <div><div className="text-xs font-semibold text-gray-600 mb-1">Mevcut</div>{partitions.map((p,i)=><div key={i} className="flex justify-between items-center p-1.5 bg-gray-50 rounded text-xs mb-1"><span>{p.label} - {p.position}cm (Bas:{p.startPos||0} Uz:{p.length||"Tam"})</span><button onClick={()=>setPartitions(ps=>ps.filter((_,idx)=>idx!==i))} className="text-red-500 px-1">x</button></div>)}</div>}
+                </>}
+                {activeTab==="doors" && <><div className="text-xs text-gray-400 mb-1">Secip krokiye yerlestirin.</div>{DOOR_TYPES.map(d=><button key={d.id} onClick={()=>startPlacing({type:"door",doorType:d.id,width:d.width,height:15,doorHeight:d.height,openDir:"sol",openInOut:"ic"})} className={`w-full p-2 rounded border-2 text-left flex justify-between items-center text-xs mb-1.5 ${mode==="place"&&placingItem?.doorType===d.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><div><div className="font-medium">{d.name}</div><div className="text-gray-400">{d.width}x{d.height}</div></div><span className="bg-gray-100 px-1.5 py-0.5 rounded">{d.type==="dis"?"Dis":d.type==="wc"?"WC":"Ic"}</span></button>)}{mode==="place"&&placingItem?.type==="door" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}</>}
+                {activeTab==="windows" && <><div className="text-xs text-gray-400 mb-1">Secip yerlestirin.</div>{WINDOW_TYPES.map(w=><button key={w.id} onClick={()=>startPlacing({type:"window",windowType:w.id,width:w.width,height:10,windowHeight:w.height,elevation:w.defaultElevation,openDir:"ic"})} className={`w-full p-2 rounded border-2 text-left flex justify-between items-center text-xs mb-1.5 ${mode==="place"&&placingItem?.windowType===w.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><div><div className="font-medium">{w.name}</div><div className="text-gray-400">{w.width}x{w.height} | Yerden: {w.defaultElevation}cm</div></div>{w.id==="w50x100" && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-xs">Vasistas</span>}</button>)}{mode==="place"&&placingItem?.type==="window" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}</>}
+                {activeTab==="extras" && <>
+                  <button onClick={()=>startPlacing({type:"outlet",width:10,height:10,elevation:40})} className={`w-full p-2 rounded border-2 text-left text-xs ${mode==="place"&&placingItem?.type==="outlet"?"border-orange-500 bg-orange-50":"border-gray-200 hover:border-gray-300"}`}><div className="font-medium">Priz Ekle</div><div className="text-gray-400">Varsayilan yerden: 40cm</div></button>
+                  <button onClick={()=>startPlacing({type:"watertank",width:60,height:40})} className="w-full p-2 rounded border-2 border-gray-200 hover:border-gray-300 text-left text-xs"><div className="font-medium">Su Deposu</div></button>
+                  <label className="flex items-center gap-2 p-2 bg-gray-50 rounded cursor-pointer text-xs"><input type="checkbox" checked={container.hasVeranda} onChange={e=>setContainer({...container,hasVeranda:e.target.checked})} className="w-3.5 h-3.5 text-blue-600 rounded"/><span className="font-medium">Veranda</span></label>
+                  {mode==="place"&&(placingItem?.type==="outlet"||placingItem?.type==="watertank") && <div className="bg-orange-50 border border-orange-200 rounded p-2 text-xs text-orange-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-orange-300 rounded">Iptal</button></div>}
+                </>}
+                {activeTab==="markers" && <>
+                  <div className="text-xs text-gray-400 mb-2">Isaret koyun, aciklama yazin.</div>
+                  {MARKER_TYPES.map(m=><button key={m.id} onClick={()=>startPlacing({type:"marker",markerType:m.id,width:20,height:20,note:m.id==="ozel"?"":m.name})} className={`w-full p-2 rounded border-2 text-left flex items-center gap-2 text-xs mb-1.5 ${mode==="place"&&placingItem?.markerType===m.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{backgroundColor:m.color}}>{m.icon}</span><span className="font-medium">{m.name}</span></button>)}
+                  {mode==="place"&&placingItem?.type==="marker" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700 space-y-2"><div>Tiklayarak yerlestirin.</div>{placingItem.markerType==="ozel" && <input type="text" value={markerNote} onChange={e=>{setMarkerNote(e.target.value);setPlacingItem({...placingItem,note:e.target.value})}} className="w-full border border-blue-300 rounded px-2 py-1 text-xs" placeholder="Not yazin..."/>}<button onClick={()=>{setMode("select");setPlacingItem(null);setMarkerNote("")}} className="px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}
+                </>}
+              </div>
+              {/* Selected item detail */}
+              {selectedItemData && (
+                <div className="border-t border-gray-200 p-3 bg-gray-50 flex-shrink-0 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-700">{selectedItemData.type==="door"?"Kapi":selectedItemData.type==="window"?"Pencere":selectedItemData.type==="outlet"?"Priz":selectedItemData.type==="marker"?"Isaret":"Su Dep."}</span>
+                    <div className="flex gap-1"><button onClick={()=>handleRotateItem(selectedItem)} className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">Dondur</button><button onClick={()=>handleDeleteItem(selectedItem)} className="px-1.5 py-0.5 bg-red-50 border border-red-200 rounded text-xs text-red-600">Sil</button></div>
+                  </div>
+                  <div className="text-xs text-gray-500">Konum: {selectedItemData.x}, {selectedItemData.y} cm</div>
+                  {/* Door controls */}
+                  {selectedItemData.type==="door" && <>
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Sol/Sag:</label><div className="flex gap-1">{["sol","sag"].map(d=><button key={d} onClick={()=>updateItemProp(selectedItem,"openDir",d)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.openDir||"sol")===d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{d==="sol"?"Sola":"Saga"}</button>)}</div></div>
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Ic/Dis:</label><div className="flex gap-1">{["ic","dis"].map(d=><button key={d} onClick={()=>updateItemProp(selectedItem,"openInOut",d)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.openInOut||"ic")===d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{d==="ic"?"Ice":"Disa"}</button>)}</div></div>
+                  </>}
+                  {/* Window controls */}
+                  {selectedItemData.type==="window" && <>
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 whitespace-nowrap">Yerden:</label><input type="number" value={selectedItemData.elevation||90} onChange={e=>updateItemProp(selectedItem,"elevation",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="5"/><span className="text-xs text-gray-400">cm</span></div>
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Acilim:</label><div className="flex gap-1">{["ic","dis"].map(d=><button key={d} onClick={()=>updateItemProp(selectedItem,"openDir",d)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.openDir||"ic")===d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{d==="ic"?"Ice":"Disa"}</button>)}</div></div>
+                  </>}
+                  {selectedItemData.type==="outlet" && <div className="flex items-center gap-2"><label className="text-xs text-gray-500 whitespace-nowrap">Yerden:</label><input type="number" value={selectedItemData.elevation||40} onChange={e=>updateItemProp(selectedItem,"elevation",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="5"/><span className="text-xs text-gray-400">cm</span></div>}
+                  {selectedItemData.type==="marker" && <div><label className="text-xs text-gray-500 block mb-1">Not:</label><input type="text" value={selectedItemData.note||""} onChange={e=>updateItemProp(selectedItem,"note",e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-xs"/></div>}
+                </div>
+              )}
+            </div>
+          </div>
+          {showExport && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={()=>setShowExport(false)}>
+              <div className="bg-white rounded-xl shadow-2xl w-[520px] max-h-[75vh] overflow-hidden" onClick={e=>e.stopPropagation()}>
+                <div className="p-4 border-b border-gray-200"><div className="text-base font-bold">Tasarim Ozeti</div></div>
+                <div className="p-4 overflow-y-auto max-h-[45vh]"><pre className="bg-gray-50 p-3 rounded text-xs text-gray-700 whitespace-pre-wrap font-mono">{(()=>{
+                  const pi2=PANEL_TYPES.find(p=>p.id===container.panelType),ri2=ROOF_TYPES.find(r=>r.id===container.roofType),rc2=ROOF_COLORS.find(r=>r.id===container.roofColor);
+                  let t="KONTEYNER: "+container.width+"x"+container.length+"x"+container.height+"cm ("+(container.width*container.length/10000).toFixed(1)+"m2)\nPanel: "+(pi2?.name)+" | Cati: "+(ri2?.name)+" ("+(rc2?.name)+")\n\n";
+                  if(wcZones.length){t+="WC: ";wcZones.forEach(w=>t+=w.w+"x"+w.h+"cm("+w.corner+") ");t+="\n"}
+                  if(partitions.length){t+="Boluntu: ";partitions.forEach(p=>t+=p.label+"@"+p.position+"cm ");t+="\n"}
+                  items.forEach(i=>{if(i.type==="door"){const d=DOOR_TYPES.find(dt=>dt.id===i.doorType);t+="Kapi: "+(d?.name)+" ("+(i.openDir==="sag"?"Saga":"Sola")+","+(i.openInOut==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n"}if(i.type==="window")t+="Pencere: "+i.width+"x"+i.windowHeight+" h:"+(i.elevation||90)+"cm ("+(i.openDir==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n";if(i.type==="outlet")t+="Priz: h:"+(i.elevation||40)+"cm @"+i.x+","+i.y+"\n";if(i.type==="marker"){const mi=MARKER_TYPES.find(m=>m.id===i.markerType);t+=(mi?.name)+": "+(i.note||"-")+" @"+i.x+","+i.y+"\n"}});
+                  return t;
+                })()}</pre></div>
+                <div className="p-3 border-t flex justify-end gap-2"><button onClick={()=>setShowExport(false)} className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs">Kapat</button></div>
+              </div>
+            </div>
+          )}
+          {showPrint && <PrintView container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda} onClose={()=>setShowPrint(false)}/>}
+        </div>
+      );
+    }
     // === postMessage Bridge ===
     let __designStateGetter = null;
     window.__registerDesignState = (getter) => { __designStateGetter = getter; };
