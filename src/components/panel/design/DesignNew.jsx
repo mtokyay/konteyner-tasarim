@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
 import { getSupabase } from '../../../lib/supabase';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -12,6 +12,7 @@ const placeholderCustomers = [
 
 export default function DesignNew() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { tenantId } = useTenant();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -47,9 +48,24 @@ export default function DesignNew() {
     nereden_geldi: '',
   });
 
+  // Track if we came from CustomerDetail with a pre-selected customer
+  const preSelectedCustomerId = location.state?.customerId;
+  const [autoRedirected, setAutoRedirected] = useState(false);
+
   useEffect(() => {
     fetchCustomers();
   }, []);
+
+  // Auto-redirect to editor if customerId was passed from CustomerDetail
+  useEffect(() => {
+    if (preSelectedCustomerId && customers.length > 0 && !autoRedirected && !customersLoading) {
+      const customer = customers.find(c => c.id === preSelectedCustomerId);
+      if (customer) {
+        setAutoRedirected(true);
+        handleSelectCustomer(customer);
+      }
+    }
+  }, [preSelectedCustomerId, customers, customersLoading, autoRedirected]);
 
   const fetchCustomers = async () => {
     try {
