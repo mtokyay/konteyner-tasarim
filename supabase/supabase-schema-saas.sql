@@ -89,21 +89,21 @@ INSERT INTO plans (name, slug, description, price_monthly, price_yearly, limits,
 ),
 (
   'Başlangıç', 'starter', 'Küçük işletmeler için — 50 müşteri, PDF çıktı',
-  499, 4990,
+  499, 5390,
   '{"max_customers": 50, "max_designs": 25, "max_active_designs": 25, "max_revisions": 5, "max_contracts": 0, "max_members": 1, "max_storage_mb": 1000}'::jsonb,
   '{"save_design": true, "export_pdf": true, "contracts": false, "payments": false, "customer_portal": false, "team_management": false, "version_tracking": false, "worker_tracking": false, "quality_control": false, "api_access": false}'::jsonb,
   1
 ),
 (
   'Profesyonel', 'pro', 'Büyüyen işletmeler için — 200 müşteri, sözleşme ve ödeme takibi, 5 çalışan',
-  999, 9990,
+  999, 10790,
   '{"max_customers": 200, "max_designs": 100, "max_active_designs": 100, "max_revisions": 20, "max_contracts": 999999, "max_members": 5, "max_storage_mb": 5000}'::jsonb,
   '{"save_design": true, "export_pdf": true, "contracts": true, "payments": true, "customer_portal": false, "team_management": true, "version_tracking": false, "worker_tracking": false, "quality_control": false, "api_access": false}'::jsonb,
   2
 ),
 (
   'Kurumsal', 'enterprise', 'Büyük firmalar için tam paket — sınırsız, usta izleme, kalite kontrol, API',
-  1999, 19990,
+  1999, 21590,
   '{"max_customers": 999999, "max_designs": 999999, "max_active_designs": 999999, "max_revisions": 999999, "max_contracts": 999999, "max_members": 20, "max_storage_mb": 50000}'::jsonb,
   '{"save_design": true, "export_pdf": true, "contracts": true, "payments": true, "customer_portal": true, "team_management": true, "version_tracking": true, "worker_tracking": true, "quality_control": true, "api_access": true}'::jsonb,
   3

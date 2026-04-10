@@ -19,19 +19,19 @@ const plans = [
     cta: 'Ücretsiz Başla', highlight: false,
   },
   {
-    name: 'Başlangıç', slug: 'starter', priceMonthly: 499, priceYearly: 5389,
+    name: 'Başlangıç', slug: 'starter', priceMonthly: 499, priceYearly: 5390,
     features: ['50 müşteri', '25 aktif tasarım', 'Tasarım başına 5 revizyon', 'Tasarım kaydetme', 'PDF çıktı / teklif'],
     notIncluded: ['Sözleşme yönetimi', 'Ödeme takibi', 'Ekip yönetimi'],
     cta: 'Planı Seç', highlight: false,
   },
   {
-    name: 'Profesyonel', slug: 'pro', priceMonthly: 999, priceYearly: 10789,
+    name: 'Profesyonel', slug: 'pro', priceMonthly: 999, priceYearly: 10790,
     features: ['200 müşteri', '100 aktif tasarım', 'Tasarım başına 20 revizyon', 'PDF çıktı / teklif', 'Sözleşme oluşturma ve takibi', 'Ödeme takibi', '5 çalışana kadar'],
     notIncluded: [],
     cta: 'Planı Seç', highlight: true,
   },
   {
-    name: 'Kurumsal', slug: 'enterprise', priceMonthly: 1999, priceYearly: 21589,
+    name: 'Kurumsal', slug: 'enterprise', priceMonthly: 1999, priceYearly: 21590,
     features: ['Sınırsız müşteri', 'Sınırsız tasarım', 'Sınırsız revizyon', 'Müşteri portalı', '20 çalışana kadar', 'Versiyon takibi', 'Usta / ekip izleme', 'Kalite kontrol modülü', 'API erişimi', 'Öncelikli destek'],
     notIncluded: [],
     cta: 'İletişime Geç', highlight: false,

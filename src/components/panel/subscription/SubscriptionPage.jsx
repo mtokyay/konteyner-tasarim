@@ -34,7 +34,7 @@ const SubscriptionPage = () => {
             limits: { max_customers: 5, max_designs: 5, max_revisions: 1, max_members: 1 },
           },
           {
-            id: 2, name: 'Başlangıç', slug: 'starter', price_monthly: 499, price_yearly: 5389,
+            id: 2, name: 'Başlangıç', slug: 'starter', price_monthly: 499, price_yearly: 5390,
             features: {
               save_design: true, export_pdf: true, contracts: false, payments: false,
               customer_portal: false, team_management: false, version_tracking: false,
@@ -43,7 +43,7 @@ const SubscriptionPage = () => {
             limits: { max_customers: 50, max_designs: 25, max_revisions: 5, max_members: 1 },
           },
           {
-            id: 3, name: 'Profesyonel', slug: 'pro', price_monthly: 999, price_yearly: 10789,
+            id: 3, name: 'Profesyonel', slug: 'pro', price_monthly: 999, price_yearly: 10790,
             features: {
               save_design: true, export_pdf: true, contracts: true, payments: true,
               customer_portal: false, team_management: true, version_tracking: false,
@@ -52,7 +52,7 @@ const SubscriptionPage = () => {
             limits: { max_customers: 200, max_designs: 100, max_revisions: 20, max_members: 5 },
           },
           {
-            id: 4, name: 'Kurumsal', slug: 'enterprise', price_monthly: 1999, price_yearly: 21589,
+            id: 4, name: 'Kurumsal', slug: 'enterprise', price_monthly: 1999, price_yearly: 21590,
             features: {
               save_design: true, export_pdf: true, contracts: true, payments: true,
               customer_portal: true, team_management: true, version_tracking: true,

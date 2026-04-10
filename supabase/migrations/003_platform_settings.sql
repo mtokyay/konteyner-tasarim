@@ -54,6 +54,8 @@ BEGIN
   END IF;
 END $$;
 
--- Yıllık fiyatları güncelle (%10 indirimli)
-UPDATE plans SET price_yearly = ROUND(price_monthly * 12 * 0.9) WHERE price_yearly IS NULL OR price_yearly = 0;
-UPDATE plans SET price_yearly = 0 WHERE price_monthly = 0;
+-- Yıllık fiyatları güncelle (%10 indirimli, yuvarlak sayılar)
+UPDATE plans SET price_yearly = 5390 WHERE slug = 'starter';
+UPDATE plans SET price_yearly = 10790 WHERE slug = 'pro';
+UPDATE plans SET price_yearly = 21590 WHERE slug = 'enterprise';
+UPDATE plans SET price_yearly = 0 WHERE slug = 'free';
