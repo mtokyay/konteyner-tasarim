@@ -83,6 +83,9 @@ const DesignEditor = () => {
     }
   };
 
+  // Track whether design has been loaded into iframe already
+  const designLoadedRef = useRef(false);
+
   // Listen for messages from iframe
   useEffect(() => {
     const handleMessage = (event) => {
@@ -90,8 +93,9 @@ const DesignEditor = () => {
 
       if (event.data.type === 'DESIGNER_READY') {
         setDesignerReady(true);
-        // If we have existing design data, send it to the iframe
-        if (design?.design_data) {
+        // Only load design data into iframe ONCE (first DESIGNER_READY)
+        if (!designLoadedRef.current && design?.design_data) {
+          designLoadedRef.current = true;
           setTimeout(() => {
             iframeRef.current?.contentWindow?.postMessage({
               type: 'LOAD_DESIGN',

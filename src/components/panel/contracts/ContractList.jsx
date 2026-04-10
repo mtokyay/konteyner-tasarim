@@ -89,14 +89,14 @@ const ContractList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sözleşmeler</h1>
-          <p className="text-gray-600 mt-1">Tüm sözleşmeleri yönetin ve takip edin</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Sözleşmeler</h1>
+          <p className="text-gray-600 mt-1 text-sm md:text-base">Tüm sözleşmeleri yönetin ve takip edin</p>
         </div>
         <button
           onClick={() => navigate('/panel/contracts/new')}
-          className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition"
+          className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition text-sm md:text-base whitespace-nowrap"
         >
           <Plus size={20} />
           Yeni Sözleşme

@@ -150,14 +150,14 @@ export default function DesignList() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Tasarımlar</h1>
-            <p className="text-gray-600">Tüm tasarımlarınızı yönetin ve izleyin</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Tasarımlar</h1>
+            <p className="text-gray-600 text-sm md:text-base">Tüm tasarımlarınızı yönetin ve izleyin</p>
           </div>
           <Link
             to="/panel/designs/new"
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg"
+            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-4 py-2.5 md:px-6 md:py-3 rounded-lg font-semibold transition-all shadow-lg text-sm md:text-base whitespace-nowrap"
           >
             <Plus size={20} />
             Yeni Tasarım
@@ -225,7 +225,8 @@ export default function DesignList() {
             </div>
           ) : (
             <>
-              <table className="w-full">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="bg-gradient-to-r from-amber-50 to-orange-50 border-b-2 border-amber-200">
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Ref No</th>
@@ -285,6 +286,7 @@ export default function DesignList() {
                   ))}
                 </tbody>
               </table>
+              </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
