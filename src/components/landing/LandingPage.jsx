@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Check, ArrowRight, Shield, Zap, Users, PenTool, FileText, BarChart3 } from 'lucide-react';
+import { Box, Check, ArrowRight, Shield, Zap, Users, PenTool, FileText, BarChart3, X as XIcon } from 'lucide-react';
 
 const features = [
   { icon: PenTool, title: '3D Konteyner Tasarım', desc: 'Görsel editörle konteyner tasarımı yapın, kapı, pencere, bölüntü ekleyin.' },
@@ -13,32 +13,38 @@ const features = [
 
 const plans = [
   {
-    name: 'Ücretsiz', price: '0', period: '',
-    features: ['5 müşteri', '3 aktif tasarım', 'Tasarım editörü', 'Demo kullanım'],
-    notIncluded: ['Tasarım kaydetme', 'PDF çıktı', 'Sözleşme', 'Ödeme takibi'],
+    name: 'Ücretsiz', slug: 'free', priceMonthly: 0, priceYearly: 0,
+    features: ['5 müşteri', '5 aktif tasarım', 'Tasarım başına 1 revizyon', 'Tasarım editörü', 'Tasarım kaydetme'],
+    notIncluded: ['PDF çıktı', 'Sözleşme yönetimi', 'Ödeme takibi', 'Ekip yönetimi'],
     cta: 'Ücretsiz Başla', highlight: false,
   },
   {
-    name: 'Başlangıç', price: '299', period: '/ay',
-    features: ['50 müşteri', 'Sınırsız tasarım', 'Tasarım kaydetme', 'PDF çıktı', 'Sözleşme oluşturma', 'Ödeme takibi'],
-    notIncluded: ['Müşteri portalı', 'Ekip yönetimi'],
+    name: 'Başlangıç', slug: 'starter', priceMonthly: 499, priceYearly: 5389,
+    features: ['50 müşteri', '25 aktif tasarım', 'Tasarım başına 5 revizyon', 'Tasarım kaydetme', 'PDF çıktı / teklif'],
+    notIncluded: ['Sözleşme yönetimi', 'Ödeme takibi', 'Ekip yönetimi'],
     cta: 'Planı Seç', highlight: false,
   },
   {
-    name: 'Profesyonel', price: '599', period: '/ay',
-    features: ['200 müşteri', 'Sınırsız tasarım', 'Müşteri portalı', '5 çalışana kadar', 'Tüm Başlangıç özellikleri'],
+    name: 'Profesyonel', slug: 'pro', priceMonthly: 999, priceYearly: 10789,
+    features: ['200 müşteri', '100 aktif tasarım', 'Tasarım başına 20 revizyon', 'PDF çıktı / teklif', 'Sözleşme oluşturma ve takibi', 'Ödeme takibi', '5 çalışana kadar'],
     notIncluded: [],
     cta: 'Planı Seç', highlight: true,
   },
   {
-    name: 'Kurumsal', price: '999', period: '/ay',
-    features: ['Sınırsız müşteri', 'Sınırsız tasarım', '20 çalışana kadar', 'API erişimi', 'Öncelikli destek', 'Tüm Pro özellikleri'],
+    name: 'Kurumsal', slug: 'enterprise', priceMonthly: 1999, priceYearly: 21589,
+    features: ['Sınırsız müşteri', 'Sınırsız tasarım', 'Sınırsız revizyon', 'Müşteri portalı', '20 çalışana kadar', 'Versiyon takibi', 'Usta / ekip izleme', 'Kalite kontrol modülü', 'API erişimi', 'Öncelikli destek'],
     notIncluded: [],
     cta: 'İletişime Geç', highlight: false,
   },
 ];
 
 const LandingPage = () => {
+  const [billingPeriod, setBillingPeriod] = useState('monthly');
+
+  const getPrice = (p) => billingPeriod === 'yearly' ? p.priceYearly : p.priceMonthly;
+  const getMonthlyEq = (p) => billingPeriod === 'yearly' && p.priceMonthly > 0 ? Math.round(p.priceYearly / 12) : null;
+  const getSavings = (p) => billingPeriod === 'yearly' && p.priceMonthly > 0 ? (p.priceMonthly * 12) - p.priceYearly : 0;
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
@@ -105,46 +111,132 @@ const LandingPage = () => {
       <section id="fiyatlandirma" className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">Fiyatlandırma</h2>
-          <p className="text-gray-600 text-center mb-12">İşletmenize uygun planı seçin. İstediğiniz zaman yükseltin.</p>
+          <p className="text-gray-600 text-center mb-8">İşletmenize uygun planı seçin. İstediğiniz zaman yükseltin.</p>
+
+          {/* Billing Period Toggle */}
+          <div className="flex justify-center mb-12">
+            <div className="bg-white rounded-full p-1.5 flex items-center gap-1 shadow-sm border border-gray-200">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Aylık
+              </button>
+              <button
+                onClick={() => setBillingPeriod('yearly')}
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+                  billingPeriod === 'yearly'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Yıllık
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                  billingPeriod === 'yearly'
+                    ? 'bg-green-400 text-green-900'
+                    : 'bg-green-100 text-green-700'
+                }`}>
+                  %10 İndirim
+                </span>
+              </button>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plans.map((p, i) => (
-              <div key={i} className={`bg-white rounded-2xl p-6 border-2 transition-shadow ${
-                p.highlight ? 'border-amber-500 shadow-xl shadow-amber-100 relative' : 'border-gray-200 hover:border-gray-300'
-              }`}>
-                {p.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    Popüler
+            {plans.map((p, i) => {
+              const price = getPrice(p);
+              const monthlyEq = getMonthlyEq(p);
+              const savings = getSavings(p);
+
+              return (
+                <div key={i} className={`bg-white rounded-2xl p-6 border-2 transition-shadow ${
+                  p.highlight ? 'border-amber-500 shadow-xl shadow-amber-100 relative' : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  {p.highlight && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md">
+                      En Popüler
+                    </div>
+                  )}
+                  <h3 className="font-bold text-gray-900 text-lg mb-1">{p.name}</h3>
+
+                  {/* Price Display */}
+                  <div className="mb-2">
+                    {p.priceMonthly === 0 ? (
+                      <>
+                        <span className="text-3xl font-bold text-gray-900">₺0</span>
+                        <span className="text-gray-400 text-sm ml-1">Ücretsiz</span>
+                      </>
+                    ) : billingPeriod === 'yearly' ? (
+                      <>
+                        <span className="text-3xl font-bold text-gray-900">₺{price.toLocaleString('tr-TR')}</span>
+                        <span className="text-gray-500 text-sm">/yıl</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-bold text-gray-900">₺{price.toLocaleString('tr-TR')}</span>
+                        <span className="text-gray-500 text-sm">/ay</span>
+                      </>
+                    )}
                   </div>
-                )}
-                <h3 className="font-bold text-gray-900 text-lg mb-1">{p.name}</h3>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-gray-900">₺{p.price}</span>
-                  <span className="text-gray-500 text-sm">{p.period}</span>
+
+                  {/* Monthly equivalent & savings for yearly */}
+                  {billingPeriod === 'yearly' && monthlyEq ? (
+                    <div className="mb-5">
+                      <p className="text-sm text-gray-500">
+                        aylık <span className="line-through text-gray-400">₺{p.priceMonthly.toLocaleString('tr-TR')}</span>
+                        {' '}<span className="font-semibold text-green-600">₺{monthlyEq.toLocaleString('tr-TR')}</span>
+                      </p>
+                      {savings > 0 && (
+                        <p className="text-xs text-green-600 font-medium mt-0.5">
+                          Yıllık ₺{savings.toLocaleString('tr-TR')} tasarruf
+                        </p>
+                      )}
+                    </div>
+                  ) : billingPeriod === 'monthly' && p.priceMonthly > 0 ? (
+                    <div className="mb-5">
+                      <p className="text-xs text-gray-400">Yıllık ödemede %10 indirim</p>
+                    </div>
+                  ) : (
+                    <div className="mb-5"></div>
+                  )}
+
+                  {/* Features */}
+                  <ul className="space-y-2.5 mb-4">
+                    {p.features.map((f, j) => (
+                      <li key={j} className="flex items-start gap-2 text-sm text-gray-700">
+                        <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Not Included */}
+                  {p.notIncluded.length > 0 && (
+                    <ul className="space-y-1.5 mb-4 border-t border-gray-100 pt-3">
+                      {p.notIncluded.map((f, j) => (
+                        <li key={`no-${j}`} className="flex items-start gap-2 text-sm text-gray-400">
+                          <XIcon className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
+                          <span className="line-through">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <Link to="/kayit"
+                    className={`block text-center py-2.5 rounded-xl font-semibold text-sm transition ${
+                      p.highlight
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}>
+                    {p.cta}
+                  </Link>
                 </div>
-                <ul className="space-y-2.5 mb-6">
-                  {p.features.map((f, j) => (
-                    <li key={j} className="flex items-start gap-2 text-sm text-gray-700">
-                      <Check className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                  {p.notIncluded.map((f, j) => (
-                    <li key={`no-${j}`} className="flex items-start gap-2 text-sm text-gray-400 line-through">
-                      <Check className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/kayit"
-                  className={`block text-center py-2.5 rounded-xl font-semibold text-sm transition ${
-                    p.highlight
-                      ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  }`}>
-                  {p.cta}
-                </Link>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

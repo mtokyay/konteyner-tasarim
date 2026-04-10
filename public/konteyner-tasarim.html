@@ -328,19 +328,22 @@
 
         // ---- OGE DUVAR TESPITI ----
         const getItemWall = (item) => {
-            if (item.y < 20) return { axis: "back", wallY: 0, posAlongWall: item.x };
-            if (item.y > totalW3d - 20) return { axis: "front", wallY: totalW3d, posAlongWall: item.x };
-            if (item.x < 20) return { axis: "left", wallX: 0, posAlongWall: item.y };
-            if (item.x > totalL3d - 20) return { axis: "right", wallX: totalL3d, posAlongWall: item.y };
+            // Önce bölüntü (partition) kontrolü - iç duvardaki ögeler dış duvara kaçmasın
             for (const p of partitions) {
-                if (Math.abs(item.x - p.position) < 20) return { axis: "partition", wallX: p.position, posAlongWall: item.y };
+                if (Math.abs(item.x - p.position) < 25) return { axis: "partition", wallX: p.position, posAlongWall: item.y };
             }
+            // WC duvarları
             for (const wc of wcZones) {
                 if (Math.abs(item.x - wc.x) < 20 || Math.abs(item.x - (wc.x + wc.w)) < 20)
                     return { axis: "wcVert", wallX: item.x, posAlongWall: item.y };
                 if (Math.abs(item.y - wc.y) < 20 || Math.abs(item.y - (wc.y + wc.h)) < 20)
                     return { axis: "wcHoriz", wallY: item.y, posAlongWall: item.x };
             }
+            // Dış duvarlar
+            if (item.y < 20) return { axis: "back", wallY: 0, posAlongWall: item.x };
+            if (item.y > totalW3d - 20) return { axis: "front", wallY: totalW3d, posAlongWall: item.x };
+            if (item.x < 20) return { axis: "left", wallX: 0, posAlongWall: item.y };
+            if (item.x > totalL3d - 20) return { axis: "right", wallX: totalL3d, posAlongWall: item.y };
             return { axis: "front", wallY: 0, posAlongWall: item.x };
         };
 
@@ -1617,7 +1620,17 @@
         return{x:svgPt.x,y:svgPt.y};
       },[]);
       const handlePlaceItem=useCallback((x,y)=>{if(!placingItem)return;setItems(p=>[...p,{...placingItem,id:uid(),x,y,rotation:0}]);setMode("select");setPlacingItem(null);setMarkerNote("")},[placingItem]);
-      const handleMoveItem=useCallback((id,x,y)=>{setItems(p=>p.map(i=>i.id===id?{...i,x:Math.max(0,x),y:Math.max(0,y)}:i))},[]);
+      const handleMoveItem=useCallback((id,x,y)=>{
+        let fx=Math.max(0,x),fy=Math.max(0,y);
+        // Bölüntü (partition) duvarına yapışma - 15cm yakınsa snap
+        for(const p of partitions){
+          if(Math.abs(fx-p.position)<15){fx=p.position;break;}
+        }
+        // Dış duvarlara yapışma
+        if(fy<15)fy=0; if(fy>totalW-15)fy=totalW;
+        if(fx<15)fx=0; if(fx>totalL-15)fx=totalL;
+        setItems(p=>p.map(i=>i.id===id?{...i,x:fx,y:fy}:i));
+      },[partitions,totalW,totalL]);
       const handleDeleteItem=useCallback(id=>{setItems(p=>p.filter(i=>i.id!==id));setSelectedItem(null);setEditingItem(null)},[]);
       const handleRotateItem=useCallback(id=>{setItems(p=>p.map(i=>i.id===id?{...i,rotation:(i.rotation||0)===0?90:0}:i))},[]);
       const updateItemProp=useCallback((id,prop,val)=>{setItems(p=>p.map(i=>i.id===id?{...i,[prop]:val}:i))},[]);
