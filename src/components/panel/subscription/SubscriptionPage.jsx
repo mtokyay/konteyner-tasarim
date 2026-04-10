@@ -12,6 +12,7 @@ const SubscriptionPage = () => {
   const [upgrading, setUpgrading] = useState(null);
   const [error, setError] = useState('');
   const [subscriptionPayments, setSubscriptionPayments] = useState([]);
+  const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' | 'yearly'
   const supabase = getSupabase();
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const SubscriptionPage = () => {
       if (!supabase) {
         setPlans([
           {
-            id: 1, name: 'Ücretsiz', slug: 'free', price_monthly: 0,
+            id: 1, name: 'Ücretsiz', slug: 'free', price_monthly: 0, price_yearly: 0,
             features: {
               save_design: true, export_pdf: false, contracts: false, payments: false,
               customer_portal: false, team_management: false, version_tracking: false,
@@ -33,7 +34,7 @@ const SubscriptionPage = () => {
             limits: { max_customers: 5, max_designs: 5, max_revisions: 1, max_members: 1 },
           },
           {
-            id: 2, name: 'Başlangıç', slug: 'starter', price_monthly: 499,
+            id: 2, name: 'Başlangıç', slug: 'starter', price_monthly: 499, price_yearly: 5389,
             features: {
               save_design: true, export_pdf: true, contracts: false, payments: false,
               customer_portal: false, team_management: false, version_tracking: false,
@@ -42,7 +43,7 @@ const SubscriptionPage = () => {
             limits: { max_customers: 50, max_designs: 25, max_revisions: 5, max_members: 1 },
           },
           {
-            id: 3, name: 'Profesyonel', slug: 'pro', price_monthly: 999,
+            id: 3, name: 'Profesyonel', slug: 'pro', price_monthly: 999, price_yearly: 10789,
             features: {
               save_design: true, export_pdf: true, contracts: true, payments: true,
               customer_portal: false, team_management: true, version_tracking: false,
@@ -51,7 +52,7 @@ const SubscriptionPage = () => {
             limits: { max_customers: 200, max_designs: 100, max_revisions: 20, max_members: 5 },
           },
           {
-            id: 4, name: 'Kurumsal', slug: 'enterprise', price_monthly: 1999,
+            id: 4, name: 'Kurumsal', slug: 'enterprise', price_monthly: 1999, price_yearly: 21589,
             features: {
               save_design: true, export_pdf: true, contracts: true, payments: true,
               customer_portal: true, team_management: true, version_tracking: true,
@@ -79,6 +80,28 @@ const SubscriptionPage = () => {
     }
   };
 
+  const getPrice = (p) => {
+    if (billingPeriod === 'yearly') {
+      // If plan has explicit yearly price, use it; otherwise calculate with 10% discount
+      if (p.price_yearly && p.price_yearly > 0) return p.price_yearly;
+      return Math.round(p.price_monthly * 12 * 0.9);
+    }
+    return p.price_monthly;
+  };
+
+  const getMonthlyEquivalent = (p) => {
+    if (billingPeriod !== 'yearly' || p.price_monthly === 0) return null;
+    const yearlyTotal = getPrice(p);
+    return Math.round(yearlyTotal / 12);
+  };
+
+  const getSavings = (p) => {
+    if (billingPeriod !== 'yearly' || p.price_monthly === 0) return 0;
+    const fullYearly = p.price_monthly * 12;
+    const discountedYearly = getPrice(p);
+    return fullYearly - discountedYearly;
+  };
+
   const handleUpgrade = async (selectedPlan) => {
     if (!supabase || !tenant) return;
 
@@ -103,6 +126,9 @@ const SubscriptionPage = () => {
       setUpgrading(selectedPlan.id);
       setError('');
 
+      const price = getPrice(selectedPlan);
+      const periodMonths = billingPeriod === 'yearly' ? 12 : 1;
+
       const response = await fetch('/.netlify/functions/paytr-create-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,9 +136,11 @@ const SubscriptionPage = () => {
           tenant_id: tenant.id,
           plan_id: selectedPlan.id,
           plan_name: selectedPlan.name,
-          amount: selectedPlan.price_monthly * 100,
+          amount: price * 100, // kuruş
           email: user?.email || '',
           user_name: user?.user_metadata?.full_name || tenant?.name || '',
+          billing_period: billingPeriod,
+          period_months: periodMonths,
         }),
       });
 
@@ -141,45 +169,37 @@ const SubscriptionPage = () => {
   const getPlanFeatures = (p) => {
     const all = [];
 
-    // Müşteri limiti
     if (isUnlimited(p.limits?.max_customers)) all.push('Sınırsız müşteri');
     else if (p.limits?.max_customers) all.push(`${p.limits.max_customers} müşteri`);
 
-    // Tasarım limiti
     if (isUnlimited(p.limits?.max_designs)) all.push('Sınırsız tasarım');
     else if (p.limits?.max_designs) all.push(`${p.limits.max_designs} aktif tasarım`);
 
-    // Revizyon limiti
     if (isUnlimited(p.limits?.max_revisions)) all.push('Sınırsız revizyon');
     else if (p.limits?.max_revisions) all.push(`Tasarım başına ${p.limits.max_revisions} revizyon`);
 
-    // Temel özellikler
     if (p.features?.save_design) all.push('Tasarım kaydetme');
     if (p.features?.export_pdf) all.push('PDF çıktı / teklif');
     if (p.features?.contracts) all.push('Sözleşme oluşturma ve takibi');
     if (p.features?.payments) all.push('Ödeme takibi');
 
-    // Ekip yönetimi
     if (p.features?.team_management) {
       const maxMembers = p.limits?.max_members;
       if (isUnlimited(maxMembers)) all.push('Sınırsız ekip üyesi');
       else all.push(maxMembers ? `${maxMembers} çalışana kadar` : 'Ekip yönetimi');
     }
 
-    // Gelişmiş özellikler
     if (p.features?.customer_portal) all.push('Müşteri portalı');
     if (p.features?.version_tracking) all.push('Versiyon takibi');
     if (p.features?.worker_tracking) all.push('Usta / ekip izleme');
     if (p.features?.quality_control) all.push('Kalite kontrol modülü');
     if (p.features?.api_access) all.push('API erişimi');
 
-    // Enterprise ekstraları
     if (p.slug === 'enterprise') all.push('Öncelikli destek');
 
     return all;
   };
 
-  // Ücretsiz planda olmayan ama üst planlarda olan özellikler (X ile göster)
   const getMissingFeatures = (p) => {
     const missing = [];
     if (!p.features?.export_pdf) missing.push('PDF çıktı / teklif');
@@ -255,6 +275,35 @@ const SubscriptionPage = () => {
         </div>
       )}
 
+      {/* Billing Period Toggle */}
+      <div className="flex justify-center">
+        <div className="bg-gray-100 rounded-full p-1 flex items-center gap-1">
+          <button
+            onClick={() => setBillingPeriod('monthly')}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+              billingPeriod === 'monthly'
+                ? 'bg-white text-gray-900 shadow-md'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Aylık
+          </button>
+          <button
+            onClick={() => setBillingPeriod('yearly')}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+              billingPeriod === 'yearly'
+                ? 'bg-white text-gray-900 shadow-md'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Yıllık
+            <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">
+              %10 İndirim
+            </span>
+          </button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((p) => {
           const current = isCurrentPlan(p);
@@ -263,6 +312,9 @@ const SubscriptionPage = () => {
           const missingFeatures = getMissingFeatures(p);
           const isPopular = p.slug === 'pro';
           const colors = planColors[p.slug] || planColors.free;
+          const price = getPrice(p);
+          const monthlyEq = getMonthlyEquivalent(p);
+          const savings = getSavings(p);
 
           return (
             <div key={p.id} className={`bg-white rounded-2xl p-6 border-2 transition-shadow relative ${
@@ -280,13 +332,53 @@ const SubscriptionPage = () => {
               )}
 
               <h3 className="font-bold text-gray-900 text-lg mb-1">{p.name}</h3>
-              <div className="mb-6">
-                <span className="text-3xl font-bold text-gray-900">
-                  {p.price_monthly > 0 ? `₺${p.price_monthly.toLocaleString('tr-TR')}` : '₺0'}
-                </span>
-                {p.price_monthly > 0 && <span className="text-gray-500 text-sm">/ay</span>}
-                {p.price_monthly === 0 && <span className="text-gray-400 text-sm ml-1">Ücretsiz</span>}
+              <div className="mb-2">
+                {p.price_monthly === 0 ? (
+                  <>
+                    <span className="text-3xl font-bold text-gray-900">₺0</span>
+                    <span className="text-gray-400 text-sm ml-1">Ücretsiz</span>
+                  </>
+                ) : billingPeriod === 'yearly' ? (
+                  <>
+                    <span className="text-3xl font-bold text-gray-900">
+                      ₺{price.toLocaleString('tr-TR')}
+                    </span>
+                    <span className="text-gray-500 text-sm">/yıl</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-bold text-gray-900">
+                      ₺{price.toLocaleString('tr-TR')}
+                    </span>
+                    <span className="text-gray-500 text-sm">/ay</span>
+                  </>
+                )}
               </div>
+
+              {/* Monthly equivalent for yearly */}
+              {billingPeriod === 'yearly' && monthlyEq && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500">
+                    aylık <span className="line-through text-gray-400">₺{p.price_monthly.toLocaleString('tr-TR')}</span>
+                    {' '}<span className="font-semibold text-green-600">₺{monthlyEq.toLocaleString('tr-TR')}</span>
+                  </p>
+                  {savings > 0 && (
+                    <p className="text-xs text-green-600 font-medium mt-0.5">
+                      Yıllık ₺{savings.toLocaleString('tr-TR')} tasarruf
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {billingPeriod === 'monthly' && p.price_monthly > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-400">
+                    Yıllık ödemede %10 indirim
+                  </p>
+                </div>
+              )}
+
+              {p.price_monthly === 0 && <div className="mb-4"></div>}
 
               {/* Aktif özellikler */}
               <ul className="space-y-2 mb-4">
@@ -408,6 +500,26 @@ const SubscriptionPage = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               <tr>
+                <td className="px-4 py-2.5 text-gray-600 font-medium">Aylık Fiyat</td>
+                {plans.map((p) => (
+                  <td key={p.id} className="px-4 py-2.5 text-center font-bold text-gray-900">
+                    {p.price_monthly > 0 ? `₺${p.price_monthly}` : 'Ücretsiz'}
+                  </td>
+                ))}
+              </tr>
+              <tr className="bg-green-50">
+                <td className="px-4 py-2.5 text-gray-600 font-medium">Yıllık Fiyat <span className="text-green-600 text-xs">(%10 indirimli)</span></td>
+                {plans.map((p) => {
+                  const yp = getPrice({ ...p, price_monthly: p.price_monthly }); // force monthly context temporarily
+                  const yearlyPrice = p.price_yearly || Math.round(p.price_monthly * 12 * 0.9);
+                  return (
+                    <td key={p.id} className="px-4 py-2.5 text-center font-bold text-green-700">
+                      {p.price_monthly > 0 ? `₺${yearlyPrice.toLocaleString('tr-TR')}` : 'Ücretsiz'}
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
                 <td className="px-4 py-2.5 text-gray-600">Müşteri Limiti</td>
                 {plans.map((p) => (
                   <td key={p.id} className="px-4 py-2.5 text-center font-medium">
@@ -474,6 +586,7 @@ const SubscriptionPage = () => {
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
         <p className="text-sm text-amber-800">
           Plan değişiklikleriniz hemen geçerli olur. Yükseltme durumunda fark tutarı tahsil edilir.
+          Yıllık ödemede <strong>%10 indirim</strong> uygulanır.
           İstediğiniz zaman planınızı değiştirebilirsiniz. Sorularınız için destek@konteynertasarim.com.tr adresine yazabilirsiniz.
         </p>
       </div>

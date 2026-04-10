@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Calendar, CreditCard, Users, FileText, Palette, Loader2, AlertCircle, Shield, Save, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, CreditCard, Users, FileText, Palette, Loader2, AlertCircle, Shield, Save, CheckCircle, Clock, CalendarPlus, Ban, RotateCcw } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 
 export default function TenantDetail() {
@@ -17,6 +17,7 @@ export default function TenantDetail() {
   const [success, setSuccess] = useState('');
   const [editStatus, setEditStatus] = useState('');
   const [editPlan, setEditPlan] = useState('');
+  const [extendDays, setExtendDays] = useState(30);
   const supabase = getSupabase();
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function TenantDetail() {
       const [tenantRes, membersRes, plansRes, paymentsRes] = await Promise.all([
         supabase
           .from('tenants')
-          .select('*, plans(id, name, slug, price_monthly)')
+          .select('*, plans(id, name, slug, price_monthly, price_yearly)')
           .eq('id', id)
           .single(),
         supabase
@@ -39,13 +40,13 @@ export default function TenantDetail() {
           .select('id, role, is_active, created_at, user_id, profiles:user_id(full_name, email, avatar_url)')
           .eq('tenant_id', id)
           .order('created_at', { ascending: true }),
-        supabase.from('plans').select('id, name, slug, price_monthly').order('price_monthly'),
+        supabase.from('plans').select('id, name, slug, price_monthly, price_yearly').order('price_monthly'),
         supabase
           .from('subscription_payments')
           .select('*')
           .eq('tenant_id', id)
           .order('created_at', { ascending: false })
-          .limit(10),
+          .limit(20),
       ]);
 
       if (tenantRes.error) throw tenantRes.error;
@@ -92,6 +93,16 @@ export default function TenantDetail() {
         return;
       }
 
+      // If activating and no start date, set it
+      if (updates.subscription_status === 'active' && !tenant.subscription_start) {
+        updates.subscription_start = new Date().toISOString();
+        if (!tenant.subscription_end) {
+          const end = new Date();
+          end.setDate(end.getDate() + 30);
+          updates.subscription_end = end.toISOString();
+        }
+      }
+
       const { error: uErr } = await supabase
         .from('tenants')
         .update(updates)
@@ -107,8 +118,93 @@ export default function TenantDetail() {
     }
   };
 
+  const handleExtendSubscription = async () => {
+    try {
+      setSaving(true);
+      setError('');
+      setSuccess('');
+
+      const currentEnd = tenant.subscription_end ? new Date(tenant.subscription_end) : new Date();
+      const baseDate = currentEnd > new Date() ? currentEnd : new Date();
+      baseDate.setDate(baseDate.getDate() + extendDays);
+
+      const { error: uErr } = await supabase
+        .from('tenants')
+        .update({
+          subscription_end: baseDate.toISOString(),
+          subscription_status: 'active',
+          ...(tenant.subscription_start ? {} : { subscription_start: new Date().toISOString() }),
+        })
+        .eq('id', id);
+
+      if (uErr) throw uErr;
+      setSuccess(`Abonelik ${extendDays} gün uzatıldı. Yeni bitiş: ${baseDate.toLocaleDateString('tr-TR')}`);
+      await loadData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!window.confirm('Bu firmanın aboneliğini iptal etmek istediğinize emin misiniz?')) return;
+    try {
+      setSaving(true);
+      setError('');
+
+      const { error: uErr } = await supabase
+        .from('tenants')
+        .update({ subscription_status: 'cancelled' })
+        .eq('id', id);
+
+      if (uErr) throw uErr;
+      setSuccess('Abonelik iptal edildi');
+      await loadData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReactivate = async () => {
+    try {
+      setSaving(true);
+      setError('');
+
+      const end = new Date();
+      end.setDate(end.getDate() + 30);
+
+      const { error: uErr } = await supabase
+        .from('tenants')
+        .update({
+          subscription_status: 'active',
+          subscription_start: new Date().toISOString(),
+          subscription_end: end.toISOString(),
+        })
+        .eq('id', id);
+
+      if (uErr) throw uErr;
+      setSuccess('Abonelik yeniden aktifleştirildi (30 gün)');
+      await loadData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const formatCurrency = (v) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }).format(v || 0);
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+
+  const daysRemaining = () => {
+    if (!tenant?.subscription_end) return null;
+    const end = new Date(tenant.subscription_end);
+    const now = new Date();
+    const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
 
   if (loading) {
     return (
@@ -129,6 +225,8 @@ export default function TenantDetail() {
     );
   }
 
+  const remaining = daysRemaining();
+
   return (
     <div className="space-y-6">
       <button onClick={() => navigate('/admin/tenants')} className="flex items-center gap-2 text-amber-600 hover:text-amber-700 transition text-sm font-medium">
@@ -142,16 +240,31 @@ export default function TenantDetail() {
           <div>
             <h1 className="text-2xl font-bold">{tenant.name}</h1>
             <p className="text-amber-100 text-sm mt-1">slug: {tenant.slug} | ID: {tenant.id.substring(0, 8)}...</p>
+            {tenant.plans && (
+              <p className="text-amber-100 text-sm mt-1">
+                Plan: <strong className="text-white">{tenant.plans.name}</strong> — {tenant.plans.price_monthly > 0 ? `₺${tenant.plans.price_monthly}/ay` : 'Ücretsiz'}
+              </p>
+            )}
           </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            tenant.subscription_status === 'active' ? 'bg-green-500/20 text-green-100' :
-            tenant.subscription_status === 'trialing' ? 'bg-yellow-500/20 text-yellow-100' :
-            'bg-red-500/20 text-red-100'
-          }`}>
-            {tenant.subscription_status === 'active' ? 'Aktif' :
-             tenant.subscription_status === 'trialing' ? 'Deneme' :
-             tenant.subscription_status === 'cancelled' ? 'İptal' : tenant.subscription_status}
-          </span>
+          <div className="text-right">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              tenant.subscription_status === 'active' ? 'bg-green-500/20 text-green-100' :
+              tenant.subscription_status === 'trialing' ? 'bg-yellow-500/20 text-yellow-100' :
+              'bg-red-500/20 text-red-100'
+            }`}>
+              {tenant.subscription_status === 'active' ? 'Aktif' :
+               tenant.subscription_status === 'trialing' ? 'Deneme' :
+               tenant.subscription_status === 'cancelled' ? 'İptal' :
+               tenant.subscription_status === 'past_due' ? 'Gecikmiş' :
+               tenant.subscription_status === 'expired' ? 'Süresi Dolmuş' : tenant.subscription_status}
+            </span>
+            {remaining !== null && (
+              <p className={`text-xs mt-2 ${remaining <= 7 ? 'text-red-200 font-semibold' : 'text-amber-200'}`}>
+                <Clock className="w-3 h-3 inline mr-1" />
+                {remaining > 0 ? `${remaining} gün kaldı` : 'Süresi dolmuş'}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -221,7 +334,7 @@ export default function TenantDetail() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500"
               >
                 {plans.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} - ₺{p.price_monthly}/ay</option>
+                  <option key={p.id} value={p.id}>{p.name} — ₺{p.price_monthly}/ay</option>
                 ))}
               </select>
             </div>
@@ -232,7 +345,9 @@ export default function TenantDetail() {
               </div>
               <div>
                 <span className="text-gray-500">Abonelik Bitiş:</span>
-                <p className="font-medium">{formatDate(tenant.subscription_end)}</p>
+                <p className={`font-medium ${remaining !== null && remaining <= 7 ? 'text-red-600' : ''}`}>
+                  {formatDate(tenant.subscription_end)}
+                </p>
               </div>
             </div>
             <button
@@ -246,52 +361,130 @@ export default function TenantDetail() {
           </div>
         </div>
 
-        {/* Members */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-amber-600" />
-            Üyeler ({members.length})
-          </h2>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {members.map((m) => (
-              <div key={m.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs">
-                    {(m.profiles?.full_name || m.profiles?.email || '?')[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{m.profiles?.full_name || 'İsimsiz'}</p>
-                    <p className="text-xs text-gray-500">{m.profiles?.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    m.role === 'owner' ? 'bg-amber-100 text-amber-700' :
-                    m.role === 'admin' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {m.role === 'owner' ? 'Sahip' : m.role === 'admin' ? 'Yönetici' : 'Üye'}
-                  </span>
-                  {!m.is_active && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">Pasif</span>
-                  )}
-                </div>
+        {/* Quick Subscription Actions */}
+        <div className="space-y-6">
+          {/* Extend Subscription */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <CalendarPlus className="w-5 h-5 text-green-600" />
+              Abonelik Uzat
+            </h2>
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Süre (Gün)</label>
+                <select
+                  value={extendDays}
+                  onChange={(e) => setExtendDays(parseInt(e.target.value))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+                >
+                  <option value={7}>7 gün</option>
+                  <option value={15}>15 gün</option>
+                  <option value={30}>30 gün (1 ay)</option>
+                  <option value={90}>90 gün (3 ay)</option>
+                  <option value={180}>180 gün (6 ay)</option>
+                  <option value={365}>365 gün (1 yıl)</option>
+                </select>
               </div>
-            ))}
-            {members.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-4">Üye bulunamadı</p>
+              <button
+                onClick={handleExtendSubscription}
+                disabled={saving}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />}
+                Uzat
+              </button>
+            </div>
+            {tenant.subscription_end && (
+              <p className="text-xs text-gray-500 mt-2">
+                Mevcut bitiş: {formatDate(tenant.subscription_end)}
+                {remaining !== null && remaining > 0 && ` (${remaining} gün kaldı)`}
+              </p>
             )}
+          </div>
+
+          {/* Cancel / Reactivate */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Ban className="w-5 h-5 text-red-500" />
+              Hızlı İşlemler
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {tenant.subscription_status !== 'cancelled' && tenant.subscription_status !== 'expired' ? (
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={saving}
+                  className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-sm font-medium transition disabled:opacity-50 flex items-center gap-2"
+                >
+                  <Ban className="w-4 h-4" />
+                  Aboneliği İptal Et
+                </button>
+              ) : (
+                <button
+                  onClick={handleReactivate}
+                  disabled={saving}
+                  className="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg text-sm font-medium transition disabled:opacity-50 flex items-center gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Yeniden Aktifleştir (30 gün)
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Members */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5 text-amber-600" />
+          Üyeler ({members.length})
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {members.map((m) => (
+            <div key={m.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs">
+                  {(m.profiles?.full_name || m.profiles?.email || '?')[0].toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{m.profiles?.full_name || 'İsimsiz'}</p>
+                  <p className="text-xs text-gray-500">{m.profiles?.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  m.role === 'owner' ? 'bg-amber-100 text-amber-700' :
+                  m.role === 'admin' ? 'bg-blue-100 text-blue-700' :
+                  m.role === 'designer' ? 'bg-purple-100 text-purple-700' :
+                  m.role === 'production' ? 'bg-orange-100 text-orange-700' :
+                  m.role === 'accounting' ? 'bg-green-100 text-green-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {m.role === 'owner' ? 'Sahip' : m.role === 'admin' ? 'Yönetici' :
+                   m.role === 'designer' ? 'Tasarımcı' : m.role === 'production' ? 'Üretim' :
+                   m.role === 'accounting' ? 'Muhasebe' : m.role === 'customer' ? 'Müşteri' : m.role}
+                </span>
+                {!m.is_active && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">Pasif</span>
+                )}
+              </div>
+            </div>
+          ))}
+          {members.length === 0 && (
+            <p className="text-gray-400 text-sm text-center py-4 col-span-full">Üye bulunamadı</p>
+          )}
+        </div>
+      </div>
+
       {/* Payment History */}
-      {payments.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-amber-600" />
-            Ödeme Geçmişi
-          </h2>
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <CreditCard className="w-5 h-5 text-amber-600" />
+          Ödeme Geçmişi
+        </h2>
+        {payments.length === 0 ? (
+          <p className="text-gray-400 text-sm text-center py-6">Henüz ödeme kaydı bulunmuyor</p>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -300,6 +493,7 @@ export default function TenantDetail() {
                   <th className="px-4 py-2 text-right font-semibold text-gray-600">Tutar</th>
                   <th className="px-4 py-2 text-left font-semibold text-gray-600">Dönem</th>
                   <th className="px-4 py-2 text-center font-semibold text-gray-600">Durum</th>
+                  <th className="px-4 py-2 text-left font-semibold text-gray-600">Sipariş No</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -319,13 +513,14 @@ export default function TenantDetail() {
                         {p.status === 'completed' ? 'Ödendi' : p.status === 'pending' ? 'Bekliyor' : 'Başarısız'}
                       </span>
                     </td>
+                    <td className="px-4 py-2 text-gray-400 text-xs font-mono">{p.paytr_merchant_oid || '-'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -38,6 +38,7 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import TenantList from './components/admin/TenantList';
 import TenantDetail from './components/admin/TenantDetail';
 import PlanManager from './components/admin/PlanManager';
+import AdminSettings from './components/admin/AdminSettings';
 
 // Portal pages (müşteri)
 import PortalDashboard from './components/portal/PortalDashboard';
@@ -150,6 +151,7 @@ function AppRoutes() {
         <Route path="tenants" element={<TenantList />} />
         <Route path="tenants/:id" element={<TenantDetail />} />
         <Route path="plans" element={<PlanManager />} />
+        <Route path="settings" element={<AdminSettings />} />
       </Route>
 
       {/* Portal — Müşteri */}

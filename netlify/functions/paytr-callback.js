@@ -53,9 +53,19 @@ exports.handler = async (event) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse merchant_oid to get tenant info
-    // Format: SUB-{tenant_id_prefix}-{timestamp}
+    // Format: SUB-{M|Y}-{tenant_id_prefix}-{timestamp} or legacy SUB-{tenant_id_prefix}-{timestamp}
     const oidParts = merchant_oid.split('-');
-    const tenantPrefix = oidParts[1]; // first 8 chars of tenant_id
+    let tenantPrefix;
+    let isYearly = false;
+
+    if (oidParts[1] === 'Y' || oidParts[1] === 'M') {
+      // New format with period code
+      isYearly = oidParts[1] === 'Y';
+      tenantPrefix = oidParts[2]; // first 8 chars of tenant_id
+    } else {
+      // Legacy format
+      tenantPrefix = oidParts[1]; // first 8 chars of tenant_id
+    }
 
     // Find the tenant by prefix
     const { data: tenants, error: tenantError } = await supabase
@@ -76,7 +86,11 @@ exports.handler = async (event) => {
       // Payment successful - update tenant subscription
       const now = new Date();
       const subscriptionEnd = new Date(now);
-      subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+      if (isYearly) {
+        subscriptionEnd.setFullYear(subscriptionEnd.getFullYear() + 1);
+      } else {
+        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+      }
 
       // Record payment
       await supabase.from('subscription_payments').insert({

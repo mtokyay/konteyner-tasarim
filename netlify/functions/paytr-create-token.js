@@ -17,6 +17,8 @@ exports.handler = async (event) => {
       amount, // kuruş cinsinden
       email,
       user_name,
+      billing_period, // 'monthly' | 'yearly'
+      period_months,  // 1 or 12
     } = JSON.parse(event.body);
 
     if (!tenant_id || !plan_id || !amount || !email) {
@@ -35,8 +37,13 @@ exports.handler = async (event) => {
       };
     }
 
+    // Determine billing info
+    const isYearly = billing_period === 'yearly' || period_months === 12;
+    const periodLabel = isYearly ? 'Yıllık' : 'Aylık';
+
     // Generate unique merchant_oid (order ID)
-    const merchant_oid = `SUB-${tenant_id.substring(0, 8)}-${Date.now()}`;
+    const periodCode = isYearly ? 'Y' : 'M';
+    const merchant_oid = `SUB-${periodCode}-${tenant_id.substring(0, 8)}-${Date.now()}`;
 
     // User info
     const user_ip = event.headers['x-forwarded-for'] || event.headers['client-ip'] || '127.0.0.1';
@@ -57,7 +64,7 @@ exports.handler = async (event) => {
 
     // Basket (JSON encoded and base64)
     const basket = JSON.stringify([
-      [`${plan_name} Aylık Abonelik`, `${(payment_amount / 100).toFixed(2)}`, 1],
+      [`${plan_name} ${periodLabel} Abonelik`, `${(payment_amount / 100).toFixed(2)}`, 1],
     ]);
     const user_basket = Buffer.from(basket).toString('base64');
 
@@ -112,6 +119,8 @@ exports.handler = async (event) => {
           merchant_oid,
           tenant_id,
           plan_id,
+          billing_period: isYearly ? 'yearly' : 'monthly',
+          period_months: isYearly ? 12 : 1,
         }),
       };
     } else {
