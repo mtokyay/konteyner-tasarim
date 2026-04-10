@@ -59,7 +59,7 @@ function RequireTenant({ children }) {
 
   if (authLoading || tenantLoading) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/giris" replace />;
-  if (isSuperAdmin && !tenant) return <Navigate to="/admin" replace />;
+  if (isSuperAdmin) return <Navigate to="/admin" replace />;
   if (!tenant) return <Navigate to="/kayit?step=tenant" replace />;
   return children;
 }
