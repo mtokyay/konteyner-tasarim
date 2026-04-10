@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, CreditCard, CheckCircle, AlertCircle, Eye, Loader2, LogOut, Calendar, Home, User } from 'lucide-react';
+import { FileText, CreditCard, CheckCircle, AlertCircle, Eye, Loader2, LogOut, Calendar, Home, User, ArrowRight } from 'lucide-react';
 import { getSupabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -175,18 +175,19 @@ export default function PortalDashboard() {
               </div>
               <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
                 {contracts.map((c) => (
-                  <div key={c.id} className="p-4 hover:bg-gray-50 transition">
+                  <div key={c.id} className="p-4 hover:bg-amber-50 transition cursor-pointer group" onClick={() => navigate(`/portal/contracts/${c.id}`)}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{c.sozlesme_no}</p>
+                        <p className="font-medium text-gray-900 text-sm group-hover:text-amber-700">{c.sozlesme_no}</p>
                         <p className="text-xs text-gray-500 mt-0.5">
                           {c.designs?.ad} ({c.designs?.genislik}x{c.designs?.uzunluk}x{c.designs?.yukseklik}m)
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">{c.tenants?.name} • {formatDate(c.tarih)}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end gap-1">
                         <p className="font-bold text-gray-900 text-sm">{formatCurrency(c.toplam_tutar)}</p>
                         {getStatusBadge(c.durum)}
+                        <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-amber-500 mt-1" />
                       </div>
                     </div>
                   </div>
@@ -196,11 +197,16 @@ export default function PortalDashboard() {
 
             {/* Payments */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="bg-amber-50 px-5 py-3 border-b border-amber-100">
+              <div className="bg-amber-50 px-5 py-3 border-b border-amber-100 flex items-center justify-between">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-amber-600" />
                   Ödemelerim ({payments.length})
                 </h3>
+                {payments.length > 0 && (
+                  <button onClick={() => navigate('/portal/payments')} className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1">
+                    Tümünü Gör <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
                 {payments.map((p) => (

@@ -40,6 +40,8 @@ import PlanManager from './components/admin/PlanManager';
 
 // Portal pages (müşteri)
 import PortalDashboard from './components/portal/PortalDashboard';
+import PortalContractDetail from './components/portal/PortalContractDetail';
+import PortalPayments from './components/portal/PortalPayments';
 
 // Route guards
 function RequireAuth({ children }) {
@@ -148,6 +150,8 @@ function AppRoutes() {
 
       {/* Portal — Müşteri */}
       <Route path="/portal" element={<RequireAuth><PortalDashboard /></RequireAuth>} />
+      <Route path="/portal/contracts/:id" element={<RequireAuth><PortalContractDetail /></RequireAuth>} />
+      <Route path="/portal/payments" element={<RequireAuth><PortalPayments /></RequireAuth>} />
 
       {/* 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
