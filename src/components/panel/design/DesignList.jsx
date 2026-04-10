@@ -266,7 +266,7 @@ export default function DesignList() {
                             <Eye size={18} />
                           </Link>
                           <Link
-                            to={`/panel/designs/${design.id}/edit`}
+                            to={`/panel/designs/${design.id}/editor`}
                             className="text-blue-600 hover:text-blue-800 transition-colors"
                             title="Düzenle"
                           >

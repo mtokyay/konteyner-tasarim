@@ -191,19 +191,41 @@ const DesignEditor = () => {
       };
 
       if (design?.id) {
+        // Version tracking: save previous version before overwriting
+        const previousVersions = design.design_data?._versions || [];
+        const newVersion = {
+          v: previousVersions.length + 1,
+          date: new Date().toISOString(),
+          user: user?.email || 'unknown',
+          snapshot: { ...design.design_data },
+        };
+        // Remove nested _versions from snapshot to avoid bloat
+        delete newVersion.snapshot._versions;
+        // Keep last 10 versions max
+        const updatedVersions = [...previousVersions, newVersion].slice(-10);
+
+        // Attach version history to new design data
+        const versionedDesignData = {
+          ...pendingDesignData,
+          _versions: updatedVersions,
+          _lastModified: new Date().toISOString(),
+          _modifiedBy: user?.email || 'unknown',
+        };
+
         // Update existing design
         const { error } = await supabase
           .from('designs')
           .update({
             ...designFields,
+            design_data: versionedDesignData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', design.id)
           .eq('tenant_id', tenantId);
 
         if (error) throw error;
-        setDesign(prev => ({ ...prev, ad: extraFields.ad, design_data: pendingDesignData }));
-        setMessage({ type: 'success', text: 'Tasarım güncellendi!' });
+        setDesign(prev => ({ ...prev, ad: extraFields.ad, design_data: versionedDesignData }));
+        setMessage({ type: 'success', text: `Tasarım güncellendi! (v${updatedVersions.length + 1})` });
       } else {
         // Create new design - customer_id is required
         const effectiveCustomerId = customerId || design?.customer_id;

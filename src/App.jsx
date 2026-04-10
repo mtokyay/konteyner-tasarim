@@ -21,6 +21,7 @@ import DesignList from './components/panel/design/DesignList';
 import DesignNew from './components/panel/design/DesignNew';
 import DesignDetail from './components/panel/design/DesignDetail';
 import DesignEditor from './components/panel/design/DesignEditor';
+import DesignPDF from './components/panel/design/DesignPDF';
 import ContractList from './components/panel/contracts/ContractList';
 import ContractCreate from './components/panel/contracts/ContractCreate';
 import ContractDetail from './components/panel/contracts/ContractDetail';
@@ -130,6 +131,9 @@ function AppRoutes() {
       {/* Design editor — full screen, no sidebar */}
       <Route path="/panel/designs/:id/editor" element={
         <RequireTenant><DesignEditor /></RequireTenant>
+      } />
+      <Route path="/panel/designs/:id/pdf" element={
+        <RequireTenant><DesignPDF /></RequireTenant>
       } />
       <Route path="/panel/designs/new/editor" element={
         <RequireTenant><DesignEditor /></RequireTenant>

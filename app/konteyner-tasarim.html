@@ -13,6 +13,35 @@
     <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Source Protection -->
+    <script>
+    (function(){
+      document.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
+      document.addEventListener('keydown',function(e){
+        if(e.key==='F12'){e.preventDefault();return false;}
+        if(e.ctrlKey&&e.key==='u'){e.preventDefault();return false;}
+        if(e.ctrlKey&&e.key==='s'){e.preventDefault();return false;}
+        if(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C')){e.preventDefault();return false;}
+        if(e.ctrlKey&&e.shiftKey&&e.key==='U'){e.preventDefault();return false;}
+      });
+      document.addEventListener('selectstart',function(e){
+        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return true;
+        e.preventDefault();return false;
+      });
+      document.addEventListener('dragstart',function(e){e.preventDefault();return false;});
+      var _dc=0;
+      setInterval(function(){
+        var s=performance.now();
+        debugger;
+        if(performance.now()-s>100){
+          _dc++;
+          if(_dc>2){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666"><p>Bu uygulama güvenli ortamda çalışır. Lütfen geliştirici araçlarını kapatın.</p></div>';}
+        }else{_dc=0;}
+      },2000);
+      console.log('%c⚠️ DUR!','color:red;font-size:40px;font-weight:bold');
+      console.log('%cBu alan geliştiriciler içindir. Size birisi buraya bir şey yapıştırmanızı söylediyse, bu bir dolandırıcılık girişimidir.','color:#333;font-size:16px');
+    })();
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; margin: 0; }
@@ -1802,8 +1831,6 @@
                   window.parent.postMessage({type:'DESIGN_DATA',designData:state},'*');
                 }else{alert('Kaydetmek icin portal uzerinden acin')}
               }} className="px-3 py-1.5 bg-amber-700 text-white rounded-lg text-xs font-medium hover:bg-amber-800">Kaydet</button>
-              <button onClick={()=>setShowPrint(true)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">PDF / Yazdir</button>
-              <button onClick={()=>setShowExport(true)} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700">Ozet</button>
             </div>
           </div>
           <div className="flex flex-1 overflow-hidden">
@@ -2087,8 +2114,19 @@
       }
     });
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App/>);
+    // Iframe-dışı erişimi engelle
+    if (window.self === window.top) {
+      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isLocalDev) {
+        document.getElementById('root').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px"><div><h2 style="color:#D97306;margin-bottom:10px">Tokyay Kereste - Konteyner Tasarım</h2><p style="color:#666">Bu uygulama yalnızca portal üzerinden erişilebilir.</p><p style="color:#999;font-size:14px;margin-top:8px"><a href="/" style="color:#D97306">Ana sayfaya dön</a></p></div></div>';
+      } else {
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App/>);
+      }
+    } else {
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App/>);
+    }
     </script>
   </body>
 </html>

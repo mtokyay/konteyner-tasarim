@@ -43,7 +43,7 @@ export function usePlanLimits() {
   return {
     // Feature checks
     canSaveDesign: hasFeature('save_design'),
-    canExportPDF: hasFeature('pdf_export'),
+    canExportPDF: hasFeature('export_pdf'),
     canCreateContract: hasFeature('contracts'),
     canTrackPayments: hasFeature('payments'),
     canUsePortal: hasFeature('customer_portal'),

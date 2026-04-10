@@ -13,9 +13,12 @@ import {
   Truck,
   Ban,
   PenTool,
+  FileText,
 } from 'lucide-react';
 import { getSupabase } from '../../../lib/supabase';
 import { useTenant } from '../../../contexts/TenantContext';
+import { usePlanLimits } from '../../../hooks/usePlanLimits';
+import FeatureGate from '../../shared/FeatureGate';
 
 const statusColors = {
   taslak: { bg: 'bg-gray-100', text: 'text-gray-800', badge: 'bg-gray-200', icon: AlertCircle },
@@ -78,6 +81,7 @@ const placeholderCustomer = {
 export default function DesignDetail() {
   const { id } = useParams();
   const { tenantId } = useTenant();
+  const { canExportPDF } = usePlanLimits();
   const navigate = useNavigate();
   const location = useLocation();
   const [design, setDesign] = useState(null);
@@ -278,6 +282,20 @@ export default function DesignDetail() {
           <div className="flex items-center gap-3">
             {!isEditing && (
               <>
+              <FeatureGate
+                feature="export_pdf"
+                allowed={canExportPDF}
+                message="PDF çıktı almak için planınızı yükseltin."
+                requiredPlan="starter"
+              >
+                <button
+                  onClick={() => navigate(`/panel/designs/${id}/pdf`)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold transition-all"
+                >
+                  <FileText size={18} />
+                  PDF Çıktı
+                </button>
+              </FeatureGate>
               <button
                 onClick={() => navigate(`/panel/designs/${id}/editor`)}
                 className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-semibold transition-all"
@@ -628,6 +646,32 @@ export default function DesignDetail() {
                 </div>
               )}
             </div>
+
+            {/* Versiyon Geçmişi */}
+            {design.design_data?._versions && design.design_data._versions.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Versiyon Geçmişi
+                </h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {[...design.design_data._versions].reverse().map((ver, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2 text-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-medium text-xs">v{ver.v}</span>
+                        <span className="text-gray-600">{new Date(ver.date).toLocaleString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <span className="text-gray-400 text-xs">{ver.user}</span>
+                    </div>
+                  ))}
+                </div>
+                {design.design_data._lastModified && (
+                  <p className="text-xs text-gray-400 mt-2">
+                    Son düzenleme: {new Date(design.design_data._lastModified).toLocaleString('tr-TR')} — {design.design_data._modifiedBy}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
