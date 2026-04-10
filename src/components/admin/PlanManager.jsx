@@ -23,11 +23,15 @@ export default function PlanManager() {
       payments: false,
       customer_portal: false,
       team_management: false,
+      version_tracking: false,
+      worker_tracking: false,
+      quality_control: false,
       api_access: false,
     },
     limits: {
       max_customers: 5,
-      max_designs: 3,
+      max_designs: 5,
+      max_revisions: 1,
       max_members: 1,
     },
   };
@@ -230,6 +234,9 @@ export default function PlanManager() {
           if (plan.features?.payments) features.push('Ödeme takibi');
           if (plan.features?.customer_portal) features.push('Müşteri portalı');
           if (plan.features?.team_management) features.push('Ekip yönetimi');
+          if (plan.features?.version_tracking) features.push('Versiyon takibi');
+          if (plan.features?.worker_tracking) features.push('Usta izleme');
+          if (plan.features?.quality_control) features.push('Kalite kontrol');
           if (plan.features?.api_access) features.push('API erişimi');
 
           return (
@@ -328,11 +335,14 @@ function PlanForm({ plan, isNew, onSave, onCancel }) {
 
   const featureLabels = {
     save_design: 'Tasarım Kaydetme',
-    export_pdf: 'PDF Çıktı',
+    export_pdf: 'PDF Çıktı / Teklif',
     contracts: 'Sözleşme Oluşturma',
     payments: 'Ödeme Takibi',
     customer_portal: 'Müşteri Portalı',
     team_management: 'Ekip Yönetimi',
+    version_tracking: 'Versiyon Takibi',
+    worker_tracking: 'Usta / Ekip İzleme',
+    quality_control: 'Kalite Kontrol Modülü',
     api_access: 'API Erişimi',
   };
 
@@ -386,6 +396,7 @@ function PlanForm({ plan, isNew, onSave, onCancel }) {
             {[
               { key: 'max_customers', label: 'Maks. Müşteri' },
               { key: 'max_designs', label: 'Maks. Tasarım' },
+              { key: 'max_revisions', label: 'Maks. Revizyon/Tasarım' },
               { key: 'max_members', label: 'Maks. Üye' },
             ].map(({ key, label }) => (
               <div key={key} className="flex items-center gap-2">

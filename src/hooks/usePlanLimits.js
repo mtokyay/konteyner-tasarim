@@ -40,6 +40,14 @@ export function usePlanLimits() {
     }
   };
 
+  // Revizyon kontrolü: tasarıma ait mevcut versiyon sayısını kontrol eder
+  const canReviseDesign = (design) => {
+    const maxRevisions = getLimit('max_revisions');
+    if (maxRevisions === -1 || maxRevisions >= 99999) return true;
+    const currentVersions = design?.design_data?._versions?.length || 0;
+    return currentVersions < maxRevisions;
+  };
+
   return {
     // Feature checks
     canSaveDesign: hasFeature('save_design'),
@@ -48,23 +56,26 @@ export function usePlanLimits() {
     canTrackPayments: hasFeature('payments'),
     canUsePortal: hasFeature('customer_portal'),
     canManageTeam: hasFeature('team_management'),
-    canCustomBrand: hasFeature('custom_branding'),
+    canTrackVersions: hasFeature('version_tracking'),
+    canTrackWorkers: hasFeature('worker_tracking'),
+    canUseQualityControl: hasFeature('quality_control'),
+    canAccessAPI: hasFeature('api_access'),
 
     // Limit checks
     canAddCustomer: counts.customers < getLimit('max_customers'),
-    canAddDesign: counts.activeDesigns < getLimit('max_active_designs'),
+    canAddDesign: counts.activeDesigns < getLimit('max_designs'),
     canAddContract: counts.contracts < getLimit('max_contracts'),
     canAddMember: counts.members < getLimit('max_members'),
+    canReviseDesign,
 
     // Current counts
     counts,
     limits: {
       maxCustomers: getLimit('max_customers'),
       maxDesigns: getLimit('max_designs'),
-      maxActiveDesigns: getLimit('max_active_designs'),
+      maxRevisions: getLimit('max_revisions'),
       maxContracts: getLimit('max_contracts'),
       maxMembers: getLimit('max_members'),
-      maxStorageMb: getLimit('max_storage_mb'),
     },
 
     // Plan info
