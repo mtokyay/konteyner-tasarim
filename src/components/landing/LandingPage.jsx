@@ -50,10 +50,10 @@ const LandingPage = () => {
       {/* Navbar */}
       <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <button onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} className="flex items-center gap-2 cursor-pointer">
             <Box className="w-7 h-7 text-amber-600" />
             <span className="font-bold text-lg text-gray-900">Konteyner<span className="text-amber-600">Tasarım</span></span>
-          </div>
+          </button>
           <div className="flex items-center gap-4">
             <a href="#ozellikler" className="text-sm text-gray-600 hover:text-gray-900 hidden md:inline">Özellikler</a>
             <a href="#fiyatlandirma" className="text-sm text-gray-600 hover:text-gray-900 hidden md:inline">Fiyatlandırma</a>
