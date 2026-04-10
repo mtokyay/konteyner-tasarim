@@ -14,6 +14,11 @@ import {
   Save,
   X,
   Check,
+  Eye,
+  Pencil,
+  Ruler,
+  Box,
+  ExternalLink,
 } from 'lucide-react';
 import { getSupabase } from '../../../lib/supabase';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -574,24 +579,94 @@ const CustomerDetail = () => {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {designs.map((design) => (
-                      <div
-                        key={design.id}
-                        className="p-4 border border-gray-200 rounded-lg hover:border-amber-400 transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">
-                              {design.ad || `Tasarım #${design.id}`}
-                            </h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {formatDate(design.created_at)}
-                            </p>
+                    {designs.map((design) => {
+                      const dd = design.design_data || {};
+                      const cont = dd.container || {};
+                      const hasCombo = dd.combo?.enabled;
+                      const w = cont.width || design.genislik * 100 || 0;
+                      const l = cont.length || design.uzunluk * 100 || 0;
+                      const displayW = hasCombo && dd.combo?.direction === 'width' ? w * 2 : w;
+                      const displayL = hasCombo && dd.combo?.direction === 'length' ? l * 2 : l;
+                      const area = design.alan || (displayW * displayL / 10000);
+                      return (
+                        <div
+                          key={design.id}
+                          onClick={() => navigate(`/panel/designs/${design.id}`)}
+                          className="p-4 border border-gray-200 rounded-xl hover:border-amber-400 hover:shadow-md transition-all cursor-pointer group"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-gray-900 truncate">
+                                  {design.ad || `Tasarım #${design.ref_no || design.id?.slice(0,8)}`}
+                                </h4>
+                                {design.ref_no && (
+                                  <span className="text-xs text-gray-400 font-mono flex-shrink-0">{design.ref_no}</span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500 mt-0.5">
+                                {formatDate(design.created_at)}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {renderStatusBadge(design.status, designStatusConfig)}
+                            </div>
                           </div>
-                          {renderStatusBadge(design.status, designStatusConfig)}
+
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+                            {(w > 0 && l > 0) && (
+                              <span className="flex items-center gap-1">
+                                <Ruler className="w-3.5 h-3.5 text-gray-400" />
+                                {displayW}x{displayL} cm
+                                {hasCombo && <span className="text-amber-600 font-medium ml-1">(Kombo)</span>}
+                              </span>
+                            )}
+                            {area > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Box className="w-3.5 h-3.5 text-gray-400" />
+                                {Number(area).toFixed(1)} m²
+                              </span>
+                            )}
+                            {design.net_fiyat > 0 && (
+                              <span className="flex items-center gap-1 font-semibold text-green-700">
+                                <DollarSign className="w-3.5 h-3.5" />
+                                {formatCurrency(design.net_fiyat)}
+                              </span>
+                            )}
+                            {!design.net_fiyat && design.toplam_fiyat > 0 && (
+                              <span className="flex items-center gap-1 font-semibold text-green-700">
+                                <DollarSign className="w-3.5 h-3.5" />
+                                {formatCurrency(design.toplam_fiyat)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/panel/designs/${design.id}`); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              Detay
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/panel/designs/${design.id}/editor`); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                              Düzenle
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/panel/designs/${design.id}/pdf`); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              PDF
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
