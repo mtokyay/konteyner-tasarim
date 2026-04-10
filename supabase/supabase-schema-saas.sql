@@ -54,22 +54,24 @@ CREATE TABLE plans (
   currency TEXT DEFAULT 'TRY',
   limits JSONB NOT NULL DEFAULT '{
     "max_customers": 5,
-    "max_designs": 3,
-    "max_active_designs": 3,
+    "max_designs": 5,
+    "max_active_designs": 5,
+    "max_revisions": 1,
     "max_contracts": 0,
     "max_members": 1,
     "max_storage_mb": 100
   }'::jsonb,
   features JSONB NOT NULL DEFAULT '{
     "save_design": false,
-    "pdf_export": false,
+    "export_pdf": false,
     "contracts": false,
     "payments": false,
     "customer_portal": false,
     "team_management": false,
-    "custom_branding": false,
-    "api_access": false,
-    "priority_support": false
+    "version_tracking": false,
+    "worker_tracking": false,
+    "quality_control": false,
+    "api_access": false
   }'::jsonb,
   is_active BOOLEAN DEFAULT true,
   sort_order INTEGER DEFAULT 0,
@@ -79,31 +81,31 @@ CREATE TABLE plans (
 -- Varsayilan planlar
 INSERT INTO plans (name, slug, description, price_monthly, price_yearly, limits, features, sort_order) VALUES
 (
-  'Ücretsiz', 'free', 'Başlangıç için temel özellikler',
+  'Ücretsiz', 'free', 'Başlangıç için temel özellikler — 5 müşteri, 5 tasarım, kaydetme',
   0, 0,
-  '{"max_customers": 5, "max_designs": 3, "max_active_designs": 3, "max_contracts": 0, "max_members": 1, "max_storage_mb": 100}'::jsonb,
-  '{"save_design": false, "pdf_export": false, "contracts": false, "payments": false, "customer_portal": false, "team_management": false, "custom_branding": false, "api_access": false, "priority_support": false}'::jsonb,
+  '{"max_customers": 5, "max_designs": 5, "max_active_designs": 5, "max_revisions": 1, "max_contracts": 0, "max_members": 1, "max_storage_mb": 100}'::jsonb,
+  '{"save_design": true, "export_pdf": false, "contracts": false, "payments": false, "customer_portal": false, "team_management": false, "version_tracking": false, "worker_tracking": false, "quality_control": false, "api_access": false}'::jsonb,
   0
 ),
 (
-  'Başlangıç', 'starter', 'Küçük işletmeler için',
-  299, 2990,
-  '{"max_customers": 50, "max_designs": 999999, "max_active_designs": 20, "max_contracts": 10, "max_members": 1, "max_storage_mb": 1000}'::jsonb,
-  '{"save_design": true, "pdf_export": true, "contracts": true, "payments": true, "customer_portal": false, "team_management": false, "custom_branding": false, "api_access": false, "priority_support": false}'::jsonb,
+  'Başlangıç', 'starter', 'Küçük işletmeler için — 50 müşteri, PDF çıktı',
+  499, 4990,
+  '{"max_customers": 50, "max_designs": 25, "max_active_designs": 25, "max_revisions": 5, "max_contracts": 0, "max_members": 1, "max_storage_mb": 1000}'::jsonb,
+  '{"save_design": true, "export_pdf": true, "contracts": false, "payments": false, "customer_portal": false, "team_management": false, "version_tracking": false, "worker_tracking": false, "quality_control": false, "api_access": false}'::jsonb,
   1
 ),
 (
-  'Profesyonel', 'pro', 'Büyüyen işletmeler için',
-  599, 5990,
-  '{"max_customers": 200, "max_designs": 999999, "max_active_designs": 999999, "max_contracts": 999999, "max_members": 5, "max_storage_mb": 5000}'::jsonb,
-  '{"save_design": true, "pdf_export": true, "contracts": true, "payments": true, "customer_portal": true, "team_management": true, "custom_branding": true, "api_access": false, "priority_support": false}'::jsonb,
+  'Profesyonel', 'pro', 'Büyüyen işletmeler için — 200 müşteri, sözleşme ve ödeme takibi, 5 çalışan',
+  999, 9990,
+  '{"max_customers": 200, "max_designs": 100, "max_active_designs": 100, "max_revisions": 20, "max_contracts": 999999, "max_members": 5, "max_storage_mb": 5000}'::jsonb,
+  '{"save_design": true, "export_pdf": true, "contracts": true, "payments": true, "customer_portal": false, "team_management": true, "version_tracking": false, "worker_tracking": false, "quality_control": false, "api_access": false}'::jsonb,
   2
 ),
 (
-  'Kurumsal', 'enterprise', 'Büyük firmalar için tam paket',
-  999, 9990,
-  '{"max_customers": 999999, "max_designs": 999999, "max_active_designs": 999999, "max_contracts": 999999, "max_members": 20, "max_storage_mb": 50000}'::jsonb,
-  '{"save_design": true, "pdf_export": true, "contracts": true, "payments": true, "customer_portal": true, "team_management": true, "custom_branding": true, "api_access": true, "priority_support": true}'::jsonb,
+  'Kurumsal', 'enterprise', 'Büyük firmalar için tam paket — sınırsız, usta izleme, kalite kontrol, API',
+  1999, 19990,
+  '{"max_customers": 999999, "max_designs": 999999, "max_active_designs": 999999, "max_revisions": 999999, "max_contracts": 999999, "max_members": 20, "max_storage_mb": 50000}'::jsonb,
+  '{"save_design": true, "export_pdf": true, "contracts": true, "payments": true, "customer_portal": true, "team_management": true, "version_tracking": true, "worker_tracking": true, "quality_control": true, "api_access": true}'::jsonb,
   3
 );
 
