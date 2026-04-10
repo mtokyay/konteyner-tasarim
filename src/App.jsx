@@ -59,7 +59,8 @@ function RequireTenant({ children }) {
 
   if (authLoading || tenantLoading) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/giris" replace />;
-  if (isSuperAdmin) return <Navigate to="/admin" replace />;
+  // Super admin tenant'ı varsa panele erişebilir, yoksa admin'e yönlendir
+  if (!tenant && isSuperAdmin) return <Navigate to="/admin" replace />;
   if (!tenant) return <Navigate to="/kayit?step=tenant" replace />;
   return children;
 }

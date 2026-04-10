@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LayoutDashboard, Building2, Crown, LogOut, Shield, Settings } from 'lucide-react';
+import { LayoutDashboard, Building2, Crown, LogOut, Shield, Settings, ArrowRightLeft } from 'lucide-react';
 
 const AdminLayout = () => {
   const { logout, profile } = useAuth();
@@ -46,11 +46,16 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-gray-700">
-          <div className="px-3 py-2 mb-2">
+        <div className="p-3 border-t border-gray-700 space-y-1">
+          <div className="px-3 py-2">
             <p className="text-sm font-medium text-white">{profile?.full_name}</p>
             <p className="text-xs text-gray-400">Super Admin</p>
           </div>
+          <button onClick={()=>navigate('/panel')}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-400 hover:bg-blue-900/30 w-full transition">
+            <ArrowRightLeft className="w-5 h-5" />
+            Panele Geç
+          </button>
           <button onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-900/30 w-full transition">
             <LogOut className="w-5 h-5" />

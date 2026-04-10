@@ -4,11 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import {
   LayoutDashboard, Users, PenTool, FileText, CreditCard, BarChart3,
-  Settings, UserPlus, Crown, LogOut, ChevronLeft, ChevronRight, Menu, X
+  Settings, UserPlus, Crown, LogOut, ChevronLeft, ChevronRight, Menu, X, Shield
 } from 'lucide-react';
 
 const PanelLayout = () => {
-  const { logout, profile } = useAuth();
+  const { logout, profile, isSuperAdmin } = useAuth();
   const { tenant, plan, role, hasFeature } = useTenant();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
@@ -89,6 +89,15 @@ const PanelLayout = () => {
             <p className="text-sm font-medium text-gray-900 truncate">{profile?.full_name}</p>
             <p className="text-xs text-gray-500 capitalize">{role}</p>
           </div>
+        )}
+        {isSuperAdmin && (
+          <button onClick={()=>navigate('/admin')}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-purple-600 hover:bg-purple-50 w-full transition ${collapsed ? 'justify-center' : ''}`}
+            title="Admin Paneli"
+          >
+            <Shield className="w-5 h-5" />
+            {!collapsed && <span>Admin Paneli</span>}
+          </button>
         )}
         <button onClick={handleLogout}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full transition ${collapsed ? 'justify-center' : ''}`}
