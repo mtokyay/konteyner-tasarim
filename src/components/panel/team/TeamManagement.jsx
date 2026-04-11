@@ -188,7 +188,8 @@ export default function TeamManagement() {
           <h1 className="text-3xl font-bold text-gray-900">Ekip Yönetimi</h1>
           <p className="text-gray-600 mt-1">
             {activeMembers.length} aktif üye
-            {maxMembers > 0 && ` / ${maxMembers} üye hakkı`}
+            {maxMembers > 0 && maxMembers < 99999 && ` / ${maxMembers} üye hakkı`}
+            {maxMembers >= 99999 && ' (Sınırsız)'}
           </p>
         </div>
         {isAdmin && (

@@ -34,6 +34,7 @@ DROP FUNCTION IF EXISTS update_updated_at() CASCADE;
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
+  email TEXT,
   phone TEXT,
   avatar_url TEXT,
   is_super_admin BOOLEAN DEFAULT false,
@@ -412,10 +413,11 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON payment_notifications
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name)
+  INSERT INTO public.profiles (id, full_name, email)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1))
+    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+    NEW.email
   );
   RETURN NEW;
 END;
