@@ -14,30 +14,53 @@ exports.handler = async (event) => {
     const merchant_salt = process.env.PAYTR_MERCHANT_SALT;
 
     if (!merchant_key || !merchant_salt) {
-      console.error('PayTR credentials missing');
       return { statusCode: 500, body: 'Configuration error' };
     }
 
     // Parse form data from PayTR
     const params = new URLSearchParams(event.body);
-    const merchant_oid = params.get('merchant_oid');
-    const status = params.get('status'); // 'success' or 'failed'
-    const total_amount = params.get('total_amount');
-    const hash = params.get('hash');
+    const merchant_oid = params.get('merchant_oid') || '';
+    const status = params.get('status') || '';
+    const total_amount = params.get('total_amount') || '';
+    const hash = params.get('hash') || '';
     const failed_reason_code = params.get('failed_reason_code') || '';
     const failed_reason_msg = params.get('failed_reason_msg') || '';
     const test_mode = params.get('test_mode') || '0';
     const payment_type = params.get('payment_type') || '';
 
-    // Verify hash
+    // --- INPUT VALIDATION ---
+    if (!merchant_oid || !status || !total_amount || !hash) {
+      return { statusCode: 400, body: 'Missing required parameters' };
+    }
+
+    // Validate status value
+    if (!['success', 'failed'].includes(status)) {
+      return { statusCode: 400, body: 'Invalid status value' };
+    }
+
+    // Validate total_amount is a positive integer
+    const amountNum = parseInt(total_amount, 10);
+    if (isNaN(amountNum) || amountNum < 0) {
+      return { statusCode: 400, body: 'Invalid total_amount' };
+    }
+
+    // Validate merchant_oid format (SUB-Y/M-xxxx-timestamp or legacy SUB-xxxx-timestamp)
+    if (!/^SUB-[A-Za-z0-9-]+$/.test(merchant_oid) || merchant_oid.length > 80) {
+      return { statusCode: 400, body: 'Invalid merchant_oid format' };
+    }
+
+    // --- TIMING-SAFE HMAC VERIFICATION ---
     const hash_str = `${merchant_oid}${merchant_salt}${status}${total_amount}`;
     const expected_hash = crypto
       .createHmac('sha256', merchant_key)
       .update(hash_str)
       .digest('base64');
 
-    if (hash !== expected_hash) {
-      console.error('PayTR hash mismatch', { merchant_oid, expected_hash, received_hash: hash });
+    // Timing-safe comparison to prevent timing attacks
+    const hashBuffer = Buffer.from(hash);
+    const expectedBuffer = Buffer.from(expected_hash);
+    if (hashBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(hashBuffer, expectedBuffer)) {
+      console.error('PayTR hash mismatch for oid:', merchant_oid.substring(0, 20));
       return { statusCode: 400, body: 'PAYTR notification hash mismatch' };
     }
 
@@ -46,7 +69,6 @@ exports.handler = async (event) => {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Supabase credentials missing');
       return { statusCode: 500, body: 'Database configuration error' };
     }
 
@@ -59,12 +81,15 @@ exports.handler = async (event) => {
     let isYearly = false;
 
     if (oidParts[1] === 'Y' || oidParts[1] === 'M') {
-      // New format with period code
       isYearly = oidParts[1] === 'Y';
-      tenantPrefix = oidParts[2]; // first 8 chars of tenant_id
+      tenantPrefix = oidParts[2];
     } else {
-      // Legacy format
-      tenantPrefix = oidParts[1]; // first 8 chars of tenant_id
+      tenantPrefix = oidParts[1];
+    }
+
+    // Validate tenant prefix (should be hex chars, 8 chars long)
+    if (!tenantPrefix || !/^[a-f0-9]{4,12}$/.test(tenantPrefix)) {
+      return { statusCode: 200, body: 'OK' }; // Respond OK but don't process
     }
 
     // Find the tenant by prefix
@@ -75,15 +100,12 @@ exports.handler = async (event) => {
       .limit(1);
 
     if (tenantError || !tenants || tenants.length === 0) {
-      console.error('Tenant not found for oid:', merchant_oid);
-      // Still respond OK to PayTR
       return { statusCode: 200, body: 'OK' };
     }
 
     const tenant = tenants[0];
 
     if (status === 'success') {
-      // Payment successful - update tenant subscription
       const now = new Date();
       const subscriptionEnd = new Date(now);
       if (isYearly) {
@@ -96,21 +118,20 @@ exports.handler = async (event) => {
       await supabase.from('subscription_payments').insert({
         tenant_id: tenant.id,
         merchant_oid,
-        amount: parseInt(total_amount) / 100, // kuruş to TL
+        amount: amountNum / 100,
         status: 'completed',
         payment_type,
         period_start: now.toISOString(),
         period_end: subscriptionEnd.toISOString(),
         paytr_data: {
           merchant_oid,
-          total_amount,
+          total_amount: String(amountNum),
           test_mode,
           payment_type,
         },
       });
 
-      // Find the plan from the pending payment or use current plan
-      // We need to find which plan was being purchased
+      // Find pending plan
       const { data: pendingPayment } = await supabase
         .from('subscription_payments')
         .select('plan_id')
@@ -119,7 +140,7 @@ exports.handler = async (event) => {
 
       const planId = pendingPayment?.plan_id || tenant.plan_id;
 
-      // Update tenant subscription status
+      // Update tenant subscription
       await supabase
         .from('tenants')
         .update({
@@ -127,38 +148,31 @@ exports.handler = async (event) => {
           subscription_status: 'active',
           subscription_start: now.toISOString(),
           subscription_end: subscriptionEnd.toISOString(),
+          next_plan_id: null, // Clear any pending downgrade
         })
         .eq('id', tenant.id);
 
-      console.log(`Subscription activated for tenant ${tenant.id}, plan ${planId}`);
     } else {
       // Payment failed
       await supabase.from('subscription_payments').insert({
         tenant_id: tenant.id,
         merchant_oid,
-        amount: parseInt(total_amount) / 100,
+        amount: amountNum / 100,
         status: 'failed',
         payment_type,
         paytr_data: {
           merchant_oid,
-          total_amount,
+          total_amount: String(amountNum),
           failed_reason_code,
-          failed_reason_msg,
+          failed_reason_msg: (failed_reason_msg || '').substring(0, 500),
           test_mode,
         },
       });
-
-      console.log(`Payment failed for tenant ${tenant.id}: ${failed_reason_msg}`);
     }
 
-    // PayTR expects "OK" response
-    return {
-      statusCode: 200,
-      body: 'OK',
-    };
+    return { statusCode: 200, body: 'OK' };
   } catch (err) {
-    console.error('PayTR callback error:', err);
-    // Still respond OK to avoid PayTR retries on server errors
+    console.error('PayTR callback error:', err.message);
     return { statusCode: 200, body: 'OK' };
   }
 };

@@ -151,10 +151,21 @@ const SubscriptionPage = () => {
       }
 
       if (data.token) {
-        const paytrDiv = document.getElementById('paytr-iframe-container');
-        if (paytrDiv) {
-          paytrDiv.innerHTML = `<iframe src="https://www.paytr.com/odeme/guvenli/${data.token}" id="paytriframe" frameborder="0" scrolling="no" style="width:100%;height:600px;"></iframe>`;
-          paytrDiv.scrollIntoView({ behavior: 'smooth' });
+        // Token'ı doğrula: sadece alfanumerik ve güvenli karakterler
+        const safeToken = data.token.replace(/[^a-zA-Z0-9]/g, '');
+        if (safeToken.length > 0) {
+          const paytrDiv = document.getElementById('paytr-iframe-container');
+          if (paytrDiv) {
+            paytrDiv.textContent = ''; // Güvenli temizlik
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.paytr.com/odeme/guvenli/${safeToken}`;
+            iframe.id = 'paytriframe';
+            iframe.frameBorder = '0';
+            iframe.scrolling = 'no';
+            iframe.style.cssText = 'width:100%;height:600px;';
+            paytrDiv.appendChild(iframe);
+            paytrDiv.scrollIntoView({ behavior: 'smooth' });
+          }
         }
       }
     } catch (err) {

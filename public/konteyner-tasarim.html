@@ -2143,7 +2143,12 @@
     window.__registerDesignState = (getter) => { __designStateGetter = getter; };
     window.__getDesignState = () => __designStateGetter ? __designStateGetter() : {};
 
+    // Güvenli origin listesi
+    const ALLOWED_ORIGINS = [window.location.origin, 'https://konteynertasarim.com.tr', 'https://www.konteynertasarim.com.tr', 'http://localhost:5173', 'http://localhost:3000'];
+
     window.addEventListener('message', function(event) {
+      // Origin kontrolü
+      if (!ALLOWED_ORIGINS.includes(event.origin) && event.origin !== window.location.origin) return;
       if (!event.data || !event.data.type) return;
       if (event.data.type === 'LOAD_DESIGN') {
         const d = event.data.designData;
@@ -2153,7 +2158,8 @@
       }
       if (event.data.type === 'REQUEST_SAVE') {
         const state = window.__getDesignState();
-        window.parent.postMessage({ type: 'DESIGN_DATA', designData: state }, '*');
+        const targetOrigin = event.origin || '*';
+        window.parent.postMessage({ type: 'DESIGN_DATA', designData: state }, targetOrigin);
       }
     });
 
