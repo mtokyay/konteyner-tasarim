@@ -37,7 +37,7 @@ export default function TenantList() {
 
       let query = supabase
         .from('tenants')
-        .select('id, name, slug, subscription_status, created_at, owner_id, plans(id, name, slug)', { count: 'exact' })
+        .select('id, name, slug, subscription_status, created_at, owner_id, plans!plan_id(id, name, slug)', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
@@ -78,7 +78,7 @@ export default function TenantList() {
       setLoading(true);
       const { data, error: sErr, count } = await supabase
         .from('tenants')
-        .select('id, name, slug, subscription_status, created_at, owner_id, plans(id, name, slug)', { count: 'exact' })
+        .select('id, name, slug, subscription_status, created_at, owner_id, plans!plan_id(id, name, slug)', { count: 'exact' })
         .or(`name.ilike.%${search}%,slug.ilike.%${search}%`)
         .order('created_at', { ascending: false })
         .limit(50);

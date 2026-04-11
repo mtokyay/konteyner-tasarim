@@ -32,7 +32,7 @@ export default function TenantDetail() {
       const [tenantRes, membersRes, plansRes, paymentsRes] = await Promise.all([
         supabase
           .from('tenants')
-          .select('*, plans(id, name, slug, price_monthly, price_yearly)')
+          .select('*, plans!plan_id(id, name, slug, price_monthly, price_yearly)')
           .eq('id', id)
           .single(),
         supabase

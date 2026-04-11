@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         // Total revenue from completed payments
         supabase.from('subscription_payments').select('amount').eq('status', 'completed'),
         // Recent tenants (last 5)
-        supabase.from('tenants').select('id, name, slug, subscription_status, created_at, plans(name, slug)').order('created_at', { ascending: false }).limit(5),
+        supabase.from('tenants').select('id, name, slug, subscription_status, created_at, plans!plan_id(name, slug)').order('created_at', { ascending: false }).limit(5),
         // Recent payments (last 5)
         supabase.from('subscription_payments').select('id, amount, status, created_at, tenants(name)').order('created_at', { ascending: false }).limit(5),
         // Total designs
