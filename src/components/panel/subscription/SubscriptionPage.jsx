@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Crown, Loader2, AlertCircle, CreditCard, Calendar, ArrowRight, X as XIcon } from 'lucide-react';
+import { Check, Crown, Loader2, AlertCircle, CreditCard, Calendar, ArrowRight, ArrowDown, X as XIcon } from 'lucide-react';
 import { getSupabase } from '../../../lib/supabase';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -216,6 +216,101 @@ const SubscriptionPage = () => {
 
   const isCurrentPlan = (p) => plan?.id === p.id;
   const isHigherPlan = (p) => (p.price_monthly || 0) > (plan?.price_monthly || 0);
+  const isLowerPlan = (p) => !isCurrentPlan(p) && (p.price_monthly || 0) < (plan?.price_monthly || 0);
+  const [downgradeModal, setDowngradeModal] = useState(null);
+
+  const getRemainingDays = () => {
+    if (!tenant?.subscription_end) return 0;
+    const end = new Date(tenant.subscription_end);
+    const now = new Date();
+    return Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
+  };
+
+  // Kalan süre 35 günden fazlaysa yıllık abonelik sayıyoruz
+  const isYearlySubscription = () => getRemainingDays() > 35;
+
+  const calculateDowngradeCredit = (targetPlan) => {
+    const remainingDays = getRemainingDays();
+    if (remainingDays <= 0) return { remainingDays: 0, credit: 0, newDays: 0, newMonths: 0 };
+
+    const currentMonthly = plan?.price_monthly || 0;
+    const targetMonthly = targetPlan.price_monthly || 1;
+
+    // Günlük ücretler
+    const currentDaily = currentMonthly / 30;
+    const targetDaily = targetMonthly / 30;
+
+    // Kalan bakiye (TL)
+    const credit = Math.round(currentDaily * remainingDays);
+    // Yeni planda kaç gün
+    const newDays = Math.floor(credit / targetDaily);
+    const newMonths = Math.round(newDays / 30 * 10) / 10;
+    const newYears = Math.round(newDays / 365 * 10) / 10;
+
+    return { remainingDays, credit, newDays, newMonths, newYears };
+  };
+
+  const handleDowngrade = (targetPlan) => {
+    if (isYearlySubscription()) {
+      // Yıllık: bakiye hesapla, kullanıcıya göster
+      const calc = calculateDowngradeCredit(targetPlan);
+      setDowngradeModal({ plan: targetPlan, mode: 'yearly', ...calc });
+    } else {
+      // Aylık: dönem sonunda geçiş
+      setDowngradeModal({ plan: targetPlan, mode: 'monthly' });
+    }
+  };
+
+  const confirmDowngrade = async () => {
+    if (!supabase || !tenant || !downgradeModal) return;
+    try {
+      setUpgrading(downgradeModal.plan.id);
+      setError('');
+
+      if (downgradeModal.mode === 'monthly') {
+        // Aylık: dönem sonunda plan değişecek
+        const { error: updateError } = await supabase
+          .from('tenants')
+          .update({ next_plan_id: downgradeModal.plan.id })
+          .eq('id', tenant.id);
+        if (updateError) throw updateError;
+      } else {
+        // Yıllık: hemen plan değiştir, kalan bakiyeyi yeni süreye çevir
+        const newEnd = new Date();
+        newEnd.setDate(newEnd.getDate() + downgradeModal.newDays);
+
+        const { error: updateError } = await supabase
+          .from('tenants')
+          .update({
+            plan_id: downgradeModal.plan.id,
+            subscription_status: 'active',
+            subscription_end: newEnd.toISOString(),
+            next_plan_id: null,
+          })
+          .eq('id', tenant.id);
+        if (updateError) throw updateError;
+
+        // Downgrade log kaydı
+        await supabase.from('subscription_payments').insert({
+          tenant_id: tenant.id,
+          plan_id: downgradeModal.plan.id,
+          plan_name: `${downgradeModal.plan.name} (düşürme)`,
+          amount: 0,
+          status: 'completed',
+          period_start: new Date().toISOString(),
+          period_end: newEnd.toISOString(),
+          merchant_oid: `DWN-${tenant.id.substring(0, 8)}-${Date.now()}`,
+        });
+      }
+
+      setDowngradeModal(null);
+      window.location.reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpgrading(null);
+    }
+  };
 
   const formatDate = (d) => new Date(d).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -410,7 +505,30 @@ const SubscriptionPage = () => {
               {current ? (
                 <div className="text-center py-2.5 rounded-xl font-semibold text-sm bg-green-100 text-green-700">
                   Aktif Plan
+                  {tenant?.next_plan_id && tenant.next_plan_id !== p.id && (
+                    <p className="text-xs text-amber-600 mt-1 font-normal">Dönem sonunda plan değişecek</p>
+                  )}
                 </div>
+              ) : tenant?.next_plan_id === p.id ? (
+                <div className="text-center py-2.5 rounded-xl font-semibold text-sm bg-blue-100 text-blue-700">
+                  Dönem Sonunda Geçilecek
+                  <p className="text-xs font-normal mt-0.5">{tenant?.subscription_end ? formatDate(tenant.subscription_end) : ''}</p>
+                </div>
+              ) : isLowerPlan(p) ? (
+                <button
+                  onClick={() => handleDowngrade(p)}
+                  disabled={upgrading === p.id}
+                  className="w-full py-2.5 rounded-xl font-semibold text-sm transition flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50"
+                >
+                  {upgrading === p.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      Plana Geç
+                      <ArrowDown className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
               ) : (
                 <button
                   onClick={() => handleUpgrade(p)}
@@ -425,7 +543,7 @@ const SubscriptionPage = () => {
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      {higher ? 'Yükselt' : 'Değiştir'}
+                      Yükselt
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -435,6 +553,76 @@ const SubscriptionPage = () => {
           );
         })}
       </div>
+
+      {/* Downgrade Onay Modalı */}
+      {downgradeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Plan Değişikliği</h3>
+
+            {downgradeModal.mode === 'monthly' ? (
+              /* Aylık abonelik: dönem sonunda geçiş */
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-700 mb-2">
+                  <strong>{plan?.name}</strong> → <strong>{downgradeModal.plan.name}</strong>
+                </p>
+                <p className="text-sm text-gray-700">
+                  Mevcut aylık aboneliğiniz <strong>{tenant?.subscription_end ? formatDate(tenant.subscription_end) : 'dönem sonuna'}</strong> kadar aktif kalacak.
+                  Bu tarihten sonra <strong>{downgradeModal.plan.name}</strong> planı otomatik olarak başlayacaktır.
+                </p>
+              </div>
+            ) : (
+              /* Yıllık abonelik: bakiye hesabı */
+              <div className="space-y-3 mb-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm font-medium text-blue-900 mb-2">Bakiye Hesabı</p>
+                  <div className="space-y-1 text-sm text-blue-800">
+                    <p>Kalan süre: <strong>{downgradeModal.remainingDays} gün</strong></p>
+                    <p>Mevcut plan günlük ücreti: <strong>₺{Math.round((plan?.price_monthly || 0) / 30).toLocaleString('tr-TR')}</strong></p>
+                    <p>Kalan bakiyeniz: <strong>₺{downgradeModal.credit.toLocaleString('tr-TR')}</strong></p>
+                  </div>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-sm font-medium text-green-900 mb-1">
+                    {downgradeModal.plan.name} planında kullanım süreniz:
+                  </p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {downgradeModal.newDays > 365
+                      ? `${downgradeModal.newYears} yıl (~${downgradeModal.newDays} gün)`
+                      : `${downgradeModal.newMonths} ay (~${downgradeModal.newDays} gün)`
+                    }
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    {downgradeModal.plan.name}: ₺{downgradeModal.plan.price_monthly}/ay → günlük ₺{Math.round(downgradeModal.plan.price_monthly / 30)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500 mb-4">
+              {downgradeModal.mode === 'monthly'
+                ? 'Dönem sonuna kadar mevcut planınızın tüm özelliklerini kullanmaya devam edebilirsiniz.'
+                : 'Onayladığınızda planınız hemen değişecek ve kalan bakiyeniz yeni plan süresine dönüştürülecektir.'
+              }
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDowngradeModal(null)}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+              >
+                Vazgeç
+              </button>
+              <button
+                onClick={confirmDowngrade}
+                disabled={upgrading}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-amber-600 hover:bg-amber-700 text-white transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {upgrading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Onayla'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div id="paytr-iframe-container" className="mt-8"></div>
 
