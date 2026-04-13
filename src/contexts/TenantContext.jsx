@@ -69,22 +69,26 @@ export function TenantProvider({ children }) {
 
   // Create a new tenant (registration flow)
   const createTenant = async (tenantName, slug) => {
-    // Get free plan
-    const { data: freePlan } = await supabase
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser?.id) {
+      throw new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+    }
+
+    const { data: freePlan, error: planErr } = await supabase
       .from('plans')
       .select('id')
       .eq('slug', 'free')
-      .single();
+      .maybeSingle();
 
-    if (!freePlan) throw new Error('Free plan bulunamadı');
+    if (planErr) throw new Error('Plan yüklenemedi: ' + planErr.message);
+    if (!freePlan?.id) throw new Error('Ücretsiz plan bulunamadı. Lütfen yönetici ile iletişime geçin.');
 
-    // Create tenant
     const { data: newTenant, error: tenantErr } = await supabase
       .from('tenants')
       .insert({
         name: tenantName,
         slug: slug,
-        owner_id: user.id,
+        owner_id: authUser.id,
         plan_id: freePlan.id,
         subscription_status: 'trialing',
       })
@@ -92,13 +96,13 @@ export function TenantProvider({ children }) {
       .single();
 
     if (tenantErr) throw tenantErr;
+    if (!newTenant?.id) throw new Error('Firma oluşturulamadı');
 
-    // Add owner as member
     const { error: memberErr } = await supabase
       .from('tenant_members')
       .insert({
         tenant_id: newTenant.id,
-        user_id: user.id,
+        user_id: authUser.id,
         role: 'owner',
       });
 

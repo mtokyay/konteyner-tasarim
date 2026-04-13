@@ -63,6 +63,13 @@ export function AuthProvider({ children }) {
       options: { data: { full_name: fullName } },
     });
     if (error) throw error;
+
+    if (!data.session) {
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInErr || !signInData.session) {
+        throw new Error('Kaydınız oluşturuldu, lütfen e-posta adresinize gelen doğrulama bağlantısına tıklayıp tekrar giriş yapın.');
+      }
+    }
     return data;
   };
 
