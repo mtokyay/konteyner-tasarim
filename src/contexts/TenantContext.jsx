@@ -30,10 +30,10 @@ export function TenantProvider({ children }) {
     try {
       setLoading(true);
 
-      // Get user's tenant membership
+      // Get user's tenant membership + tenant + plan in one query
       const { data: memberData, error: memberErr } = await supabase
         .from('tenant_members')
-        .select('*, tenants(*)')
+        .select('*, tenants(*, plans:plan_id(*))')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .limit(1)
@@ -50,16 +50,7 @@ export function TenantProvider({ children }) {
 
       setMembership(memberData);
       setTenant(memberData.tenants);
-
-      // Load plan details
-      if (memberData.tenants?.plan_id) {
-        const { data: planData } = await supabase
-          .from('plans')
-          .select('*')
-          .eq('id', memberData.tenants.plan_id)
-          .single();
-        setPlan(planData);
-      }
+      setPlan(memberData.tenants?.plans || null);
     } catch (err) {
       console.error('Tenant yükleme hatası:', err);
     } finally {

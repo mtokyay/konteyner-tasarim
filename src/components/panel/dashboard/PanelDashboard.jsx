@@ -20,14 +20,14 @@ export default function PanelDashboard() {
       if (!supabase || !tenantId) return;
 
       const [customersRes, designsRes, contractsRes, membersRes, paymentsRes] = await Promise.all([
-        supabase.from('customers').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('designs').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('tenant_members').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('is_active', true),
-        supabase.from('payments').select('odenen_tutar').eq('tenant_id', tenantId).eq('durum', 'odendi'),
+        supabase.from('customers').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('designs').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('contracts').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('tenant_members').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('is_active', true),
+        supabase.from('payments').select('odenen_tutar').eq('tenant_id', tenantId).eq('durum', 'odendi').limit(500),
       ]);
 
-      const totalPaid = (paymentsRes.data || []).reduce((s, p) => s + (p.odenen_tutar || 0), 0);
+      const totalPaid = (paymentsRes.data || []).reduce((s, p) => s + (parseFloat(p.odenen_tutar) || 0), 0);
 
       setStats({
         customers: customersRes.count || 0,

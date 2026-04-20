@@ -89,7 +89,8 @@ export default function DesignList() {
       const { data, error: queryError } = await supabase
         .from('designs')
         .select('id, ad, ref_no, status, toplam_fiyat, net_fiyat, teslim_tarihi, created_at, customers:customer_id(ad, soyad)')
-        .eq('tenant_id', tenantId);
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false });
 
       if (queryError) throw queryError;
       setDesigns(data || []);

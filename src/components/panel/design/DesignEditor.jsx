@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Check, AlertCircle, FileText, Download } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Check, AlertCircle, FileText, Download, PenTool } from 'lucide-react';
 import { getSupabase } from '../../../lib/supabase';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -344,6 +344,24 @@ const DesignEditor = () => {
 
       {/* Iframe - full screen */}
       <div className="flex-1 relative">
+        {/* Loading overlay until designer is ready */}
+        {!designerReady && (
+          <div className="absolute inset-0 z-20 bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col items-center justify-center">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 border-4 border-amber-200 rounded-full animate-spin border-t-amber-600"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <PenTool className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 mb-1">Tasarim Araci Hazirlaniyor</h3>
+            <p className="text-sm text-gray-500">Lutfen bekleyin, editör yukleniyor...</p>
+            <div className="mt-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{animationDelay:'0ms'}}></div>
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{animationDelay:'150ms'}}></div>
+              <div className="w-2 h-2 bg-amber-600 rounded-full animate-bounce" style={{animationDelay:'300ms'}}></div>
+            </div>
+          </div>
+        )}
         <iframe
           ref={iframeRef}
           src="/konteyner-tasarim.html"
