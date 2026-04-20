@@ -65,6 +65,14 @@ const LandingPage = () => {
         </div>
       </nav>
 
+      {/* Fuar Campaign Banner */}
+      <Link to="/tuyap2026" className="block bg-gradient-to-r from-amber-700 to-amber-900 text-white text-center py-2.5 px-4 hover:from-amber-800 hover:to-amber-950 transition-all">
+        <span className="text-sm font-medium">
+          🎁 Tüyap Fuarı'na Özel — <strong>30 Gün Ücretsiz Başlangıç Planı!</strong>
+          <span className="ml-2 underline underline-offset-2">Detaylar →</span>
+        </span>
+      </Link>
+
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6">
