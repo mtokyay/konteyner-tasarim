@@ -68,7 +68,7 @@ export function TenantProvider({ children }) {
   };
 
   // Create a new tenant (registration flow)
-  const createTenant = async (tenantName, slug) => {
+  const createTenant = async (tenantName, slug, promoCode = null) => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser?.id) {
       throw new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
@@ -107,6 +107,23 @@ export function TenantProvider({ children }) {
       });
 
     if (memberErr) throw memberErr;
+
+    // Kupon kodu varsa uygula
+    if (promoCode) {
+      try {
+        const { data: redeemResult, error: redeemErr } = await supabase
+          .rpc('redeem_coupon', { p_code: promoCode, p_tenant_id: newTenant.id });
+
+        if (redeemErr) {
+          console.warn('Kupon uygulama hatası:', redeemErr.message);
+        } else if (redeemResult && !redeemResult.success) {
+          console.warn('Kupon uygulanamadı:', redeemResult.error);
+        }
+      } catch (couponErr) {
+        // Kupon hatası tenant oluşturma sürecini engellemesin
+        console.warn('Kupon işlemi başarısız:', couponErr);
+      }
+    }
 
     // Reload
     await loadTenantData();
