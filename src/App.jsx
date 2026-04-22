@@ -34,6 +34,8 @@ import FinanceDashboard from './components/panel/payments/FinanceDashboard';
 import CompanyInfo from './components/panel/settings/CompanyInfo';
 import TeamManagement from './components/panel/team/TeamManagement';
 import SubscriptionPage from './components/panel/subscription/SubscriptionPage';
+import KilavuzAbonePage from './components/panel/kilavuz/KilavuzAbonePage';
+import KilavuzAdminPage from './components/panel/kilavuz/KilavuzAdminPage';
 
 // Admin pages (super admin)
 import AdminDashboard from './components/admin/AdminDashboard';
@@ -148,6 +150,14 @@ function AppRoutes() {
       {/* Contract PDF — full screen for printing */}
       <Route path="/panel/contracts/:id/pdf" element={
         <RequireTenant><ContractPDF /></RequireTenant>
+      } />
+
+      {/* Kılavuzlar — full screen, print-friendly */}
+      <Route path="/panel/kilavuz" element={
+        <RequireTenant><KilavuzAbonePage /></RequireTenant>
+      } />
+      <Route path="/panel/kilavuz/admin" element={
+        <RequireAdmin><KilavuzAdminPage /></RequireAdmin>
       } />
 
       {/* Admin — Super Admin */}
