@@ -885,7 +885,7 @@ export default function KilavuzAdminPage() {
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
             <ul className="space-y-2 text-sm text-slate-600">
               {[
-                'Platforma giriş yapabilir ve dashboard'u anlayabilir',
+                'Platforma giriş yapabilir ve dashboard\u2019u anlayabilir',
                 'Yeni müşteri kaydı oluşturabilir',
                 'Konteyner tasarımı yapabilir (yerleştirme, kapı/pencere, kaydetme)',
                 'PDF teklif oluşturabilir',
