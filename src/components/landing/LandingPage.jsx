@@ -57,6 +57,7 @@ const LandingPage = () => {
           <div className="flex items-center gap-4">
             <a href="#ozellikler" className="text-sm text-gray-600 hover:text-gray-900 hidden md:inline">Özellikler</a>
             <a href="#fiyatlandirma" className="text-sm text-gray-600 hover:text-gray-900 hidden md:inline">Fiyatlandırma</a>
+            <Link to="/sss" className="text-sm text-gray-600 hover:text-gray-900 hidden md:inline">S.S.S.</Link>
             <Link to="/giris" className="text-sm font-medium text-gray-700 hover:text-gray-900">Giriş Yap</Link>
             <Link to="/kayit" className="text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition">
               Ücretsiz Dene
@@ -257,6 +258,11 @@ const LandingPage = () => {
             <span className="font-bold text-white">KonteynerTasarım</span>
           </div>
           <p className="text-sm">Konteyner ev üreticileri için dijital yönetim platformu</p>
+          <div className="flex items-center justify-center gap-4 mt-4 text-sm">
+            <Link to="/sss" className="text-gray-400 hover:text-white transition">S.S.S.</Link>
+            <span className="text-gray-600">|</span>
+            <Link to="/tuyap2026" className="text-gray-400 hover:text-white transition">Tüyap 2026</Link>
+          </div>
           <p className="text-xs mt-4 text-gray-500">© 2025 Tüm hakları saklıdır.</p>
         </div>
       </footer>

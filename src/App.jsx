@@ -10,6 +10,7 @@ import AdminLayout from './components/layout/AdminLayout';
 // Public pages
 import LandingPage from './components/landing/LandingPage';
 import Tuyap2026Page from './components/landing/Tuyap2026Page';
+import SSSPage from './components/landing/SSSPage';
 import LoginPage from './components/auth/LoginPage';
 import RegisterPage from './components/auth/RegisterPage';
 
@@ -104,6 +105,7 @@ function AppRoutes() {
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/tuyap2026" element={<Tuyap2026Page />} />
+      <Route path="/sss" element={<SSSPage />} />
       <Route path="/giris" element={<LoginPage />} />
       <Route path="/kayit" element={<RegisterPage />} />
 

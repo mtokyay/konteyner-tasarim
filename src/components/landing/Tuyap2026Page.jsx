@@ -28,6 +28,7 @@ const Tuyap2026Page = () => {
             <span className="font-bold text-lg text-gray-900">Konteyner<span className="text-amber-600">Tasarim</span></span>
           </Link>
           <div className="flex items-center gap-3">
+            <Link to="/sss" className="text-sm text-gray-600 hover:text-gray-900">S.S.S.</Link>
             <Link to="/giris" className="text-sm font-medium text-gray-600 hover:text-gray-900">Giris Yap</Link>
             <button onClick={handleStart}
               className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
