@@ -125,6 +125,18 @@
         { id: "ozel",        name: "Ozel Not",       icon: "?", color: "#6B7280" }
     ];
 
+    const KITCHEN_TYPES = [
+        { id: "duz",  name: "Duz Mutfak",   desc: "Tek duvar boyunca, dogru hat" },
+        { id: "L",    name: "L Mutfak",      desc: "Kose mutfak, L seklinde" }
+    ];
+
+    const KITCHEN_PRESETS = [
+        { w: 240, d: 60, lb: "240x60" },
+        { w: 300, d: 60, lb: "300x60" },
+        { w: 180, d: 60, lb: "180x60" },
+        { w: 200, d: 65, lb: "200x65" }
+    ];
+
     const DEFAULT_CONTAINER = {
         width: 300, length: 700, height: 230,
         roofType: "duz", roofColor: "beyaz", panelType: "beyaz_pu",
@@ -147,10 +159,36 @@
     function calcWallSegments(items, wallLength, wallAxis, containerWidth) {
         const wallItems = items.filter(i => {
             if (i.type !== "door" && i.type !== "window" && i.type !== "outlet") return false;
-            if (wallAxis === "top")    return i.y < 20;
-            if (wallAxis === "bottom") return i.y > containerWidth - 20;
-            if (wallAxis === "left")   return i.x < 20;
-            if (wallAxis === "right")  return i.x > wallLength - 20;
+            const rot = i.rotation || 0;
+            const nearTop = i.y < 20;
+            const nearBot = i.y > containerWidth - 20;
+            const nearLeft = i.x < 20;
+            const nearRight = i.x > wallLength - 20;
+            // Köşede iki duvara da yakınsa rotation'a göre karar ver
+            if (wallAxis === "top") {
+                if (!nearTop) return false;
+                if (nearLeft && rot === 90) return false;  // sol duvarda
+                if (nearRight && rot === 90) return false; // sağ duvarda
+                return true;
+            }
+            if (wallAxis === "bottom") {
+                if (!nearBot) return false;
+                if (nearLeft && rot === 90) return false;
+                if (nearRight && rot === 90) return false;
+                return true;
+            }
+            if (wallAxis === "left") {
+                if (!nearLeft) return false;
+                if (nearTop && rot === 0) return false;    // üst duvarda
+                if (nearBot && rot === 0) return false;    // alt duvarda
+                return true;
+            }
+            if (wallAxis === "right") {
+                if (!nearRight) return false;
+                if (nearTop && rot === 0) return false;
+                if (nearBot && rot === 0) return false;
+                return true;
+            }
             return false;
         });
 
@@ -339,11 +377,33 @@
                 if (Math.abs(item.y - wc.y) < 20 || Math.abs(item.y - (wc.y + wc.h)) < 20)
                     return { axis: "wcHoriz", wallY: item.y, posAlongWall: item.x };
             }
-            // Dış duvarlar
-            if (item.y < 20) return { axis: "back", wallY: 0, posAlongWall: item.x };
-            if (item.y > totalW3d - 20) return { axis: "front", wallY: totalW3d, posAlongWall: item.x };
-            if (item.x < 20) return { axis: "left", wallX: 0, posAlongWall: item.y };
-            if (item.x > totalL3d - 20) return { axis: "right", wallX: totalL3d, posAlongWall: item.y };
+            // Dış duvarlar - rotation dikkate alınarak köşe çakışması çözümlenir
+            const rot = item.rotation || 0;
+            const nearTop = item.y < 20;
+            const nearBot = item.y > totalW3d - 20;
+            const nearLeft = item.x < 20;
+            const nearRight = item.x > totalL3d - 20;
+            // Köşede iki duvara da yakın olabilir; rotation'a göre karar ver
+            if (nearTop && nearLeft) {
+                if (rot === 90) return { axis: "left", wallX: 0, posAlongWall: item.y };
+                return { axis: "back", wallY: 0, posAlongWall: item.x };
+            }
+            if (nearTop && nearRight) {
+                if (rot === 90) return { axis: "right", wallX: totalL3d, posAlongWall: item.y };
+                return { axis: "back", wallY: 0, posAlongWall: item.x };
+            }
+            if (nearBot && nearLeft) {
+                if (rot === 90) return { axis: "left", wallX: 0, posAlongWall: item.y };
+                return { axis: "front", wallY: totalW3d, posAlongWall: item.x };
+            }
+            if (nearBot && nearRight) {
+                if (rot === 90) return { axis: "right", wallX: totalL3d, posAlongWall: item.y };
+                return { axis: "front", wallY: totalW3d, posAlongWall: item.x };
+            }
+            if (nearTop) return { axis: "back", wallY: 0, posAlongWall: item.x };
+            if (nearBot) return { axis: "front", wallY: totalW3d, posAlongWall: item.x };
+            if (nearLeft) return { axis: "left", wallX: 0, posAlongWall: item.y };
+            if (nearRight) return { axis: "right", wallX: totalL3d, posAlongWall: item.y };
             return { axis: "front", wallY: 0, posAlongWall: item.x };
         };
 
@@ -893,10 +953,13 @@
       const wx=v=>v*sc2+pad, wy=v=>svgH-pad-dimRowH*2-v*sc2;
       // Filter items on this wall (use totalW/totalL for combo mode)
       const wallItems=items.filter(i=>{
-        if(wall==="A") return i.y>totalW-20;
-        if(wall==="C") return i.y<20;
-        if(wall==="D") return i.x<20;
-        if(wall==="B") return i.x>totalL-20;
+        if(i.type==="kitchen")return false; // mutfak duvar görünümünde gösterilmez
+        const rot=i.rotation||0;
+        const nearTop=i.y<20,nearBot=i.y>totalW-20,nearLeft=i.x<20,nearRight=i.x>totalL-20;
+        if(wall==="A"){if(!nearBot)return false;if(nearLeft&&rot===90)return false;if(nearRight&&rot===90)return false;return true}
+        if(wall==="C"){if(!nearTop)return false;if(nearLeft&&rot===90)return false;if(nearRight&&rot===90)return false;return true}
+        if(wall==="D"){if(!nearLeft)return false;if(nearTop&&rot===0)return false;if(nearBot&&rot===0)return false;return true}
+        if(wall==="B"){if(!nearRight)return false;if(nearTop&&rot===0)return false;if(nearBot&&rot===0)return false;return true}
         if(wall.startsWith("P-")){const pos=parseInt(wall.split("-")[1]);return Math.abs(i.x-pos)<20&&i.y>20&&i.y<totalW-20}
         if(wall.startsWith("WC-V-")){const pos=parseInt(wall.split("-")[2]);return Math.abs(i.x-pos)<20}
         if(wall.startsWith("WC-H-")){const pos=parseInt(wall.split("-")[2]);return Math.abs(i.y-pos)<20}
@@ -1080,6 +1143,8 @@
         if(doors.length>0){msg+="🚪 *KAPILAR*%0A";doors.forEach((d,i)=>{const info=DOOR_TYPES.find(dt=>dt.id===d.doorType);msg+=(i+1)+". "+(info?.name)+" - "+(d.openDir==="sag"?"Saga":"Sola")+" "+(d.openInOut==="dis"?"Disa":"Ice")+" acilir%0A"});msg+="%0A"}
         if(windows.length>0){msg+="🪟 *PENCERELER*%0A";windows.forEach((w,i)=>{msg+=(i+1)+". "+w.width+"x"+w.windowHeight+" cm (yerden "+(w.elevation||90)+" cm, "+(w.openDir==="dis"?"disa":"ice")+" acilir)%0A"});msg+="%0A"}
         if(outlets.length>0) msg+="🔌 *PRIZ:* "+outlets.length+" adet%0A%0A";
+        const kitchens=items.filter(i=>i.type==="kitchen");
+        if(kitchens.length>0){msg+="🍳 *MUTFAK*%0A";kitchens.forEach((k,i)=>{msg+=(i+1)+". "+(k.kitchenType==="L"?"L Mutfak":"Duz Mutfak")+" "+(k.width||240)+"x"+(k.depth||60)+" cm%0A"});msg+="%0A"}
         if(markers.length>0){msg+="📌 *ISARETLER*%0A";markers.forEach(m=>{const mi=MARKER_TYPES.find(mt=>mt.id===m.markerType);msg+=mi?.name+(m.note?" - "+m.note:"")+" ("+m.x+","+m.y+" cm)%0A"});msg+="%0A"}
         msg+="----%0A_PDF dokuman ayrica gonderilecektir._";
         window.open("https://wa.me/?text="+msg,"_blank");
@@ -1633,7 +1698,7 @@
         setItems(p=>p.map(i=>i.id===id?{...i,x:fx,y:fy}:i));
       },[partitions,totalW,totalL]);
       const handleDeleteItem=useCallback(id=>{setItems(p=>p.filter(i=>i.id!==id));setSelectedItem(null);setEditingItem(null)},[]);
-      const handleRotateItem=useCallback(id=>{setItems(p=>p.map(i=>i.id===id?{...i,rotation:(i.rotation||0)===0?90:0}:i))},[]);
+      const handleRotateItem=useCallback(id=>{setItems(p=>p.map(i=>{if(i.id!==id)return i;if(i.type==="kitchen"){const r=(i.rotation||0);return{...i,rotation:(r+90)%360}}return{...i,rotation:(i.rotation||0)===0?90:0}}))},[]);
       const updateItemProp=useCallback((id,prop,val)=>{setItems(p=>p.map(i=>i.id===id?{...i,[prop]:val}:i))},[]);
       const handleMouseMove=useCallback(e=>{const pt=getSvgPt(e);const cx=snapTo(s2c(pt.x-padding)),cy=snapTo(s2c(pt.y-padding));setMousePos({x:cx,y:cy});if(isDragging&&selectedItem){handleMoveItem(selectedItem,snapTo(s2c(pt.x-padding)-dragOffset.x),snapTo(s2c(pt.y-padding)-dragOffset.y))}},[isDragging,selectedItem,dragOffset,getSvgPt,handleMoveItem]);
       const handleMouseDown=useCallback((e,id)=>{e.stopPropagation();const pt=getSvgPt(e);const item=items.find(i=>i.id===id);if(item){setDragOffset({x:s2c(pt.x-padding)-item.x,y:s2c(pt.y-padding)-item.y});setIsDragging(true);setSelectedItem(id)}},[items,getSvgPt]);
@@ -1768,6 +1833,43 @@
             {isSel && <circle cx={x+10} cy={y+10} r={14} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4,4"/>}
           </g>);
         }
+        if(item.type==="kitchen"){
+          const kw=item.width||240,kd=item.depth||60,rot=item.rotation||0;
+          const isL=item.kitchenType==="L";
+          const lw=item.lWing||60,ld=item.lDepth||60;
+          // Rotated dimensions
+          let mainW,mainH,lWingW,lWingH,lOffX,lOffY;
+          if(rot===0){mainW=c2s(kw);mainH=c2s(kd);lWingW=c2s(ld);lWingH=c2s(lw);lOffX=0;lOffY=mainH}
+          else if(rot===90){mainW=c2s(kd);mainH=c2s(kw);lWingW=c2s(lw);lWingH=c2s(ld);lOffX=mainW;lOffY=0}
+          else if(rot===180){mainW=c2s(kw);mainH=c2s(kd);lWingW=c2s(ld);lWingH=c2s(lw);lOffX=mainW-lWingW;lOffY=-lWingH}
+          else{mainW=c2s(kd);mainH=c2s(kw);lWingW=c2s(lw);lWingH=c2s(ld);lOffX=-lWingW;lOffY=mainH-lWingH}
+          const totalBoundW=isL?(rot===90?mainW+lWingW:rot===270?mainW+lWingW:mainW):(rot%180===0?mainW:mainH);
+          const totalBoundH=isL?(rot===0?mainH+lWingH:rot===180?mainH+lWingH:mainH):(rot%180===0?mainH:mainW);
+          // Counter-top hatch pattern
+          const hatchId="khatch-"+item.id;
+          return (<g key={item.id} onMouseDown={e=>handleMouseDown(e,item.id)} onClick={e=>{e.stopPropagation();setSelectedItem(item.id);setEditingItem(item.id)}} style={{cursor:"move"}}>
+            <defs>
+              <pattern id={hatchId} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform={"rotate(45)"}>
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#A1887F" strokeWidth="0.5" opacity="0.4"/>
+              </pattern>
+            </defs>
+            {/* Main counter */}
+            <rect x={x} y={y} width={mainW} height={mainH} fill="#EFEBE9" stroke={isSel?"#3b82f6":"#795548"} strokeWidth={isSel?2.5:1.5} rx="2"/>
+            <rect x={x} y={y} width={mainW} height={mainH} fill={`url(#${hatchId})`} rx="2"/>
+            {/* Sink indicator */}
+            <ellipse cx={x+mainW*0.5} cy={y+mainH*0.5} rx={Math.min(mainW,mainH)*0.18} ry={Math.min(mainW,mainH)*0.15} fill="none" stroke="#78909C" strokeWidth="1" opacity="0.7"/>
+            {/* Stove indicator */}
+            {[0.2,0.3].map((fx,fi)=>[0.35,0.65].map((fy,fj)=><circle key={fi+"-"+fj} cx={x+mainW*fx} cy={y+mainH*fy} r={Math.min(mainW,mainH)*0.04+1} fill="none" stroke="#D84315" strokeWidth="0.8" opacity="0.5"/>))}
+            {/* L-wing */}
+            {isL && <>
+              <rect x={x+lOffX} y={y+lOffY} width={lWingW} height={lWingH} fill="#EFEBE9" stroke={isSel?"#3b82f6":"#795548"} strokeWidth={isSel?2.5:1.5} rx="2"/>
+              <rect x={x+lOffX} y={y+lOffY} width={lWingW} height={lWingH} fill={`url(#${hatchId})`} rx="2"/>
+            </>}
+            {/* Label */}
+            <text x={x+mainW/2} y={y+mainH+12} textAnchor="middle" fontSize="7" fill={isSel?"#3b82f6":"#795548"} fontWeight="500">{isL?"L ":""}Mutfak {kw}x{kd}</text>
+            {isSel && <rect x={x-3} y={y-3} width={(isL&&(rot===90||rot===270)?mainW+lWingW:mainW)+6} height={(isL&&(rot===0||rot===180)?mainH+lWingH:mainH)+6} fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4,4" rx="2"/>}
+          </g>);
+        }
         if(item.type==="watertank"){
           return (<g key={item.id} onMouseDown={e=>handleMouseDown(e,item.id)} style={{cursor:"move"}}>
             <rect x={x} y={y} width={c2s(60)} height={c2s(40)} fill="#E3F2FD" stroke={isSel?"#3b82f6":"#1976D2"} strokeWidth={isSel?2.5:1.5} rx="4"/>
@@ -1841,7 +1943,7 @@
           </g>);
         });
       };
-      const tabs=[{id:"container",label:"Konteyner"},{id:"walls",label:"Bölüntü"},{id:"doors",label:"Kapı"},{id:"windows",label:"Pencere"},{id:"extras",label:"Ekstra"},{id:"markers",label:"İşaret"}];
+      const tabs=[{id:"container",label:"Konteyner"},{id:"walls",label:"Bölüntü"},{id:"doors",label:"Kapı"},{id:"windows",label:"Pencere"},{id:"kitchen",label:"Mutfak"},{id:"extras",label:"Ekstra"},{id:"markers",label:"İşaret"}];
       return (
         <div className="flex flex-col h-screen bg-gray-50 text-gray-800 text-sm select-none">
           <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm flex-shrink-0">
@@ -1909,7 +2011,7 @@
                   {/* Wall dimension lines + labels */}
                   {renderWallDims()}
                   {renderWallLabels()}
-                  {mode==="place"&&placingItem&&(placingItem.type==="outlet"||placingItem.type==="marker"?<circle cx={c2s(mousePos.x)+padding} cy={c2s(mousePos.y)+padding} r={placingItem.type==="marker"?10:7} fill="rgba(59,130,246,0.2)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3"/>:<rect x={c2s(mousePos.x)+padding} y={c2s(mousePos.y)+padding} width={c2s(placingItem.width||20)} height={c2s(placingItem.height||10)} fill="rgba(59,130,246,0.15)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3" rx="2"/>)}
+                  {mode==="place"&&placingItem&&(placingItem.type==="outlet"||placingItem.type==="marker"?<circle cx={c2s(mousePos.x)+padding} cy={c2s(mousePos.y)+padding} r={placingItem.type==="marker"?10:7} fill="rgba(59,130,246,0.2)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,3"/>:<rect x={c2s(mousePos.x)+padding} y={c2s(mousePos.y)+padding} width={c2s(placingItem.type==="kitchen"?placingItem.width:(placingItem.width||20))} height={c2s(placingItem.type==="kitchen"?placingItem.depth:(placingItem.height||10))} fill={placingItem.type==="kitchen"?"rgba(121,85,72,0.15)":"rgba(59,130,246,0.15)"} stroke={placingItem.type==="kitchen"?"#795548":"#3b82f6"} strokeWidth="1" strokeDasharray="3,3" rx="2"/>)}
                   <line x1={padding} y1={padding+cw+25} x2={padding+cl} y2={padding+cw+25} stroke="#64748b" strokeWidth="0.8" markerStart="url(#ahr)" markerEnd="url(#ah)"/>
                   <rect x={padding+cl/2-28} y={padding+cw+16} width="56" height="16" fill="white" rx="3" stroke="#cbd5e1" strokeWidth="0.5"/>
                   <text x={padding+cl/2} y={padding+cw+28} textAnchor="middle" fontSize="10" fill="#475569" fontWeight="500">{container.length} cm</text>
@@ -2082,6 +2184,24 @@
                 </>}
                 {activeTab==="doors" && <><div className="text-xs text-gray-400 mb-1">Secip krokiye yerlestirin.</div>{DOOR_TYPES.map(d=><button key={d.id} onClick={()=>startPlacing({type:"door",doorType:d.id,width:d.width,height:15,doorHeight:d.height,openDir:"sol",openInOut:"ic"})} className={`w-full p-2 rounded border-2 text-left flex justify-between items-center text-xs mb-1.5 ${mode==="place"&&placingItem?.doorType===d.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><div><div className="font-medium">{d.name}</div><div className="text-gray-400">{d.width}x{d.height}</div></div><span className="bg-gray-100 px-1.5 py-0.5 rounded">{d.type==="dis"?"Dis":d.type==="wc"?"WC":"Ic"}</span></button>)}{mode==="place"&&placingItem?.type==="door" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}</>}
                 {activeTab==="windows" && <><div className="text-xs text-gray-400 mb-1">Secip yerlestirin.</div>{WINDOW_TYPES.map(w=><button key={w.id} onClick={()=>startPlacing({type:"window",windowType:w.id,width:w.width,height:10,windowHeight:w.height,elevation:w.defaultElevation,openDir:"ic"})} className={`w-full p-2 rounded border-2 text-left flex justify-between items-center text-xs mb-1.5 ${mode==="place"&&placingItem?.windowType===w.id?"border-blue-500 bg-blue-50":"border-gray-200 hover:border-gray-300"}`}><div><div className="font-medium">{w.name}</div><div className="text-gray-400">{w.width}x{w.height} | Yerden: {w.defaultElevation}cm</div></div>{w.id==="w100x50" && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-xs">Vasistas</span>}</button>)}{mode==="place"&&placingItem?.type==="window" && <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-blue-300 rounded">Iptal</button></div>}</>}
+                {activeTab==="kitchen" && <>
+                  <div className="text-xs text-gray-400 mb-2">Mutfak tezgahi ekleyin. Yerlestirdikten sonra dondurebilirsiniz.</div>
+                  <div className="space-y-2 mb-3">
+                    <div className="text-xs font-semibold text-gray-600">Mutfak Tipi</div>
+                    {KITCHEN_TYPES.map(kt=><button key={kt.id} onClick={()=>{
+                      const kw=240,kd=60,lw=kt.id==="L"?60:0;
+                      startPlacing({type:"kitchen",kitchenType:kt.id,width:kw,depth:kd,lWing:lw,lDepth:kd})
+                    }} className={`w-full p-2 rounded border-2 text-left text-xs mb-1.5 ${mode==="place"&&placingItem?.kitchenType===kt.id?"border-amber-500 bg-amber-50":"border-gray-200 hover:border-gray-300"}`}>
+                      <div className="font-medium">{kt.name}</div>
+                      <div className="text-gray-400">{kt.desc}</div>
+                    </button>)}
+                  </div>
+                  <div className="text-xs font-semibold text-gray-600 mb-1">Hazir Olculer</div>
+                  <div className="flex gap-1 flex-wrap mb-2">
+                    {KITCHEN_PRESETS.map(p=><button key={p.lb} onClick={()=>startPlacing({type:"kitchen",kitchenType:"duz",width:p.w,depth:p.d,lWing:0,lDepth:p.d})} className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-xs text-gray-600 hover:bg-amber-50">{p.lb}cm</button>)}
+                  </div>
+                  {mode==="place"&&placingItem?.type==="kitchen" && <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs text-amber-700">Tiklayarak yerlestirin. <button onClick={()=>{setMode("select");setPlacingItem(null)}} className="ml-2 px-2 py-0.5 bg-white border border-amber-300 rounded">Iptal</button></div>}
+                </>}
                 {activeTab==="extras" && <>
                   <button onClick={()=>startPlacing({type:"outlet",width:10,height:10,elevation:40})} className={`w-full p-2 rounded border-2 text-left text-xs ${mode==="place"&&placingItem?.type==="outlet"?"border-orange-500 bg-orange-50":"border-gray-200 hover:border-gray-300"}`}><div className="font-medium">Priz Ekle</div><div className="text-gray-400">Varsayilan yerden: 40cm</div></button>
                   <button onClick={()=>startPlacing({type:"watertank",width:60,height:40})} className="w-full p-2 rounded border-2 border-gray-200 hover:border-gray-300 text-left text-xs"><div className="font-medium">Su Deposu</div></button>
@@ -2098,7 +2218,7 @@
               {selectedItemData && (
                 <div className="border-t border-gray-200 p-3 bg-gray-50 flex-shrink-0 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-gray-700">{selectedItemData.type==="door"?"Kapi":selectedItemData.type==="window"?"Pencere":selectedItemData.type==="outlet"?"Priz":selectedItemData.type==="marker"?"Isaret":"Su Dep."}</span>
+                    <span className="text-xs font-semibold text-gray-700">{selectedItemData.type==="door"?"Kapi":selectedItemData.type==="window"?"Pencere":selectedItemData.type==="outlet"?"Priz":selectedItemData.type==="marker"?"Isaret":selectedItemData.type==="kitchen"?"Mutfak":"Su Dep."}</span>
                     <div className="flex gap-1"><button onClick={()=>handleRotateItem(selectedItem)} className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">Dondur</button><button onClick={()=>handleDeleteItem(selectedItem)} className="px-1.5 py-0.5 bg-red-50 border border-red-200 rounded text-xs text-red-600">Sil</button></div>
                   </div>
                   <div className="text-xs text-gray-500">Konum: {selectedItemData.x}, {selectedItemData.y} cm</div>
@@ -2117,6 +2237,13 @@
                     <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Acilim:</label><div className="flex gap-1">{["ic","dis"].map(d=><button key={d} onClick={()=>updateItemProp(selectedItem,"openDir",d)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.openDir||"ic")===d?"bg-blue-100 text-blue-700 font-medium":"bg-gray-100 text-gray-500"}`}>{d==="ic"?"Ice":"Disa"}</button>)}</div></div>
                   </>}
                   {selectedItemData.type==="outlet" && <div className="flex items-center gap-2"><label className="text-xs text-gray-500 whitespace-nowrap">Yerden:</label><input type="number" value={selectedItemData.elevation||40} onChange={e=>updateItemProp(selectedItem,"elevation",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="5"/><span className="text-xs text-gray-400">cm</span></div>}
+                  {selectedItemData.type==="kitchen" && <>
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Genislik:</label><input type="number" value={selectedItemData.width||240} onChange={e=>updateItemProp(selectedItem,"width",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="10" min="60" max="500"/><span className="text-xs text-gray-400">cm</span></div>
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Derinlik:</label><input type="number" value={selectedItemData.depth||60} onChange={e=>updateItemProp(selectedItem,"depth",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="5" min="40" max="100"/><span className="text-xs text-gray-400">cm</span></div>
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Sekil:</label><div className="flex gap-1">{KITCHEN_TYPES.map(kt=><button key={kt.id} onClick={()=>{updateItemProp(selectedItem,"kitchenType",kt.id);if(kt.id==="L")updateItemProp(selectedItem,"lWing",60)}} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.kitchenType||"duz")===kt.id?"bg-amber-100 text-amber-700 font-medium":"bg-gray-100 text-gray-500"}`}>{kt.name}</button>)}</div></div>
+                    {selectedItemData.kitchenType==="L" && <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">L Kanat:</label><input type="number" value={selectedItemData.lWing||60} onChange={e=>updateItemProp(selectedItem,"lWing",+e.target.value)} className="w-16 border border-gray-300 rounded px-1.5 py-0.5 text-xs" step="10" min="40" max="200"/><span className="text-xs text-gray-400">cm</span></div>}
+                    <div className="flex items-center gap-2"><label className="text-xs text-gray-500 w-14">Yon:</label><div className="flex gap-1">{[{r:0,lb:"0\u00b0"},{r:90,lb:"90\u00b0"},{r:180,lb:"180\u00b0"},{r:270,lb:"270\u00b0"}].map(o=><button key={o.r} onClick={()=>updateItemProp(selectedItem,"rotation",o.r)} className={`px-2 py-0.5 rounded text-xs ${(selectedItemData.rotation||0)===o.r?"bg-amber-100 text-amber-700 font-medium":"bg-gray-100 text-gray-500"}`}>{o.lb}</button>)}</div></div>
+                  </>}
                   {selectedItemData.type==="marker" && <div><label className="text-xs text-gray-500 block mb-1">Not:</label><input type="text" value={selectedItemData.note||""} onChange={e=>updateItemProp(selectedItem,"note",e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1 text-xs"/></div>}
                 </div>
               )}
@@ -2131,7 +2258,7 @@
                   let t="KONTEYNER: "+container.width+"x"+container.length+"x"+container.height+"cm ("+(container.width*container.length/10000).toFixed(1)+"m2)\nPanel: "+(pi2?.name)+" | Cati: "+(ri2?.name)+" ("+(rc2?.name)+")\n\n";
                   if(wcZones.length){t+="WC: ";wcZones.forEach(w=>t+=w.w+"x"+w.h+"cm("+w.corner+") ");t+="\n"}
                   if(partitions.length){t+="Boluntu: ";partitions.forEach(p=>t+=p.label+"@"+p.position+"cm ");t+="\n"}
-                  items.forEach(i=>{if(i.type==="door"){const d=DOOR_TYPES.find(dt=>dt.id===i.doorType);t+="Kapi: "+(d?.name)+" ("+(i.openDir==="sag"?"Saga":"Sola")+","+(i.openInOut==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n"}if(i.type==="window")t+="Pencere: "+i.width+"x"+i.windowHeight+" h:"+(i.elevation||90)+"cm ("+(i.openDir==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n";if(i.type==="outlet")t+="Priz: h:"+(i.elevation||40)+"cm @"+i.x+","+i.y+"\n";if(i.type==="marker"){const mi=MARKER_TYPES.find(m=>m.id===i.markerType);t+=(mi?.name)+": "+(i.note||"-")+" @"+i.x+","+i.y+"\n"}});
+                  items.forEach(i=>{if(i.type==="door"){const d=DOOR_TYPES.find(dt=>dt.id===i.doorType);t+="Kapi: "+(d?.name)+" ("+(i.openDir==="sag"?"Saga":"Sola")+","+(i.openInOut==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n"}if(i.type==="window")t+="Pencere: "+i.width+"x"+i.windowHeight+" h:"+(i.elevation||90)+"cm ("+(i.openDir==="dis"?"Disa":"Ice")+") @"+i.x+","+i.y+"\n";if(i.type==="outlet")t+="Priz: h:"+(i.elevation||40)+"cm @"+i.x+","+i.y+"\n";if(i.type==="kitchen")t+="Mutfak: "+(i.kitchenType==="L"?"L ":"Duz ")+(i.width||240)+"x"+(i.depth||60)+"cm @"+i.x+","+i.y+"\n";if(i.type==="marker"){const mi=MARKER_TYPES.find(m=>m.id===i.markerType);t+=(mi?.name)+": "+(i.note||"-")+" @"+i.x+","+i.y+"\n"}});
                   return t;
                 })()}</pre></div>
                 <div className="p-3 border-t flex justify-end gap-2"><button onClick={()=>setShowExport(false)} className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs">Kapat</button></div>
