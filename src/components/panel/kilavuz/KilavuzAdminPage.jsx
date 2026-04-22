@@ -114,13 +114,23 @@ export default function KilavuzAdminPage() {
             <ArrowLeft className="w-4 h-4" />
             Panele Dön
           </Link>
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm"
-          >
-            <Printer className="w-4 h-4" />
-            Yazdır
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href="/Egitmen-Kilavuzu.docx"
+              download
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium shadow-sm"
+            >
+              <FileText className="w-4 h-4" />
+              Eğitmen Kılavuzu İndir
+            </a>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm"
+            >
+              <Printer className="w-4 h-4" />
+              Yazdır
+            </button>
+          </div>
         </div>
       </div>
 
