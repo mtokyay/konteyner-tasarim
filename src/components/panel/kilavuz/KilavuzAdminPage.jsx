@@ -7,7 +7,7 @@ import {
   Users,
   Building2,
   CreditCard,
-  Tag,
+  Gift,
   Box,
   Eye,
   MessageSquare,
@@ -35,7 +35,7 @@ const sections = [
   { id: 'admin-panel', title: '2. Admin Panel Genel Bakış', icon: Shield },
   { id: 'firma-yonetimi', title: '3. Firma (Tenant) Yönetimi', icon: Building2 },
   { id: 'plan-yonetimi', title: '4. Plan Yönetimi', icon: CreditCard },
-  { id: 'kupon-kampanya', title: '5. Kupon & Kampanya Sistemi', icon: Tag },
+  { id: 'kupon-kampanya', title: '5. Kupon & Kampanya Sistemi', icon: Gift },
   { id: 'fuar-hazirlik', title: '6. Fuar Hazırlık Rehberi', icon: Box },
   { id: 'demo-senaryolari', title: '7. Demo Senaryoları', icon: Eye },
   { id: 'itiraz-yonetimi', title: '8. Müşteri İtiraz Yönetimi', icon: MessageSquare },
@@ -399,7 +399,7 @@ export default function KilavuzAdminPage() {
         </InfoBox>
 
         {/* ===================== SECTION 5 ===================== */}
-        <SectionTitle id="kupon-kampanya" icon={Tag}>
+        <SectionTitle id="kupon-kampanya" icon={Gift}>
           5. Kupon & Kampanya Sistemi
         </SectionTitle>
         <p className="text-slate-600 leading-relaxed mb-4">

@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import {
   LayoutDashboard, Users, PenTool, FileText, CreditCard, BarChart3,
-  Settings, UserPlus, Crown, LogOut, ChevronLeft, ChevronRight, Menu, X, Shield, BookOpen
+  Settings, UserPlus, Crown, LogOut, ChevronLeft, ChevronRight, Menu, X, Shield, HelpCircle
 } from 'lucide-react';
 
 const PanelLayout = () => {
@@ -32,7 +32,7 @@ const PanelLayout = () => {
     { path: '/panel/team', icon: UserPlus, label: 'Ekip', feature: 'team_management' },
     { path: '/panel/settings', icon: Settings, label: 'Ayarlar' },
     { path: '/panel/subscription', icon: Crown, label: 'Abonelik' },
-    { path: '/panel/kilavuz', icon: BookOpen, label: 'Kullanım Kılavuzu' },
+    { path: '/panel/kilavuz', icon: HelpCircle, label: 'Kullanım Kılavuzu' },
   ];
 
   const renderNavItem = (item) => {

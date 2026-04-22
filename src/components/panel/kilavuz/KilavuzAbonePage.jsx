@@ -11,7 +11,7 @@ import {
   Settings,
   BarChart3,
   UserCog,
-  LayoutDashboardDashboard,
+  LayoutDashboard,
   Shield,
   Search,
   Zap,
