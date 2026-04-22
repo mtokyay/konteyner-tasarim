@@ -3,30 +3,30 @@ import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Printer,
-  Book,
+  Box,
   Users,
   PenTool,
   FileText,
   CreditCard,
   Settings,
   BarChart3,
-  UserPlus,
-  Layout,
+  UserCog,
+  LayoutDashboardDashboard,
   Shield,
-  Globe,
-  Lightbulb,
+  Search,
+  Zap,
   HelpCircle,
-  LogIn,
+  Eye,
   ChevronRight,
   AlertCircle,
   CheckCircle,
   Star,
   Palette,
-  Receipt,
-  CalendarClock,
+  Download,
+  Clock,
   Building2,
   Mail,
-  Phone,
+  Lock,
 } from 'lucide-react';
 
 const printStyles = `
@@ -40,20 +40,20 @@ const printStyles = `
 `;
 
 const tocItems = [
-  { id: 'hos-geldiniz', label: '1. Hos Geldiniz', icon: Book },
-  { id: 'kayit-giris', label: '2. Kayit ve Giris', icon: LogIn },
-  { id: 'kontrol-paneli', label: '3. Kontrol Paneli', icon: Layout },
+  { id: 'hos-geldiniz', label: '1. Hos Geldiniz', icon: Box },
+  { id: 'kayit-giris', label: '2. Kayit ve Giris', icon: Eye },
+  { id: 'kontrol-paneli', label: '3. Kontrol Paneli', icon: LayoutDashboard },
   { id: 'musteri-yonetimi', label: '4. Musteri Yonetimi', icon: Users },
   { id: 'tasarim-editoru', label: '5. Tasarim Editoru', icon: PenTool },
   { id: 'pdf-teklif', label: '6. PDF Teklif Olusturma', icon: FileText },
   { id: 'sozlesme-yonetimi', label: '7. Sozlesme Yonetimi', icon: FileText },
   { id: 'odeme-takibi', label: '8. Odeme Takibi', icon: CreditCard },
   { id: 'finans-ozeti', label: '9. Finans Ozeti', icon: BarChart3 },
-  { id: 'ekip-yonetimi', label: '10. Ekip Yonetimi', icon: UserPlus },
+  { id: 'ekip-yonetimi', label: '10. Ekip Yonetimi', icon: UserCog },
   { id: 'firma-ayarlari', label: '11. Firma Ayarlari', icon: Settings },
   { id: 'plan-abonelik', label: '12. Plan ve Abonelik', icon: Star },
-  { id: 'musteri-portali', label: '13. Musteri Portali', icon: Globe },
-  { id: 'ipuclari', label: '14. Ipuclari ve Kisayollar', icon: Lightbulb },
+  { id: 'musteri-portali', label: '13. Musteri Portali', icon: Search },
+  { id: 'ipuclari', label: '14. Ipuclari ve Kisayollar', icon: Zap },
   { id: 'destek', label: '15. Destek', icon: HelpCircle },
 ];
 
@@ -61,7 +61,7 @@ function TipBox({ children }) {
   return (
     <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg my-4">
       <div className="flex items-start gap-2">
-        <Lightbulb className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+        <Zap className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
         <div className="text-amber-900 text-sm">{children}</div>
       </div>
     </div>
@@ -170,7 +170,7 @@ export default function KilavuzAbonePage() {
         {/* Table of Contents */}
         <div className="bg-gray-50 rounded-2xl p-8 mb-12 border border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <Book className="w-5 h-5 text-amber-500" />
+            <Box className="w-5 h-5 text-amber-500" />
             Icindekiler
           </h2>
           <div className="grid sm:grid-cols-2 gap-2">
@@ -194,7 +194,7 @@ export default function KilavuzAbonePage() {
         {/* SECTION 1: Hos Geldiniz */}
         {/* ================================================================ */}
         <section className="mb-16">
-          <SectionHeading id="hos-geldiniz" number="1" title="Hos Geldiniz" icon={Book} />
+          <SectionHeading id="hos-geldiniz" number="1" title="Hos Geldiniz" icon={Box} />
 
           <p className="text-gray-700 leading-relaxed mb-4">
             <strong>KonteynerTasarim</strong>, konteyner ev ureticileri icin gelistirilmis
@@ -220,7 +220,7 @@ export default function KilavuzAbonePage() {
         {/* SECTION 2: Kayit ve Giris */}
         {/* ================================================================ */}
         <section className="mb-16 print-break">
-          <SectionHeading id="kayit-giris" number="2" title="Kayit ve Giris" icon={LogIn} />
+          <SectionHeading id="kayit-giris" number="2" title="Kayit ve Giris" icon={Eye} />
 
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Yeni Hesap Olusturma</h3>
           <StepList
@@ -265,7 +265,7 @@ export default function KilavuzAbonePage() {
         {/* SECTION 3: Kontrol Paneli (Dashboard) */}
         {/* ================================================================ */}
         <section className="mb-16 print-break">
-          <SectionHeading id="kontrol-paneli" number="3" title="Kontrol Paneli (Dashboard)" icon={Layout} />
+          <SectionHeading id="kontrol-paneli" number="3" title="Kontrol Paneli (Dashboard)" icon={LayoutDashboard} />
 
           <p className="text-gray-700 leading-relaxed mb-4">
             Giris yaptiktan sonra sizi karsilayan kontrol paneli, isletmenizin genel durumunu
@@ -586,7 +586,7 @@ export default function KilavuzAbonePage() {
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Odeme Durumlari</h3>
           <div className="grid sm:grid-cols-3 gap-3 my-4">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
-              <CalendarClock className="w-6 h-6 text-amber-600 mx-auto mb-1" />
+              <Clock className="w-6 h-6 text-amber-600 mx-auto mb-1" />
               <span className="text-amber-700 font-bold text-sm">Bekliyor</span>
               <p className="text-xs text-amber-600 mt-1">Vadesi gelmemis odeme</p>
             </div>
@@ -653,7 +653,7 @@ export default function KilavuzAbonePage() {
         {/* SECTION 10: Ekip Yonetimi */}
         {/* ================================================================ */}
         <section className="mb-16 print-break">
-          <SectionHeading id="ekip-yonetimi" number="10" title="Ekip Yonetimi" icon={UserPlus} />
+          <SectionHeading id="ekip-yonetimi" number="10" title="Ekip Yonetimi" icon={UserCog} />
           <PathIndicator path="Panel → Ekip" />
 
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
@@ -854,7 +854,7 @@ export default function KilavuzAbonePage() {
         {/* SECTION 13: Musteri Portali */}
         {/* ================================================================ */}
         <section className="mb-16 print-break">
-          <SectionHeading id="musteri-portali" number="13" title="Musteri Portali" icon={Globe} />
+          <SectionHeading id="musteri-portali" number="13" title="Musteri Portali" icon={Search} />
 
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
             <p className="text-purple-800 text-sm font-medium">
@@ -898,7 +898,7 @@ export default function KilavuzAbonePage() {
         {/* SECTION 14: Ipuclari ve Kisayollar */}
         {/* ================================================================ */}
         <section className="mb-16 print-break">
-          <SectionHeading id="ipuclari" number="14" title="Ipuclari ve Kisayollar" icon={Lightbulb} />
+          <SectionHeading id="ipuclari" number="14" title="Ipuclari ve Kisayollar" icon={Zap} />
 
           <p className="text-gray-700 leading-relaxed mb-6">
             Platformu daha verimli kullanmaniz icin asagidaki ipuclarini uygulayabilirsiniz:
@@ -967,7 +967,7 @@ export default function KilavuzAbonePage() {
               </div>
             </div>
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 flex items-start gap-4">
-              <Phone className="w-8 h-8 text-amber-500 flex-shrink-0" />
+              <Lock className="w-8 h-8 text-amber-500 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-gray-900 mb-1">Telefon Destek</h4>
                 <a

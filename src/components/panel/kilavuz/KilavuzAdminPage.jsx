@@ -8,42 +8,40 @@ import {
   Building2,
   CreditCard,
   Tag,
-  Tent,
-  PlayCircle,
-  MessageSquareWarning,
+  Box,
+  Eye,
+  MessageSquare,
   BarChart3,
-  UserPlus,
-  Phone,
+  UserCog,
+  Mail,
   ChevronRight,
-  AlertTriangle,
-  Lightbulb,
-  CheckCircle2,
-  BookOpen,
+  AlertCircle,
   Star,
+  CheckCircle,
+  HelpCircle,
   Clock,
-  Globe,
+  Search,
   Lock,
   FileText,
   Package,
   Zap,
-  Target,
-  ClipboardList,
-  Mail,
-  Smartphone,
+  Check,
+  Edit,
+  Settings,
 } from 'lucide-react';
 
 const sections = [
-  { id: 'giris', title: '1. Giriş — Admin Kılavuzu Hakkında', icon: BookOpen },
+  { id: 'giris', title: '1. Giriş — Admin Kılavuzu Hakkında', icon: HelpCircle },
   { id: 'admin-panel', title: '2. Admin Panel Genel Bakış', icon: Shield },
   { id: 'firma-yonetimi', title: '3. Firma (Tenant) Yönetimi', icon: Building2 },
   { id: 'plan-yonetimi', title: '4. Plan Yönetimi', icon: CreditCard },
   { id: 'kupon-kampanya', title: '5. Kupon & Kampanya Sistemi', icon: Tag },
-  { id: 'fuar-hazirlik', title: '6. Fuar Hazırlık Rehberi', icon: Tent },
-  { id: 'demo-senaryolari', title: '7. Demo Senaryoları', icon: PlayCircle },
-  { id: 'itiraz-yonetimi', title: '8. Müşteri İtiraz Yönetimi', icon: MessageSquareWarning },
+  { id: 'fuar-hazirlik', title: '6. Fuar Hazırlık Rehberi', icon: Box },
+  { id: 'demo-senaryolari', title: '7. Demo Senaryoları', icon: Eye },
+  { id: 'itiraz-yonetimi', title: '8. Müşteri İtiraz Yönetimi', icon: MessageSquare },
   { id: 'raporlama', title: '9. Raporlama ve İstatistikler', icon: BarChart3 },
-  { id: 'onboarding', title: '10. Yeni Personel Onboarding Rehberi', icon: UserPlus },
-  { id: 'destek', title: '11. Destek ve İletişim', icon: Phone },
+  { id: 'onboarding', title: '10. Yeni Personel Onboarding Rehberi', icon: UserCog },
+  { id: 'destek', title: '11. Destek ve İletişim', icon: Mail },
 ];
 
 function InfoBox({ children, type = 'info' }) {
@@ -55,9 +53,9 @@ function InfoBox({ children, type = 'info' }) {
   };
   const icons = {
     info: <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" />,
-    warning: <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />,
-    success: <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />,
-    tip: <Lightbulb className="w-5 h-5 flex-shrink-0 mt-0.5" />,
+    warning: <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />,
+    success: <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />,
+    tip: <Star className="w-5 h-5 flex-shrink-0 mt-0.5" />,
   };
   return (
     <div className={`flex gap-3 p-4 border-l-4 rounded-r-lg my-4 ${styles[type]}`}>
@@ -146,7 +144,7 @@ export default function KilavuzAdminPage() {
         {/* Table of Contents */}
         <div className="bg-slate-50 rounded-2xl p-6 mb-12 border border-slate-200">
           <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-indigo-500" />
+            <Edit className="w-5 h-5 text-indigo-500" />
             İçindekiler
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -164,7 +162,7 @@ export default function KilavuzAdminPage() {
         </div>
 
         {/* ===================== SECTION 1 ===================== */}
-        <SectionTitle id="giris" icon={BookOpen}>
+        <SectionTitle id="giris" icon={HelpCircle}>
           1. Giriş — Admin Kılavuzu Hakkında
         </SectionTitle>
         <p className="text-slate-600 leading-relaxed mb-4">
@@ -443,7 +441,7 @@ export default function KilavuzAdminPage() {
         <h3 className="text-lg font-semibold text-slate-800 mb-3">Aktif Kampanya: TUYAP2026</h3>
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-6">
           <div className="flex items-center gap-3 mb-3">
-            <Tent className="w-6 h-6 text-indigo-600" />
+            <Box className="w-6 h-6 text-indigo-600" />
             <span className="text-lg font-bold text-indigo-800">TUYAP2026 Fuar Kampanyası</span>
           </div>
           <ul className="text-sm text-indigo-700 space-y-1 ml-9">
@@ -487,7 +485,7 @@ export default function KilavuzAdminPage() {
         </InfoBox>
 
         {/* ===================== SECTION 6 ===================== */}
-        <SectionTitle id="fuar-hazirlik" icon={Tent}>
+        <SectionTitle id="fuar-hazirlik" icon={Box}>
           6. Fuar Hazırlık Rehberi
         </SectionTitle>
         <p className="text-slate-600 leading-relaxed mb-6">
@@ -533,7 +531,7 @@ export default function KilavuzAdminPage() {
               'Molalarda ekipten en az 1 kişi stantta kalsın',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
+                <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
                 <span>{item}</span>
               </li>
             ))}
@@ -555,7 +553,7 @@ export default function KilavuzAdminPage() {
         </InfoBox>
 
         {/* ===================== SECTION 7 ===================== */}
-        <SectionTitle id="demo-senaryolari" icon={PlayCircle}>
+        <SectionTitle id="demo-senaryolari" icon={Eye}>
           7. Demo Senaryoları
         </SectionTitle>
         <p className="text-slate-600 leading-relaxed mb-6">
@@ -670,7 +668,7 @@ export default function KilavuzAdminPage() {
         </div>
 
         {/* ===================== SECTION 8 ===================== */}
-        <SectionTitle id="itiraz-yonetimi" icon={MessageSquareWarning}>
+        <SectionTitle id="itiraz-yonetimi" icon={MessageSquare}>
           8. Müşteri İtiraz Yönetimi
         </SectionTitle>
         <p className="text-slate-600 leading-relaxed mb-6">
@@ -681,7 +679,7 @@ export default function KilavuzAdminPage() {
         {/* Objection 1 */}
         <div className="border border-slate-200 rounded-xl overflow-hidden mb-4">
           <div className="bg-red-50 px-5 py-3 flex items-center gap-2">
-            <MessageSquareWarning className="w-4 h-4 text-red-500" />
+            <MessageSquare className="w-4 h-4 text-red-500" />
             <span className="font-semibold text-red-800">"Çok pahalı"</span>
           </div>
           <div className="px-5 py-4 bg-emerald-50">
@@ -698,7 +696,7 @@ export default function KilavuzAdminPage() {
         {/* Objection 2 */}
         <div className="border border-slate-200 rounded-xl overflow-hidden mb-4">
           <div className="bg-red-50 px-5 py-3 flex items-center gap-2">
-            <MessageSquareWarning className="w-4 h-4 text-red-500" />
+            <MessageSquare className="w-4 h-4 text-red-500" />
             <span className="font-semibold text-red-800">"Excel ile idare ediyoruz"</span>
           </div>
           <div className="px-5 py-4 bg-emerald-50">
@@ -715,7 +713,7 @@ export default function KilavuzAdminPage() {
         {/* Objection 3 */}
         <div className="border border-slate-200 rounded-xl overflow-hidden mb-4">
           <div className="bg-red-50 px-5 py-3 flex items-center gap-2">
-            <MessageSquareWarning className="w-4 h-4 text-red-500" />
+            <MessageSquare className="w-4 h-4 text-red-500" />
             <span className="font-semibold text-red-800">"Kullanmayı öğrenemeyiz"</span>
           </div>
           <div className="px-5 py-4 bg-emerald-50">
@@ -732,7 +730,7 @@ export default function KilavuzAdminPage() {
         {/* Objection 4 */}
         <div className="border border-slate-200 rounded-xl overflow-hidden mb-4">
           <div className="bg-red-50 px-5 py-3 flex items-center gap-2">
-            <MessageSquareWarning className="w-4 h-4 text-red-500" />
+            <MessageSquare className="w-4 h-4 text-red-500" />
             <span className="font-semibold text-red-800">"Verilerimiz güvende mi?"</span>
           </div>
           <div className="px-5 py-4 bg-emerald-50">
@@ -749,7 +747,7 @@ export default function KilavuzAdminPage() {
         {/* Objection 5 */}
         <div className="border border-slate-200 rounded-xl overflow-hidden mb-6">
           <div className="bg-red-50 px-5 py-3 flex items-center gap-2">
-            <MessageSquareWarning className="w-4 h-4 text-red-500" />
+            <MessageSquare className="w-4 h-4 text-red-500" />
             <span className="font-semibold text-red-800">"Başka yazılım kullanıyoruz"</span>
           </div>
           <div className="px-5 py-4 bg-emerald-50">
@@ -828,7 +826,7 @@ export default function KilavuzAdminPage() {
         </InfoBox>
 
         {/* ===================== SECTION 10 ===================== */}
-        <SectionTitle id="onboarding" icon={UserPlus}>
+        <SectionTitle id="onboarding" icon={UserCog}>
           10. Yeni Personel Onboarding Rehberi
         </SectionTitle>
         <p className="text-slate-600 leading-relaxed mb-6">
@@ -910,7 +908,7 @@ export default function KilavuzAdminPage() {
         </InfoBox>
 
         {/* ===================== SECTION 11 ===================== */}
-        <SectionTitle id="destek" icon={Phone}>
+        <SectionTitle id="destek" icon={Mail}>
           11. Destek ve İletişim
         </SectionTitle>
         <p className="text-slate-600 leading-relaxed mb-6">
@@ -928,7 +926,7 @@ export default function KilavuzAdminPage() {
             </div>
           </div>
           <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 flex items-start gap-4">
-            <Smartphone className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-1" />
+            <Settings className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-1" />
             <div>
               <h4 className="font-semibold text-indigo-800 mb-1">Telefon Desteği</h4>
               <a href="tel:+905337278034" className="text-indigo-600 font-medium text-sm hover:underline">
