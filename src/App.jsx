@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TenantProvider, useTenant } from './contexts/TenantContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // Layouts
 import PanelLayout from './components/layout/PanelLayout';
@@ -95,7 +96,7 @@ function LoadingScreen() {
     <div className="flex items-center justify-center h-screen bg-gray-50">
       <div className="text-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600 mx-auto mb-3"></div>
-        <p className="text-gray-500 text-sm">Yükleniyor...</p>
+        <p className="text-gray-500 text-sm">Loading...</p>
       </div>
     </div>
   );
@@ -182,12 +183,14 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <TenantProvider>
-          <AppRoutes />
-        </TenantProvider>
-      </AuthProvider>
-    </Router>
+    <LanguageProvider>
+      <Router>
+        <AuthProvider>
+          <TenantProvider>
+            <AppRoutes />
+          </TenantProvider>
+        </AuthProvider>
+      </Router>
+    </LanguageProvider>
   );
 }

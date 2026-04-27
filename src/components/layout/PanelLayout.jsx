@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
+import { useTranslation } from '../../hooks/useTranslation';
+import LanguageSwitcher from '../shared/LanguageSwitcher';
 import {
   LayoutDashboard, Users, PenTool, FileText, CreditCard, BarChart3,
   Settings, UserPlus, Crown, LogOut, ChevronLeft, ChevronRight, Menu, X, Shield, HelpCircle
@@ -11,6 +13,7 @@ const PanelLayout = () => {
   const { logout, profile, isSuperAdmin } = useAuth();
   const { tenant, plan, role, hasFeature } = useTenant();
   const navigate = useNavigate();
+  const { t, isRtl } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -20,19 +23,19 @@ const PanelLayout = () => {
   };
 
   const menuItems = [
-    { path: '/panel', icon: LayoutDashboard, label: 'Dashboard', end: true },
-    { path: '/panel/customers', icon: Users, label: 'Müşteriler' },
-    { path: '/panel/designs', icon: PenTool, label: 'Tasarımlar' },
-    { path: '/panel/contracts', icon: FileText, label: 'Sözleşmeler', feature: 'contracts' },
-    { path: '/panel/payments', icon: CreditCard, label: 'Ödemeler', feature: 'payments' },
-    { path: '/panel/finance', icon: BarChart3, label: 'Finans', feature: 'payments' },
+    { path: '/panel', icon: LayoutDashboard, label: t('panel.nav.dashboard'), end: true },
+    { path: '/panel/customers', icon: Users, label: t('panel.nav.customers') },
+    { path: '/panel/designs', icon: PenTool, label: t('panel.nav.designs') },
+    { path: '/panel/contracts', icon: FileText, label: t('panel.nav.contracts'), feature: 'contracts' },
+    { path: '/panel/payments', icon: CreditCard, label: t('panel.nav.payments'), feature: 'payments' },
+    { path: '/panel/finance', icon: BarChart3, label: t('panel.nav.finance'), feature: 'payments' },
   ];
 
   const managementItems = [
-    { path: '/panel/team', icon: UserPlus, label: 'Ekip', feature: 'team_management' },
-    { path: '/panel/settings', icon: Settings, label: 'Ayarlar' },
-    { path: '/panel/subscription', icon: Crown, label: 'Abonelik' },
-    { path: '/panel/kilavuz', icon: HelpCircle, label: 'Kullanım Kılavuzu' },
+    { path: '/panel/team', icon: UserPlus, label: t('panel.nav.team'), feature: 'team_management' },
+    { path: '/panel/settings', icon: Settings, label: t('panel.nav.settings') },
+    { path: '/panel/subscription', icon: Crown, label: t('panel.nav.subscription') },
+    { path: '/panel/kilavuz', icon: HelpCircle, label: t('panel.nav.guide') },
   ];
 
   const renderNavItem = (item) => {
@@ -91,21 +94,26 @@ const PanelLayout = () => {
             <p className="text-xs text-gray-500 capitalize">{role}</p>
           </div>
         )}
+        {!collapsed && (
+          <div className="px-3 py-1.5">
+            <LanguageSwitcher variant="compact" />
+          </div>
+        )}
         {isSuperAdmin && (
           <button onClick={()=>navigate('/admin')}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-purple-600 hover:bg-purple-50 w-full transition ${collapsed ? 'justify-center' : ''}`}
-            title="Admin Paneli"
+            title={t('panel.nav.adminPanel')}
           >
             <Shield className="w-5 h-5" />
-            {!collapsed && <span>Admin Paneli</span>}
+            {!collapsed && <span>{t('panel.nav.adminPanel')}</span>}
           </button>
         )}
         <button onClick={handleLogout}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full transition ${collapsed ? 'justify-center' : ''}`}
-          title="Çıkış Yap"
+          title={t('panel.nav.logout')}
         >
           <LogOut className="w-5 h-5" />
-          {!collapsed && <span>Çıkış Yap</span>}
+          {!collapsed && <span>{t('panel.nav.logout')}</span>}
         </button>
       </div>
 

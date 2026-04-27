@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Users, FileText, PenTool, TrendingUp, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
+import { useTranslation } from '../../../hooks/useTranslation';
 import { getSupabase } from '../../../lib/supabase';
 import { Link } from 'react-router-dom';
 
 export default function PanelDashboard() {
   const { tenant, plan, tenantId, getLimit, hasFeature, isSubscriptionActive } = useTenant();
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const supabase = getSupabase();
@@ -58,10 +60,10 @@ export default function PanelDashboard() {
   }
 
   const statCards = [
-    { label: 'Müşteriler', value: stats.customers, icon: Users, color: 'amber', path: '/panel/customers' },
-    { label: 'Tasarımlar', value: stats.designs, icon: PenTool, color: 'blue', path: '/panel/designs' },
-    { label: 'Sözleşmeler', value: stats.contracts, icon: FileText, color: 'green', path: '/panel/contracts' },
-    { label: 'Ekip Üyeleri', value: stats.members, icon: Users, color: 'purple', path: '/panel/team' },
+    { label: t('panel.nav.customers'), value: stats.customers, icon: Users, color: 'amber', path: '/panel/customers' },
+    { label: t('panel.nav.designs'), value: stats.designs, icon: PenTool, color: 'blue', path: '/panel/designs' },
+    { label: t('panel.nav.contracts'), value: stats.contracts, icon: FileText, color: 'green', path: '/panel/contracts' },
+    { label: t('panel.nav.team'), value: stats.members, icon: Users, color: 'purple', path: '/panel/team' },
   ];
 
   const colorMap = {
@@ -72,9 +74,9 @@ export default function PanelDashboard() {
   };
 
   const usageLimits = [
-    { name: 'Müşteriler', used: stats.customers, limit: maxCustomers, color: 'amber' },
-    { name: 'Tasarımlar', used: stats.designs, limit: maxDesigns, color: 'blue' },
-    { name: 'Ekip Üyeleri', used: stats.members, limit: maxMembers, color: 'purple' },
+    { name: t('panel.nav.customers'), used: stats.customers, limit: maxCustomers, color: 'amber' },
+    { name: t('panel.nav.designs'), used: stats.designs, limit: maxDesigns, color: 'blue' },
+    { name: t('panel.nav.team'), used: stats.members, limit: maxMembers, color: 'purple' },
   ];
 
   return (
