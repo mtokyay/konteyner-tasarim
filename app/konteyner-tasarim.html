@@ -839,6 +839,8 @@
 
         const topSegs = calcWallSegments(items, container.length, "top", container.width);
         const botSegs = calcWallSegments(items, container.length, "bottom", container.width);
+        const leftSegs = calcWallSegments(items, container.width, "left", container.length);
+        const rightSegs = calcWallSegments(items, container.width, "right", container.length);
 
         const dimLine = (x1, y1, x2, y2, label, above, fontSize) => {
             const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
@@ -875,6 +877,20 @@
                     const sx = c2s(seg.start) + pad, ex = c2s(seg.end) + pad;
                     if (seg.type === "wall" && seg.len > 5) return <g key={"bs-" + i}>{dimLine(sx, pad + cw + 25, ex, pad + cw + 25, seg.len + " cm", false)}</g>;
                     if (seg.type === "item") return <g key={"bs-" + i}><rect x={sx} y={pad + cw - 4} width={c2s(seg.len)} height="8" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" /></g>;
+                    return null;
+                })}
+                {/* Sol duvar segmentleri */}
+                {leftSegs.map((seg, i) => {
+                    const sy = c2s(seg.start) + pad, ey = c2s(seg.end) + pad;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"ls-" + i}>{dimLine(pad - 25, sy, pad - 25, ey, seg.len + " cm", true)}</g>;
+                    if (seg.type === "item") return <g key={"ls-" + i}><rect x={pad - 4} y={sy} width="8" height={c2s(seg.len)} fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" /></g>;
+                    return null;
+                })}
+                {/* Sag duvar segmentleri */}
+                {rightSegs.map((seg, i) => {
+                    const sy = c2s(seg.start) + pad, ey = c2s(seg.end) + pad;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"rs-" + i}>{dimLine(pad + cl + 25, sy, pad + cl + 25, ey, seg.len + " cm", false)}</g>;
+                    if (seg.type === "item") return <g key={"rs-" + i}><rect x={pad + cl - 4} y={sy} width="8" height={c2s(seg.len)} fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" /></g>;
                     return null;
                 })}
                 {/* WC bolgeleri */}
@@ -967,6 +983,20 @@
         const pad = 80, cw = c2s(tw), cl = c2s(tl);
         const vW = cl + pad * 2 + 40, vH = cw + pad * 2 + 50 + (hasVeranda ? verandaDepthPx + 30 : 0);
         const panelInfo = PANEL_TYPES.find(p => p.id === container.panelType);
+        const leftSegs = calcWallSegments(items, container.width, "left", container.length);
+        const rightSegs = calcWallSegments(items, container.width, "right", container.length);
+        const dimLine2 = (x1, y1, x2, y2, label, above) => {
+            const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+            const isVert = Math.abs(x1 - x2) < 2;
+            const off = above ? -14 : 18;
+            return (
+                <g>
+                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#B71C1C" strokeWidth="2" />
+                    {isVert ? (<><line x1={x1 - 5} y1={y1} x2={x1 + 5} y2={y1} stroke="#B71C1C" strokeWidth="2" /><line x1={x2 - 5} y1={y2} x2={x2 + 5} y2={y2} stroke="#B71C1C" strokeWidth="2" /></>) : (<><line x1={x1} y1={y1 - 5} x2={x1} y2={y1 + 5} stroke="#B71C1C" strokeWidth="2" /><line x1={x2} y1={y2 - 5} x2={x2} y2={y2 + 5} stroke="#B71C1C" strokeWidth="2" /></>)}
+                    {isVert ? <text x={mx + off} y={my + 4} textAnchor="middle" fontSize="18" fill="#B71C1C" fontWeight="700" transform={`rotate(90,${mx + off},${my + 4})`}>{label}</text> : <text x={mx} y={my + off} textAnchor="middle" fontSize="18" fill="#B71C1C" fontWeight="700">{label}</text>}
+                </g>
+            );
+        };
 
         return (
             <svg viewBox={`0 0 ${vW} ${vH}`} className="kroki-svg" style={{ width: "100%", maxHeight: "400px", border: "1px solid #e5e7eb", borderRadius: "6px", background: "white" }}>
@@ -1014,6 +1044,20 @@
                             <text x={px} y={pad - 8} textAnchor="middle" fontSize="20" fill="#37474F" fontWeight="700">{p.label}</text>
                         </g>
                     );
+                })}
+                {/* Sol duvar segmentleri */}
+                {leftSegs.map((seg, i) => {
+                    const sy = c2s(seg.start) + pad, ey = c2s(seg.end) + pad;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"dls-" + i}>{dimLine2(pad - 22, sy, pad - 22, ey, seg.len + " cm", true)}</g>;
+                    if (seg.type === "item") return <g key={"dls-" + i}><rect x={pad - 3} y={sy} width="6" height={c2s(seg.len)} fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="1" /></g>;
+                    return null;
+                })}
+                {/* Sag duvar segmentleri */}
+                {rightSegs.map((seg, i) => {
+                    const sy = c2s(seg.start) + pad, ey = c2s(seg.end) + pad;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"drs-" + i}>{dimLine2(pad + cl + 22, sy, pad + cl + 22, ey, seg.len + " cm", false)}</g>;
+                    if (seg.type === "item") return <g key={"drs-" + i}><rect x={pad + cl - 3} y={sy} width="6" height={c2s(seg.len)} fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="1" /></g>;
+                    return null;
                 })}
                 {/* Ogeler */}
                 {items.map(item => {
@@ -1145,6 +1189,8 @@
 
         const topSegs = calcWallSegments(items, container.length, "top", container.width);
         const botSegs = calcWallSegments(items, container.length, "bottom", container.width);
+        const leftSegs = calcWallSegments(items, container.width, "left", container.length);
+        const rightSegs = calcWallSegments(items, container.width, "right", container.length);
 
         const dimLine = (x1, y1, x2, y2, label, above, fontSize) => {
             const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
@@ -1191,6 +1237,20 @@
                     const sx = c2s(seg.start) + pad, ex = c2s(seg.end) + pad;
                     if (seg.type === "wall" && seg.len > 5) return <g key={"bs-" + i}>{dimLine(sx, pad + cw + 28, ex, pad + cw + 28, seg.len + " cm", false)}</g>;
                     if (seg.type === "item") return <g key={"bs-" + i}><rect x={sx} y={pad + cw - 4} width={c2s(seg.len)} height="8" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" /></g>;
+                    return null;
+                })}
+                {/* Sol duvar segmentleri */}
+                {leftSegs.map((seg, i) => {
+                    const sy = c2s(seg.start) + pad, ey = c2s(seg.end) + pad;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"ls3-" + i}>{dimLine(pad - 28, sy, pad - 28, ey, seg.len + " cm", true)}</g>;
+                    if (seg.type === "item") return <g key={"ls3-" + i}><rect x={pad - 4} y={sy} width="8" height={c2s(seg.len)} fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" /></g>;
+                    return null;
+                })}
+                {/* Sag duvar segmentleri */}
+                {rightSegs.map((seg, i) => {
+                    const sy = c2s(seg.start) + pad, ey = c2s(seg.end) + pad;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"rs3-" + i}>{dimLine(pad + cl + 28, sy, pad + cl + 28, ey, seg.len + " cm", false)}</g>;
+                    if (seg.type === "item") return <g key={"rs3-" + i}><rect x={pad + cl - 4} y={sy} width="8" height={c2s(seg.len)} fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" /></g>;
                     return null;
                 })}
 
