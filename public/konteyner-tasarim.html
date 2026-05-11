@@ -1034,24 +1034,38 @@
                                 ? `M ${x} ${y} A ${arcR} ${arcR} 0 0 0 ${x - arcR * 0.3} ${y + arcR}`
                                 : `M ${x} ${y + dh} A ${arcR} ${arcR} 0 0 1 ${x - arcR * 0.3} ${y + dh - arcR}`;
                         }
+                        const isVert = item.rotation === 90;
                         return (
                             <g key={item.id}>
                                 <rect x={x} y={y} width={dw} height={dh} fill="white" stroke="#333" strokeWidth="2" />
                                 <path d={arcPath} fill="none" stroke="#999" strokeWidth="1.2" strokeDasharray="5,3" />
-                                <text x={x + dw / 2} y={y + dh + 18} textAnchor="middle" fontSize="20" fill="#333" fontWeight="700">{di?.name}</text>
-                                <text x={x + dw / 2} y={y + dh + 34} textAnchor="middle" fontSize="16" fill="#666" fontWeight="500">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                                {isVert ? <>
+                                  <text x={x + dw + 8} y={y + dh / 2 - 4} textAnchor="start" fontSize="20" fill="#333" fontWeight="700">{di?.name}</text>
+                                  <text x={x + dw + 8} y={y + dh / 2 + 14} textAnchor="start" fontSize="16" fill="#666" fontWeight="500">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                                </> : <>
+                                  <text x={x + dw / 2} y={y + dh + 18} textAnchor="middle" fontSize="20" fill="#333" fontWeight="700">{di?.name}</text>
+                                  <text x={x + dw / 2} y={y + dh + 34} textAnchor="middle" fontSize="16" fill="#666" fontWeight="500">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                                </>}
                             </g>
                         );
                     }
                     if (item.type === "window") {
                         const ww = c2s(item.rotation === 90 ? 10 : item.width), wh = c2s(item.rotation === 90 ? item.width : 10);
                         const od = item.openDir || "ic";
+                        const isVertW = item.rotation === 90;
                         return (
                             <g key={item.id}>
                                 <rect x={x} y={y} width={ww} height={wh} fill="#E3F2FD" stroke="#1565C0" strokeWidth="2" />
-                                <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="1" />
-                                <text x={x + ww / 2} y={y + wh + 18} textAnchor="middle" fontSize="20" fill="#333" fontWeight="700">{item.width}x{item.windowHeight}</text>
-                                <text x={x + ww / 2} y={y + wh + 34} textAnchor="middle" fontSize="16" fill="#666" fontWeight="500">h:{item.elevation || 90} | {od === "dis" ? "Disa" : "Ice"}</text>
+                                {isVertW
+                                  ? <line x1={x} y1={y + wh / 2} x2={x + ww} y2={y + wh / 2} stroke="#1565C0" strokeWidth="1" />
+                                  : <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="1" />}
+                                {isVertW ? <>
+                                  <text x={x + ww + 8} y={y + wh / 2 - 4} textAnchor="start" fontSize="20" fill="#333" fontWeight="700">{item.width}x{item.windowHeight}</text>
+                                  <text x={x + ww + 8} y={y + wh / 2 + 14} textAnchor="start" fontSize="16" fill="#666" fontWeight="500">h:{item.elevation || 90} | {od === "dis" ? "Disa" : "Ice"}</text>
+                                </> : <>
+                                  <text x={x + ww / 2} y={y + wh + 18} textAnchor="middle" fontSize="20" fill="#333" fontWeight="700">{item.width}x{item.windowHeight}</text>
+                                  <text x={x + ww / 2} y={y + wh + 34} textAnchor="middle" fontSize="16" fill="#666" fontWeight="500">h:{item.elevation || 90} | {od === "dis" ? "Disa" : "Ice"}</text>
+                                </>}
                             </g>
                         );
                     }
@@ -1236,12 +1250,18 @@
                             ? `M ${x} ${y} A ${arcR} ${arcR} 0 0 0 ${x - arcR * 0.3} ${y + arcR}`
                             : `M ${x} ${y + dh} A ${arcR} ${arcR} 0 0 1 ${x - arcR * 0.3} ${y + dh - arcR}`;
                     }
+                    const isVertD = item.rotation === 90;
                     return (
                         <g key={item.id}>
                             <rect x={x} y={y} width={dw} height={dh} fill="white" stroke="#333" strokeWidth="2" />
                             <path d={arcPath} fill="none" stroke="#999" strokeWidth="1.2" strokeDasharray="5,3" />
-                            <text x={x + dw / 2} y={y + dh + 16} textAnchor="middle" fontSize="16" fill="#333" fontWeight="700">{di?.name}</text>
-                            <text x={x + dw / 2} y={y + dh + 30} textAnchor="middle" fontSize="13" fill="#666" fontWeight="500">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                            {isVertD ? <>
+                              <text x={x + dw + 6} y={y + dh / 2 - 3} textAnchor="start" fontSize="16" fill="#333" fontWeight="700">{di?.name}</text>
+                              <text x={x + dw + 6} y={y + dh / 2 + 12} textAnchor="start" fontSize="13" fill="#666" fontWeight="500">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                            </> : <>
+                              <text x={x + dw / 2} y={y + dh + 16} textAnchor="middle" fontSize="16" fill="#333" fontWeight="700">{di?.name}</text>
+                              <text x={x + dw / 2} y={y + dh + 30} textAnchor="middle" fontSize="13" fill="#666" fontWeight="500">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                            </>}
                         </g>
                     );
                 })}
@@ -1249,12 +1269,20 @@
                 {items.filter(it=>it.type==="window").map(item => {
                     const x = c2s(item.x) + pad, y = c2s(item.y) + pad;
                     const ww = c2s(item.rotation === 90 ? 10 : item.width), wh = c2s(item.rotation === 90 ? item.width : 10);
+                    const isVertW = item.rotation === 90;
                     return (
                         <g key={item.id}>
                             <rect x={x} y={y} width={ww} height={wh} fill="#E3F2FD" stroke="#1565C0" strokeWidth="2" />
-                            <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="1" />
-                            <text x={x + ww / 2} y={y + wh + 16} textAnchor="middle" fontSize="16" fill="#333" fontWeight="700">{item.width}x{item.windowHeight}</text>
-                            <text x={x + ww / 2} y={y + wh + 30} textAnchor="middle" fontSize="13" fill="#666" fontWeight="500">h:{item.elevation || 90} | {(item.openDir||"ic") === "dis" ? "Disa" : "Ice"}</text>
+                            {isVertW
+                              ? <line x1={x} y1={y + wh / 2} x2={x + ww} y2={y + wh / 2} stroke="#1565C0" strokeWidth="1" />
+                              : <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="1" />}
+                            {isVertW ? <>
+                              <text x={x + ww + 6} y={y + wh / 2 - 3} textAnchor="start" fontSize="16" fill="#333" fontWeight="700">{item.width}x{item.windowHeight}</text>
+                              <text x={x + ww + 6} y={y + wh / 2 + 12} textAnchor="start" fontSize="13" fill="#666" fontWeight="500">h:{item.elevation || 90} | {(item.openDir||"ic") === "dis" ? "Disa" : "Ice"}</text>
+                            </> : <>
+                              <text x={x + ww / 2} y={y + wh + 16} textAnchor="middle" fontSize="16" fill="#333" fontWeight="700">{item.width}x{item.windowHeight}</text>
+                              <text x={x + ww / 2} y={y + wh + 30} textAnchor="middle" fontSize="13" fill="#666" fontWeight="500">h:{item.elevation || 90} | {(item.openDir||"ic") === "dis" ? "Disa" : "Ice"}</text>
+                            </>}
                         </g>
                     );
                 })}
@@ -1942,12 +1970,12 @@
               const h2c=getH2C();
               const canvas=await h2c(section,{scale:3,useCORS:true,backgroundColor:"#ffffff",logging:false,allowTaint:true});
               restoreSvgs();
-              const imgData=canvas.toDataURL("image/png");
+              const imgData=canvas.toDataURL("image/jpeg",0.85);
               const imgW=pW-margin*2;
               const imgH=(canvas.height*imgW)/canvas.width;
               const finalH=Math.min(imgH,pH-margin*2);
               const finalW=(finalH<imgH)?(canvas.width*finalH)/canvas.height:imgW;
-              pdf.addImage(imgData,"PNG",margin+(pW-margin*2-finalW)/2,margin,finalW,finalH);
+              pdf.addImage(imgData,"JPEG",margin+(pW-margin*2-finalW)/2,margin,finalW,finalH);
             }
             // Footer
             pdf.setFontSize(7);pdf.setTextColor(150);pdf.setFont(undefined,'normal');
@@ -2015,14 +2043,14 @@
             pdf.text("OLCULU KAT PLANI KROKISI",margin,14);
             pdf.setFontSize(10);pdf.setFont(undefined,'normal');pdf.setTextColor(100);
             pdf.text(infoText,margin,21);
-            const canvas=await svgToCanvas(krokiSvg,3600);
-            const imgData=canvas.toDataURL("image/png");
+            const canvas=await svgToCanvas(krokiSvg,2400);
+            const imgData=canvas.toDataURL("image/jpeg",0.85);
             const availW=pW-margin*2;
             const availH=pH-30-margin;
             const imgAspect=canvas.height/canvas.width;
             let finalW=availW, finalH=availW*imgAspect;
             if(finalH>availH){finalH=availH;finalW=finalH/imgAspect}
-            pdf.addImage(imgData,"PNG",margin+(availW-finalW)/2,26,finalW,finalH);
+            pdf.addImage(imgData,"JPEG",margin+(availW-finalW)/2,26,finalW,finalH);
           }
           // Sayfa 2: Detay krokisi
           const detailSvg=document.querySelector('[data-pdf-section="floorplan-detail"] .kroki-svg');
@@ -2032,14 +2060,14 @@
             pdf.text("DETAY KROKISI",margin,14);
             pdf.setFontSize(10);pdf.setFont(undefined,'normal');pdf.setTextColor(100);
             pdf.text("Kapi, Pencere, Mutfak, Priz konumlari",margin,21);
-            const canvas2=await svgToCanvas(detailSvg,3600);
-            const imgData2=canvas2.toDataURL("image/png");
+            const canvas2=await svgToCanvas(detailSvg,2400);
+            const imgData2=canvas2.toDataURL("image/jpeg",0.85);
             const availW2=pW-margin*2;
             const availH2=pH-30-margin;
             const imgAspect2=canvas2.height/canvas2.width;
             let finalW2=availW2, finalH2=availW2*imgAspect2;
             if(finalH2>availH2){finalH2=availH2;finalW2=finalH2/imgAspect2}
-            pdf.addImage(imgData2,"PNG",margin+(availW2-finalW2)/2,26,finalW2,finalH2);
+            pdf.addImage(imgData2,"JPEG",margin+(availW2-finalW2)/2,26,finalW2,finalH2);
           }
           // Sayfa 3: Birlesik kroki
           const combinedSvg=document.querySelector('[data-pdf-section="floorplan-combined"] .kroki-svg');
@@ -2049,14 +2077,14 @@
             pdf.text("BIRLESIK KROKI - OLCULU KAT PLANI + DETAY",margin,14);
             pdf.setFontSize(10);pdf.setFont(undefined,'normal');pdf.setTextColor(100);
             pdf.text(container.length+"x"+container.width+" cm | "+container.name,margin,20);
-            const canvas3=await svgToCanvas(combinedSvg,3600);
-            const imgData3=canvas3.toDataURL("image/png");
+            const canvas3=await svgToCanvas(combinedSvg,2400);
+            const imgData3=canvas3.toDataURL("image/jpeg",0.85);
             const availW3=pW-margin*2;
             const availH3=pH-30-margin;
             const imgAspect3=canvas3.height/canvas3.width;
             let finalW3=availW3, finalH3=availW3*imgAspect3;
             if(finalH3>availH3){finalH3=availH3;finalW3=finalH3/imgAspect3}
-            pdf.addImage(imgData3,"PNG",margin+(availW3-finalW3)/2,26,finalW3,finalH3);
+            pdf.addImage(imgData3,"JPEG",margin+(availW3-finalW3)/2,26,finalW3,finalH3);
           }
           // Footer
           const totalPages=pdf.internal.getNumberOfPages();
