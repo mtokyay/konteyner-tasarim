@@ -1259,7 +1259,7 @@
     }
 
     // ==================== PDF / PRINT VIEW ====================
-    function PrintView({container,items,partitions,wcZones,combo,veranda,onClose}){
+    function PrintView({container,items,partitions,wcZones,combo,veranda,onClose,autoKroki,onAutoKrokiDone}){
       const pi=PANEL_TYPES.find(p=>p.id===container.panelType);
       const ri=ROOF_TYPES.find(r=>r.id===container.roofType);
       const rc=ROOF_COLORS.find(r=>r.id===container.roofColor);
@@ -1776,9 +1776,17 @@
           pdf.save("TK-Kroki-"+Date.now().toString(36)+".pdf");
         }catch(err){console.error("Kroki PDF hatasi:",err);alert("Kroki PDF hatasi: "+err.message)}
         setPdfLoading(false);
+        if(onAutoKrokiDone) onAutoKrokiDone();
       };
+      // Auto-trigger kroki PDF when opened via toolbar button
+      React.useEffect(()=>{
+        if(autoKroki){
+          const timer=setTimeout(()=>handleKrokiPdf(),500);
+          return ()=>clearTimeout(timer);
+        }
+      },[autoKroki]);
       return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-auto" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-auto" onClick={autoKroki?undefined:onClose}>
           <div className="bg-white w-[900px] max-w-[95vw] max-h-[92vh] overflow-y-auto rounded-xl shadow-2xl m-4" onClick={e=>e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-200 print:hidden">
               <div className="text-base font-bold text-gray-800">Tasarim Dokumani</div>
@@ -1885,6 +1893,7 @@
       const [activeTab,setActiveTab]=useState("container");
       const [showExport,setShowExport]=useState(false);
       const [showPrint,setShowPrint]=useState(false);
+      const [autoKroki,setAutoKroki]=useState(false);
       const [viewMode,setViewMode]=useState("2d");
       const [mousePos,setMousePos]=useState({x:0,y:0});
       const [isDragging,setIsDragging]=useState(false);
@@ -2194,6 +2203,14 @@
                   window.parent.postMessage({type:'DESIGN_DATA',designData:state},'*');
                 }else{alert('Kaydetmek icin portal uzerinden acin')}
               }} className="px-3 py-1.5 bg-amber-700 text-white rounded-lg text-xs font-medium hover:bg-amber-800">{et("actions.save")}</button>
+              <button onClick={()=>setShowPrint(true)} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                {et("actions.export")}
+              </button>
+              <button onClick={()=>{setAutoKroki(true);setShowPrint(true)}} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>
+                Kroki PDF
+              </button>
             </div>
           </div>
           <div className="flex flex-row flex-1 overflow-hidden min-w-0" style={{flexDirection:"row"}}>
@@ -2495,7 +2512,7 @@
               </div>
             </div>
           )}
-          {showPrint && <PrintView container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda} onClose={()=>setShowPrint(false)}/>}
+          {showPrint && <PrintView container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda} onClose={()=>{setShowPrint(false);setAutoKroki(false)}} autoKroki={autoKroki} onAutoKrokiDone={()=>{setAutoKroki(false);setShowPrint(false)}}/>}
         </div>
       );
     }
