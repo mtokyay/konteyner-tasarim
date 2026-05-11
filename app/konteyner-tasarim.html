@@ -910,6 +910,22 @@
                         </g>
                     );
                 })}
+                {/* Mutfak */}
+                {items.filter(i => i.type === "kitchen").map((k, ki) => {
+                    const kx = c2s(k.x) + pad, ky = c2s(k.y) + pad;
+                    const rot = k.rotation || 0;
+                    const kw = c2s(rot === 90 || rot === 270 ? (k.depth || 60) : (k.width || 240));
+                    const kh = c2s(rot === 90 || rot === 270 ? (k.width || 240) : (k.depth || 60));
+                    return (
+                        <g key={"dkitchen-" + ki}>
+                            <rect x={kx} y={ky} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />
+                            <line x1={kx + 2} y1={ky + 2} x2={kx + kw - 2} y2={ky + kh - 2} stroke="#A1887F" strokeWidth="0.5" opacity="0.5" />
+                            <line x1={kx + kw - 2} y1={ky + 2} x2={kx + 2} y2={ky + kh - 2} stroke="#A1887F" strokeWidth="0.5" opacity="0.5" />
+                            <text x={kx + kw / 2} y={ky + kh / 2 + 3} textAnchor="middle" fontSize="7" fill="#5D4037" fontWeight="600">Mutfak</text>
+                            <text x={kx + kw / 2} y={ky + kh / 2 + 10} textAnchor="middle" fontSize="6" fill="#8D6E63">{k.width || 240}x{k.depth || 60}</text>
+                        </g>
+                    );
+                })}
                 {/* Ana olculer */}
                 <text x={pad + cl / 2} y={pad + cw + 30} textAnchor="middle" fontSize="12" fill="#37474F" fontWeight="600">{tl} cm</text>
                 <text x={pad + cl + 20} y={pad + cw / 2 + 3} textAnchor="middle" fontSize="12" fill="#37474F" fontWeight="600" transform={`rotate(90,${pad + cl + 20},${pad + cw / 2 + 3})`}>{tw} cm</text>
@@ -1030,6 +1046,31 @@
                                 <circle cx={x + 7} cy={y + 7} r={6} fill={mi.color} opacity="0.85" />
                                 <text x={x + 7} y={y + 10} textAnchor="middle" fontSize="9" fill="white" fontWeight="bold">{mi.icon}</text>
                                 <text x={x + 7} y={y + 19} textAnchor="middle" fontSize="6.5" fill="#555">{item.note || mi.name}</text>
+                            </g>
+                        );
+                    }
+                    if (item.type === "kitchen") {
+                        const rot = item.rotation || 0;
+                        const kw = c2s(rot === 90 || rot === 270 ? (item.depth || 60) : (item.width || 240));
+                        const kh = c2s(rot === 90 || rot === 270 ? (item.width || 240) : (item.depth || 60));
+                        const isL = item.kitchenType === "L";
+                        const lw = c2s(item.lWing || 60);
+                        return (
+                            <g key={item.id}>
+                                <rect x={x} y={y} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />
+                                {/* Hatch */}
+                                <line x1={x + 2} y1={y + 2} x2={x + kw - 2} y2={y + kh - 2} stroke="#A1887F" strokeWidth="0.4" opacity="0.4" />
+                                <line x1={x + kw - 2} y1={y + 2} x2={x + 2} y2={y + kh - 2} stroke="#A1887F" strokeWidth="0.4" opacity="0.4" />
+                                {/* Sink */}
+                                <ellipse cx={x + kw * 0.3} cy={y + kh / 2} rx={Math.min(kw * 0.12, 8)} ry={Math.min(kh * 0.3, 6)} fill="#B3E5FC" stroke="#0288D1" strokeWidth="0.5" />
+                                {/* Stove circles */}
+                                <circle cx={x + kw * 0.7} cy={y + kh * 0.35} r={3} fill="none" stroke="#F44336" strokeWidth="0.5" />
+                                <circle cx={x + kw * 0.85} cy={y + kh * 0.65} r={3} fill="none" stroke="#F44336" strokeWidth="0.5" />
+                                {/* L wing */}
+                                {isL && rot === 0 && <rect x={x} y={y + kh} width={c2s(item.depth || 60)} height={lw} fill="#EFEBE9" stroke="#795548" strokeWidth="1" rx="1" />}
+                                {isL && rot === 90 && <rect x={x + kw} y={y} width={lw} height={c2s(item.depth || 60)} fill="#EFEBE9" stroke="#795548" strokeWidth="1" rx="1" />}
+                                {/* Label */}
+                                <text x={x + kw / 2} y={y + kh + (isL && rot === 0 ? lw + 10 : 10)} textAnchor="middle" fontSize="7" fill="#5D4037" fontWeight="600">{isL ? "L " : ""}Mutfak {item.width || 240}x{item.depth || 60}</text>
                             </g>
                         );
                     }
@@ -1664,6 +1705,78 @@
         }catch(err){console.error("PDF hatasi:",err);alert("PDF hatasi: "+err.message)}
         setPdfLoading(false);
       };
+      // ---- SADECE KROKİ PDF ----
+      const handleKrokiPdf=async()=>{
+        setPdfLoading(true);
+        try{
+          let jsPDFClass=getJsPDF();
+          if(!jsPDFClass){
+            await loadScript(["https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js","https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"]);
+            jsPDFClass=getJsPDF();
+          }
+          if(!jsPDFClass) throw new Error("jsPDF yuklenemedi");
+          if(!getH2C()){
+            await loadScript(["https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js","https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"]);
+          }
+          if(!getH2C()) throw new Error("html2canvas yuklenemedi");
+          const pdf=new jsPDFClass({orientation:"landscape",unit:"mm",format:"a4"});
+          const pW=pdf.internal.pageSize.getWidth();
+          const pH=pdf.internal.pageSize.getHeight();
+          const margin=8;
+          // Title
+          pdf.setFontSize(14);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
+          pdf.text("OLCULU KAT PLANI KROKISI",margin,12);
+          pdf.setFontSize(9);pdf.setFont(undefined,'normal');pdf.setTextColor(120);
+          const tw2=combo&&combo.enabled&&combo.direction==="width"?container.width*2:container.width;
+          const tl2=combo&&combo.enabled&&combo.direction==="length"?container.length*2:container.length;
+          pdf.text(container.width+"x"+container.length+"x"+container.height+" cm | "+(tw2*tl2/10000).toFixed(1)+" m² | "+(pi?.name||"")+" | "+(ri?.name||""),margin,18);
+          // Render the kroki SVG sections to canvas
+          const krokiSection=document.querySelector('[data-pdf-section="floorplan-dims"]');
+          const detailSection=document.querySelector('[data-pdf-section="floorplan-detail"]');
+          const h2c=getH2C();
+          if(krokiSection){
+            const restoreSvgs=await convertSvgsToImages(krokiSection);
+            await new Promise(r=>setTimeout(r,80));
+            const canvas=await h2c(krokiSection,{scale:4,useCORS:true,backgroundColor:"#ffffff",logging:false,allowTaint:true});
+            restoreSvgs();
+            const imgData=canvas.toDataURL("image/png");
+            const availH=pH-28-margin;
+            const imgW=pW-margin*2;
+            const imgH=(canvas.height*imgW)/canvas.width;
+            const finalH=Math.min(imgH,availH);
+            const finalW=(finalH<imgH)?(canvas.width*finalH)/canvas.height:imgW;
+            pdf.addImage(imgData,"PNG",margin+(pW-margin*2-finalW)/2,22,finalW,finalH);
+          }
+          if(detailSection){
+            pdf.addPage("a4","landscape");
+            pdf.setFontSize(14);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
+            pdf.text("DETAY KROKISI",margin,12);
+            pdf.setFontSize(9);pdf.setFont(undefined,'normal');pdf.setTextColor(120);
+            pdf.text("Kapi, Pencere, Mutfak, Priz konumlari",margin,18);
+            const restoreSvgs2=await convertSvgsToImages(detailSection);
+            await new Promise(r=>setTimeout(r,80));
+            const canvas2=await h2c(detailSection,{scale:4,useCORS:true,backgroundColor:"#ffffff",logging:false,allowTaint:true});
+            restoreSvgs2();
+            const imgData2=canvas2.toDataURL("image/png");
+            const availH2=pH-28-margin;
+            const imgW2=pW-margin*2;
+            const imgH2=(canvas2.height*imgW2)/canvas2.width;
+            const finalH2=Math.min(imgH2,availH2);
+            const finalW2=(finalH2<imgH2)?(canvas2.width*finalH2)/canvas2.height:imgW2;
+            pdf.addImage(imgData2,"PNG",margin+(pW-margin*2-finalW2)/2,22,finalW2,finalH2);
+          }
+          // Footer on all pages
+          const totalPages=pdf.internal.getNumberOfPages();
+          for(let i=1;i<=totalPages;i++){
+            pdf.setPage(i);
+            pdf.setFontSize(7);pdf.setTextColor(150);pdf.setFont(undefined,'normal');
+            pdf.text("Tokyay Kereste - Kroki",margin,pH-3);
+            pdf.text(new Date().toLocaleDateString("tr-TR")+" | Sayfa "+i+"/"+totalPages,pW-margin,pH-3,{align:"right"});
+          }
+          pdf.save("TK-Kroki-"+Date.now().toString(36)+".pdf");
+        }catch(err){console.error("Kroki PDF hatasi:",err);alert("Kroki PDF hatasi: "+err.message)}
+        setPdfLoading(false);
+      };
       return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-auto" onClick={onClose}>
           <div className="bg-white w-[900px] max-w-[95vw] max-h-[92vh] overflow-y-auto rounded-xl shadow-2xl m-4" onClick={e=>e.stopPropagation()}>
@@ -1677,6 +1790,10 @@
                 <button onClick={handleDownloadPdf} disabled={pdfLoading} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 disabled:opacity-50 flex items-center gap-1">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   {pdfLoading?"Olusturuluyor...":"PDF Indir"}
+                </button>
+                <button onClick={handleKrokiPdf} disabled={pdfLoading} className="px-3 py-1.5 bg-amber-700 text-white rounded-lg text-xs font-medium hover:bg-amber-800 disabled:opacity-50 flex items-center gap-1">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>
+                  {pdfLoading?"Olusturuluyor...":"Kroki PDF"}
                 </button>
                 <button onClick={handlePrint} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700">Yazdir</button>
                 <button onClick={onClose} className="px-3 py-1.5 bg-gray-200 rounded-lg text-xs font-medium hover:bg-gray-300">Kapat</button>
@@ -1706,6 +1823,7 @@
                 {doors.length>0 && <div className="mb-3"><div className="font-bold text-gray-700 mb-1 text-sm">KAPILAR</div><table className="w-full text-xs border-collapse"><thead><tr className="bg-gray-100"><th className="py-1 px-2 text-left">Tip</th><th className="py-1 px-2 text-left">Olcu</th><th className="py-1 px-2 text-left">Acilim</th><th className="py-1 px-2 text-left">Konum</th></tr></thead><tbody>{doors.map((d,i)=>{const info=DOOR_TYPES.find(dt=>dt.id===d.doorType);return (<tr key={i} className="border-b border-gray-200"><td className="py-1 px-2">{info?.name}</td><td className="py-1 px-2">{info?.width}x{info?.height}cm</td><td className="py-1 px-2">{d.openDir==="sag"?"Saga":"Sola"}, {d.openInOut==="dis"?"Disa":"Ice"}</td><td className="py-1 px-2">{d.x},{d.y}cm</td></tr>)})}</tbody></table></div>}
                 {windows.length>0 && <div className="mb-3"><div className="font-bold text-gray-700 mb-1 text-sm">PENCERELER</div><table className="w-full text-xs border-collapse"><thead><tr className="bg-gray-100"><th className="py-1 px-2 text-left">Olcu</th><th className="py-1 px-2 text-left">Yerden</th><th className="py-1 px-2 text-left">Acilim</th><th className="py-1 px-2 text-left">Konum</th></tr></thead><tbody>{windows.map((w,i)=>(<tr key={i} className="border-b border-gray-200"><td className="py-1 px-2">{w.width}x{w.windowHeight}cm</td><td className="py-1 px-2">{w.elevation||90}cm</td><td className="py-1 px-2">{w.openDir==="dis"?"Disa":"Ice"} acilir</td><td className="py-1 px-2">{w.x},{w.y}cm</td></tr>))}</tbody></table></div>}
                 {outlets.length>0 && <div className="mb-3"><div className="font-bold text-gray-700 mb-1 text-sm">PRIZ NOKTALARI</div><table className="w-full text-xs border-collapse"><thead><tr className="bg-gray-100"><th className="py-1 px-2 text-left">#</th><th className="py-1 px-2 text-left">Yerden</th><th className="py-1 px-2 text-left">Duvar Konumu</th></tr></thead><tbody>{outlets.map((o,i)=>{const wallNote=o.y<20?"Ust duvar, soldan "+o.x+"cm":o.y>container.width-20?"Alt duvar, soldan "+o.x+"cm":o.x<20?"Sol duvar, ustden "+o.y+"cm":"Sag duvar, ustden "+o.y+"cm";return (<tr key={i} className="border-b border-gray-200"><td className="py-1 px-2">Priz {i+1}</td><td className="py-1 px-2">{o.elevation||40}cm</td><td className="py-1 px-2">{wallNote}</td></tr>)})}</tbody></table></div>}
+                {items.filter(i=>i.type==="kitchen").length>0 && <div className="mb-3"><div className="font-bold text-gray-700 mb-1 text-sm">MUTFAK</div><table className="w-full text-xs border-collapse"><thead><tr className="bg-gray-100"><th className="py-1 px-2 text-left">Tip</th><th className="py-1 px-2 text-left">Olcu</th><th className="py-1 px-2 text-left">Konum</th></tr></thead><tbody>{items.filter(i=>i.type==="kitchen").map((k,i)=>(<tr key={i} className="border-b border-gray-200"><td className="py-1 px-2">{k.kitchenType==="L"?"L Mutfak":"Duz Mutfak"}</td><td className="py-1 px-2">{k.width||240}x{k.depth||60}cm{k.kitchenType==="L"?" (L kanat: "+(k.lWing||60)+"cm)":""}</td><td className="py-1 px-2">{k.x},{k.y}cm | {k.rotation||0}°</td></tr>))}</tbody></table></div>}
                 {wcZones.length>0 && <div className="mb-3"><div className="font-bold text-gray-700 mb-1 text-sm">WC / BANYO</div><table className="w-full text-xs border-collapse"><tbody>{wcZones.map((wc,i)=>(<tr key={i} className="border-b border-gray-200"><td className="py-1 px-2">{wc.corner==="tl"?"Sol Ust":wc.corner==="tr"?"Sag Ust":wc.corner==="bl"?"Sol Alt":"Sag Alt"} Kose</td><td className="py-1 px-2">{wc.w}x{wc.h}cm</td></tr>))}</tbody></table></div>}
                 {markers.length>0 && <div className="mb-3"><div className="font-bold text-gray-700 mb-1 text-sm">ISARETLER</div><table className="w-full text-xs border-collapse"><tbody>{markers.map((m,i)=>{const mi=MARKER_TYPES.find(mt=>mt.id===m.markerType);return (<tr key={i} className="border-b border-gray-200"><td className="py-1 px-2 font-medium" style={{color:mi?.color}}>{mi?.name}</td><td className="py-1 px-2">{m.note||"-"}</td><td className="py-1 px-2">{m.x},{m.y}cm</td></tr>)})}</tbody></table></div>}
               </div>
