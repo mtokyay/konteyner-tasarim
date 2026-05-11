@@ -833,8 +833,8 @@
         const tl = combo && combo.enabled && combo.direction === "length" ? container.length * 2 : container.length;
         const hasVeranda = veranda && veranda.enabled;
         const verandaDepthPx = hasVeranda ? c2s(veranda.depth) : 0;
-        const pad = 55, cw = c2s(tw), cl = c2s(tl);
-        const vW = cl + pad * 2 + 40, vH = cw + pad * 2 + 50 + (hasVeranda ? verandaDepthPx + 20 : 0);
+        const pad = 80, cw = c2s(tw), cl = c2s(tl);
+        const vW = cl + pad * 2 + 60, vH = cw + pad * 2 + 70 + (hasVeranda ? verandaDepthPx + 30 : 0);
         const panelInfo = PANEL_TYPES.find(p => p.id === container.panelType);
 
         const topSegs = calcWallSegments(items, container.length, "top", container.width);
@@ -843,28 +843,28 @@
         const dimLine = (x1, y1, x2, y2, label, above, fontSize) => {
             const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
             const isVert = Math.abs(x1 - x2) < 2;
-            const off = above ? -8 : 8;
+            const off = above ? -12 : 14;
             return (
                 <g>
-                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#E53935" strokeWidth="1" />
-                    {isVert ? (<><line x1={x1 - 3} y1={y1} x2={x1 + 3} y2={y1} stroke="#E53935" strokeWidth="1" /><line x1={x2 - 3} y1={y2} x2={x2 + 3} y2={y2} stroke="#E53935" strokeWidth="1" /></>) : (<><line x1={x1} y1={y1 - 3} x2={x1} y2={y1 + 3} stroke="#E53935" strokeWidth="1" /><line x1={x2} y1={y2 - 3} x2={x2} y2={y2 + 3} stroke="#E53935" strokeWidth="1" /></>)}
-                    {isVert ? <text x={mx + off} y={my + 3} textAnchor="middle" fontSize={fontSize || "9"} fill="#C62828" fontWeight="500" transform={`rotate(90,${mx + off},${my + 3})`}>{label}</text> : <text x={mx} y={my + off} textAnchor="middle" fontSize={fontSize || "9"} fill="#C62828" fontWeight="500">{label}</text>}
+                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#E53935" strokeWidth="1.5" />
+                    {isVert ? (<><line x1={x1 - 5} y1={y1} x2={x1 + 5} y2={y1} stroke="#E53935" strokeWidth="1.5" /><line x1={x2 - 5} y1={y2} x2={x2 + 5} y2={y2} stroke="#E53935" strokeWidth="1.5" /></>) : (<><line x1={x1} y1={y1 - 5} x2={x1} y2={y1 + 5} stroke="#E53935" strokeWidth="1.5" /><line x1={x2} y1={y2 - 5} x2={x2} y2={y2 + 5} stroke="#E53935" strokeWidth="1.5" /></>)}
+                    {isVert ? <text x={mx + off} y={my + 4} textAnchor="middle" fontSize={fontSize || "14"} fill="#C62828" fontWeight="600" transform={`rotate(90,${mx + off},${my + 4})`}>{label}</text> : <text x={mx} y={my + off} textAnchor="middle" fontSize={fontSize || "14"} fill="#C62828" fontWeight="600">{label}</text>}
                 </g>
             );
         };
 
         return (
-            <svg viewBox={`0 0 ${vW} ${vH}`} style={{ width: "100%", maxHeight: "400px", border: "1px solid #e5e7eb", borderRadius: "6px", background: "white" }}>
+            <svg viewBox={`0 0 ${vW} ${vH}`} className="kroki-svg" style={{ width: "100%", maxHeight: "400px", border: "1px solid #e5e7eb", borderRadius: "6px", background: "white" }}>
                 <rect x={pad} y={pad} width={cl} height={cw} fill={panelInfo?.color || "#F0F0F0"} opacity="0.08" />
-                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="3.5" rx="1" />
+                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="4" rx="1" />
                 {/* Ust duvar segmentleri */}
                 {topSegs.map((seg, i) => {
                     const sx = c2s(seg.start) + pad, ex = c2s(seg.end) + pad;
-                    if (seg.type === "wall" && seg.len > 5) return <g key={"ts-" + i}>{dimLine(sx, pad - 12, ex, pad - 12, seg.len + " cm", true)}</g>;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"ts-" + i}>{dimLine(sx, pad - 18, ex, pad - 18, seg.len + " cm", true)}</g>;
                     if (seg.type === "item") return (
                         <g key={"ts-" + i}>
-                            <rect x={sx} y={pad - 2} width={c2s(seg.len)} height="4" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.7" rx="1" />
-                            <text x={(sx + ex) / 2} y={pad - 15} textAnchor="middle" fontSize="8" fill="#555">{seg.item.type === "door" ? "K" : seg.item.type === "window" ? "P" : "Pr"} {seg.len}</text>
+                            <rect x={sx} y={pad - 3} width={c2s(seg.len)} height="6" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.7" rx="1" />
+                            <text x={(sx + ex) / 2} y={pad - 22} textAnchor="middle" fontSize="12" fill="#555" fontWeight="500">{seg.item.type === "door" ? "K" : seg.item.type === "window" ? "P" : "Pr"} {seg.len}</text>
                         </g>
                     );
                     return null;
@@ -872,8 +872,8 @@
                 {/* Alt duvar segmentleri */}
                 {botSegs.map((seg, i) => {
                     const sx = c2s(seg.start) + pad, ex = c2s(seg.end) + pad;
-                    if (seg.type === "wall" && seg.len > 5) return <g key={"bs-" + i}>{dimLine(sx, pad + cw + 12, ex, pad + cw + 12, seg.len + " cm", false)}</g>;
-                    if (seg.type === "item") return <g key={"bs-" + i}><rect x={sx} y={pad + cw - 2} width={c2s(seg.len)} height="4" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.7" rx="1" /></g>;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"bs-" + i}>{dimLine(sx, pad + cw + 18, ex, pad + cw + 18, seg.len + " cm", false)}</g>;
+                    if (seg.type === "item") return <g key={"bs-" + i}><rect x={sx} y={pad + cw - 3} width={c2s(seg.len)} height="6" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.7" rx="1" /></g>;
                     return null;
                 })}
                 {/* WC bolgeleri */}
@@ -881,9 +881,9 @@
                     const x = c2s(wc.x) + pad, y = c2s(wc.y) + pad, w = c2s(wc.w), h = c2s(wc.h);
                     return (
                         <g key={"dwc-" + i}>
-                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.4" stroke="#00838F" strokeWidth="1" strokeDasharray="4,2" />
-                            <text x={x + w / 2} y={y + h / 2 + 3} textAnchor="middle" fontSize="8" fill="#00695C" fontWeight="600">WC</text>
-                            <text x={x + w / 2} y={y + h / 2 + 12} textAnchor="middle" fontSize="6" fill="#00897B">{wc.w}x{wc.h}</text>
+                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.4" stroke="#00838F" strokeWidth="1.5" strokeDasharray="6,3" />
+                            <text x={x + w / 2} y={y + h / 2 + 4} textAnchor="middle" fontSize="14" fill="#00695C" fontWeight="700">WC</text>
+                            <text x={x + w / 2} y={y + h / 2 + 18} textAnchor="middle" fontSize="11" fill="#00897B" fontWeight="500">{wc.w}x{wc.h}</text>
                         </g>
                     );
                 })}
@@ -895,9 +895,9 @@
                         const ex = c2s((p.startPos || 0) + (p.length || container.length)) + pad;
                         return (
                             <g key={"dp-" + i}>
-                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="2.5" />
+                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="3" />
                                 <line x1={sx} y1={py} x2={ex} y2={py} stroke="white" strokeWidth="1.5" />
-                                <text x={pad - 3} y={py + 3} textAnchor="end" fontSize="6" fill="#546E7A">{p.position}cm</text>
+                                <text x={pad - 5} y={py + 5} textAnchor="end" fontSize="11" fill="#546E7A" fontWeight="500">{p.position}cm</text>
                             </g>
                         );
                     }
@@ -906,9 +906,9 @@
                     const ey = c2s((p.startPos || 0) + (p.length || container.width)) + pad;
                     return (
                         <g key={"dp-" + i}>
-                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="2.5" />
+                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="3" />
                             <line x1={px} y1={sy} x2={px} y2={ey} stroke="white" strokeWidth="1.5" />
-                            <text x={px} y={pad - 3} textAnchor="middle" fontSize="6" fill="#546E7A">{p.position}cm</text>
+                            <text x={px} y={pad - 5} textAnchor="middle" fontSize="11" fill="#546E7A" fontWeight="500">{p.position}cm</text>
                         </g>
                     );
                 })}
@@ -920,11 +920,11 @@
                     const kh = c2s(rot === 90 || rot === 270 ? (k.width || 240) : (k.depth || 60));
                     return (
                         <g key={"dkitchen-" + ki}>
-                            <rect x={kx} y={ky} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />
-                            <line x1={kx + 2} y1={ky + 2} x2={kx + kw - 2} y2={ky + kh - 2} stroke="#A1887F" strokeWidth="0.5" opacity="0.5" />
-                            <line x1={kx + kw - 2} y1={ky + 2} x2={kx + 2} y2={ky + kh - 2} stroke="#A1887F" strokeWidth="0.5" opacity="0.5" />
-                            <text x={kx + kw / 2} y={ky + kh / 2 + 3} textAnchor="middle" fontSize="7" fill="#5D4037" fontWeight="600">Mutfak</text>
-                            <text x={kx + kw / 2} y={ky + kh / 2 + 10} textAnchor="middle" fontSize="6" fill="#8D6E63">{k.width || 240}x{k.depth || 60}</text>
+                            <rect x={kx} y={ky} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="2" rx="1" />
+                            <line x1={kx + 3} y1={ky + 3} x2={kx + kw - 3} y2={ky + kh - 3} stroke="#A1887F" strokeWidth="0.6" opacity="0.5" />
+                            <line x1={kx + kw - 3} y1={ky + 3} x2={kx + 3} y2={ky + kh - 3} stroke="#A1887F" strokeWidth="0.6" opacity="0.5" />
+                            <text x={kx + kw / 2} y={ky + kh / 2 + 4} textAnchor="middle" fontSize="12" fill="#5D4037" fontWeight="700">Mutfak</text>
+                            <text x={kx + kw / 2} y={ky + kh / 2 + 16} textAnchor="middle" fontSize="10" fill="#8D6E63" fontWeight="500">{k.width || 240}x{k.depth || 60}</text>
                         </g>
                     );
                 })}
@@ -935,25 +935,24 @@
                     const vy = veranda.position === "front" ? pad + cw : pad - vd;
                     return (
                         <g>
-                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="1.5" strokeDasharray="6,3" rx="2"/>
+                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="2" strokeDasharray="8,4" rx="2"/>
                             {[0,1,2,3].map(i=>{
                                 const cx = vx + i * (vw / 3);
                                 const cy = veranda.position === "front" ? vy + vd : vy;
-                                return <rect key={"vc-"+i} x={cx-3} y={cy-3} width={6} height={6} fill="#795548" stroke="#5D4037" strokeWidth="0.5" rx="1"/>;
+                                return <rect key={"vc-"+i} x={cx-4} y={cy-4} width={8} height={8} fill="#795548" stroke="#5D4037" strokeWidth="0.8" rx="1"/>;
                             })}
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 3} textAnchor="middle" fontSize="9" fill="#2E7D32" fontWeight="600">VERANDA</text>
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 13} textAnchor="middle" fontSize="7" fill="#4CAF50">{veranda.width}x{veranda.depth} cm ({(veranda.width * veranda.depth / 10000).toFixed(1)} m\u00B2)</text>
-                            {/* Veranda olcu cizgileri */}
-                            {dimLine(vx, vy + vd + 8, vx + vw, vy + vd + 8, veranda.width + " cm", false, "8")}
-                            {dimLine(vx + vw + 8, vy, vx + vw + 8, vy + vd, veranda.depth + " cm", false, "8")}
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 4} textAnchor="middle" fontSize="14" fill="#2E7D32" fontWeight="700">VERANDA</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 18} textAnchor="middle" fontSize="11" fill="#4CAF50" fontWeight="500">{veranda.width}x{veranda.depth} cm ({(veranda.width * veranda.depth / 10000).toFixed(1)} m\u00B2)</text>
+                            {dimLine(vx, vy + vd + 12, vx + vw, vy + vd + 12, veranda.width + " cm", false, "12")}
+                            {dimLine(vx + vw + 12, vy, vx + vw + 12, vy + vd, veranda.depth + " cm", false, "12")}
                         </g>
                     );
                 })()}
                 {/* Ana olculer */}
-                <text x={pad + cl / 2} y={pad + cw + (hasVeranda && veranda.position === "front" ? verandaDepthPx + 40 : 30)} textAnchor="middle" fontSize="12" fill="#37474F" fontWeight="600">{tl} cm</text>
-                <text x={pad + cl + 20} y={pad + cw / 2 + 3} textAnchor="middle" fontSize="12" fill="#37474F" fontWeight="600" transform={`rotate(90,${pad + cl + 20},${pad + cw / 2 + 3})`}>{tw} cm</text>
-                <text x={pad + cl / 2} y={pad + cw / 2} textAnchor="middle" fontSize="13" fill="#37474F" opacity="0.12" fontWeight="600">{(tw * tl / 10000).toFixed(1)} m\u00B2{hasVeranda ? " + " + (veranda.width * veranda.depth / 10000).toFixed(1) + " m\u00B2" : ""}</text>
-                <text x={pad} y={vH - 4} fontSize="9" fill="#999">Duvar Olculeri Krokisi</text>
+                <text x={pad + cl / 2} y={pad + cw + (hasVeranda && veranda.position === "front" ? verandaDepthPx + 50 : 40)} textAnchor="middle" fontSize="18" fill="#37474F" fontWeight="700">{tl} cm</text>
+                <text x={pad + cl + 30} y={pad + cw / 2 + 4} textAnchor="middle" fontSize="18" fill="#37474F" fontWeight="700" transform={`rotate(90,${pad + cl + 30},${pad + cw / 2 + 4})`}>{tw} cm</text>
+                <text x={pad + cl / 2} y={pad + cw / 2} textAnchor="middle" fontSize="18" fill="#37474F" opacity="0.15" fontWeight="700">{(tw * tl / 10000).toFixed(1)} m\u00B2{hasVeranda ? " + " + (veranda.width * veranda.depth / 10000).toFixed(1) + " m\u00B2" : ""}</text>
+                <text x={pad} y={vH - 6} fontSize="12" fill="#999">Duvar Olculeri Krokisi</text>
             </svg>
         );
     }
@@ -964,12 +963,12 @@
         const tl = combo && combo.enabled && combo.direction === "length" ? container.length * 2 : container.length;
         const hasVeranda = veranda && veranda.enabled;
         const verandaDepthPx = hasVeranda ? c2s(veranda.depth) : 0;
-        const pad = 35, cw = c2s(tw), cl = c2s(tl);
-        const vW = cl + pad * 2 + 20, vH = cw + pad * 2 + 30 + (hasVeranda ? verandaDepthPx + 20 : 0);
+        const pad = 60, cw = c2s(tw), cl = c2s(tl);
+        const vW = cl + pad * 2 + 30, vH = cw + pad * 2 + 40 + (hasVeranda ? verandaDepthPx + 25 : 0);
         const panelInfo = PANEL_TYPES.find(p => p.id === container.panelType);
 
         return (
-            <svg viewBox={`0 0 ${vW} ${vH}`} style={{ width: "100%", maxHeight: "400px", border: "1px solid #e5e7eb", borderRadius: "6px", background: "white" }}>
+            <svg viewBox={`0 0 ${vW} ${vH}`} className="kroki-svg" style={{ width: "100%", maxHeight: "400px", border: "1px solid #e5e7eb", borderRadius: "6px", background: "white" }}>
                 <defs>
                     <pattern id="pptile2" width="14" height="14" patternUnits="userSpaceOnUse">
                         <rect width="14" height="14" fill="#E0F2F1" />
@@ -978,15 +977,15 @@
                     </pattern>
                 </defs>
                 <rect x={pad} y={pad} width={cl} height={cw} fill={panelInfo?.color || "#F0F0F0"} opacity="0.08" />
-                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="3" rx="1" />
+                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="4" rx="1" />
                 {/* WC */}
                 {wcZones.map((wc, i) => {
                     const x = c2s(wc.x) + pad, y = c2s(wc.y) + pad, w = c2s(wc.w), h = c2s(wc.h);
                     return (
                         <g key={"pwc2-" + i}>
-                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.5" stroke="#00838F" strokeWidth="1.5" strokeDasharray="4,2" />
+                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.5" stroke="#00838F" strokeWidth="1.5" strokeDasharray="6,3" />
                             <rect x={x} y={y} width={w} height={h} fill="url(#pptile2)" opacity="0.3" />
-                            <text x={x + w / 2} y={y + h / 2 + 3} textAnchor="middle" fontSize="8" fill="#00695C" fontWeight="600">WC</text>
+                            <text x={x + w / 2} y={y + h / 2 + 4} textAnchor="middle" fontSize="14" fill="#00695C" fontWeight="700">WC</text>
                         </g>
                     );
                 })}
@@ -998,9 +997,9 @@
                         const ex = c2s((p.startPos || 0) + (p.length || container.length)) + pad;
                         return (
                             <g key={"pp2-" + i}>
-                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="3" />
+                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="3.5" />
                                 <line x1={sx} y1={py} x2={ex} y2={py} stroke="white" strokeWidth="1.5" />
-                                <text x={pad - 3} y={py + 3} textAnchor="end" fontSize="9" fill="#546E7A">{p.label}</text>
+                                <text x={pad - 5} y={py + 4} textAnchor="end" fontSize="12" fill="#546E7A" fontWeight="500">{p.label}</text>
                             </g>
                         );
                     }
@@ -1009,9 +1008,9 @@
                     const ey = c2s((p.startPos || 0) + (p.length || container.width)) + pad;
                     return (
                         <g key={"pp2-" + i}>
-                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="3" />
+                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="3.5" />
                             <line x1={px} y1={sy} x2={px} y2={ey} stroke="white" strokeWidth="1.5" />
-                            <text x={px} y={pad - 3} textAnchor="middle" fontSize="9" fill="#546E7A">{p.label}</text>
+                            <text x={px} y={pad - 5} textAnchor="middle" fontSize="12" fill="#546E7A" fontWeight="500">{p.label}</text>
                         </g>
                     );
                 })}
@@ -1036,10 +1035,10 @@
                         }
                         return (
                             <g key={item.id}>
-                                <rect x={x} y={y} width={dw} height={dh} fill="white" stroke="#555" strokeWidth="1" />
-                                <path d={arcPath} fill="none" stroke="#aaa" strokeWidth="0.7" strokeDasharray="3,2" />
-                                <text x={x + dw / 2} y={y + dh + 8} textAnchor="middle" fontSize="7.5" fill="#555">{di?.name}</text>
-                                <text x={x + dw / 2} y={y + dh + 14} textAnchor="middle" fontSize="6.5" fill="#888">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                                <rect x={x} y={y} width={dw} height={dh} fill="white" stroke="#555" strokeWidth="1.5" />
+                                <path d={arcPath} fill="none" stroke="#aaa" strokeWidth="1" strokeDasharray="4,3" />
+                                <text x={x + dw / 2} y={y + dh + 12} textAnchor="middle" fontSize="11" fill="#555" fontWeight="600">{di?.name}</text>
+                                <text x={x + dw / 2} y={y + dh + 23} textAnchor="middle" fontSize="10" fill="#888">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
                             </g>
                         );
                     }
@@ -1048,19 +1047,19 @@
                         const od = item.openDir || "ic";
                         return (
                             <g key={item.id}>
-                                <rect x={x} y={y} width={ww} height={wh} fill="#E3F2FD" stroke="#1565C0" strokeWidth="1" />
-                                <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="0.6" />
-                                <text x={x + ww / 2} y={y + wh + 8} textAnchor="middle" fontSize="7.5" fill="#555">{item.width}x{item.windowHeight}</text>
-                                <text x={x + ww / 2} y={y + wh + 14} textAnchor="middle" fontSize="6.5" fill="#888">h:{item.elevation || 90} | {od === "dis" ? "Disa" : "Ice"}</text>
+                                <rect x={x} y={y} width={ww} height={wh} fill="#E3F2FD" stroke="#1565C0" strokeWidth="1.5" />
+                                <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="0.8" />
+                                <text x={x + ww / 2} y={y + wh + 12} textAnchor="middle" fontSize="11" fill="#555" fontWeight="600">{item.width}x{item.windowHeight}</text>
+                                <text x={x + ww / 2} y={y + wh + 23} textAnchor="middle" fontSize="10" fill="#888">h:{item.elevation || 90} | {od === "dis" ? "Disa" : "Ice"}</text>
                             </g>
                         );
                     }
                     if (item.type === "outlet") {
                         return (
                             <g key={item.id}>
-                                <circle cx={x + 5} cy={y + 5} r={5} fill="#FFF8E1" stroke="#FF9800" strokeWidth="0.8" />
-                                <text x={x + 5} y={y + 8} textAnchor="middle" fontSize="7.5" fill="#E65100" fontWeight="bold">P</text>
-                                <text x={x + 5} y={y + 17} textAnchor="middle" fontSize="6.5" fill="#F57C00">h:{item.elevation || 40}</text>
+                                <circle cx={x + 7} cy={y + 7} r={7} fill="#FFF8E1" stroke="#FF9800" strokeWidth="1.2" />
+                                <text x={x + 7} y={y + 11} textAnchor="middle" fontSize="11" fill="#E65100" fontWeight="bold">P</text>
+                                <text x={x + 7} y={y + 24} textAnchor="middle" fontSize="10" fill="#F57C00" fontWeight="500">h:{item.elevation || 40}</text>
                             </g>
                         );
                     }
@@ -1068,9 +1067,9 @@
                         const mi = MARKER_TYPES.find(m => m.id === item.markerType) || MARKER_TYPES[5];
                         return (
                             <g key={item.id}>
-                                <circle cx={x + 7} cy={y + 7} r={6} fill={mi.color} opacity="0.85" />
-                                <text x={x + 7} y={y + 10} textAnchor="middle" fontSize="9" fill="white" fontWeight="bold">{mi.icon}</text>
-                                <text x={x + 7} y={y + 19} textAnchor="middle" fontSize="6.5" fill="#555">{item.note || mi.name}</text>
+                                <circle cx={x + 9} cy={y + 9} r={8} fill={mi.color} opacity="0.85" />
+                                <text x={x + 9} y={y + 13} textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">{mi.icon}</text>
+                                <text x={x + 9} y={y + 26} textAnchor="middle" fontSize="10" fill="#555" fontWeight="500">{item.note || mi.name}</text>
                             </g>
                         );
                     }
@@ -1082,20 +1081,15 @@
                         const lw = c2s(item.lWing || 60);
                         return (
                             <g key={item.id}>
-                                <rect x={x} y={y} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />
-                                {/* Hatch */}
-                                <line x1={x + 2} y1={y + 2} x2={x + kw - 2} y2={y + kh - 2} stroke="#A1887F" strokeWidth="0.4" opacity="0.4" />
-                                <line x1={x + kw - 2} y1={y + 2} x2={x + 2} y2={y + kh - 2} stroke="#A1887F" strokeWidth="0.4" opacity="0.4" />
-                                {/* Sink */}
-                                <ellipse cx={x + kw * 0.3} cy={y + kh / 2} rx={Math.min(kw * 0.12, 8)} ry={Math.min(kh * 0.3, 6)} fill="#B3E5FC" stroke="#0288D1" strokeWidth="0.5" />
-                                {/* Stove circles */}
-                                <circle cx={x + kw * 0.7} cy={y + kh * 0.35} r={3} fill="none" stroke="#F44336" strokeWidth="0.5" />
-                                <circle cx={x + kw * 0.85} cy={y + kh * 0.65} r={3} fill="none" stroke="#F44336" strokeWidth="0.5" />
-                                {/* L wing */}
-                                {isL && rot === 0 && <rect x={x} y={y + kh} width={c2s(item.depth || 60)} height={lw} fill="#EFEBE9" stroke="#795548" strokeWidth="1" rx="1" />}
-                                {isL && rot === 90 && <rect x={x + kw} y={y} width={lw} height={c2s(item.depth || 60)} fill="#EFEBE9" stroke="#795548" strokeWidth="1" rx="1" />}
-                                {/* Label */}
-                                <text x={x + kw / 2} y={y + kh + (isL && rot === 0 ? lw + 10 : 10)} textAnchor="middle" fontSize="7" fill="#5D4037" fontWeight="600">{isL ? "L " : ""}Mutfak {item.width || 240}x{item.depth || 60}</text>
+                                <rect x={x} y={y} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="2" rx="1" />
+                                <line x1={x + 3} y1={y + 3} x2={x + kw - 3} y2={y + kh - 3} stroke="#A1887F" strokeWidth="0.5" opacity="0.4" />
+                                <line x1={x + kw - 3} y1={y + 3} x2={x + 3} y2={y + kh - 3} stroke="#A1887F" strokeWidth="0.5" opacity="0.4" />
+                                <ellipse cx={x + kw * 0.3} cy={y + kh / 2} rx={Math.min(kw * 0.12, 10)} ry={Math.min(kh * 0.3, 8)} fill="#B3E5FC" stroke="#0288D1" strokeWidth="0.7" />
+                                <circle cx={x + kw * 0.7} cy={y + kh * 0.35} r={4} fill="none" stroke="#F44336" strokeWidth="0.7" />
+                                <circle cx={x + kw * 0.85} cy={y + kh * 0.65} r={4} fill="none" stroke="#F44336" strokeWidth="0.7" />
+                                {isL && rot === 0 && <rect x={x} y={y + kh} width={c2s(item.depth || 60)} height={lw} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />}
+                                {isL && rot === 90 && <rect x={x + kw} y={y} width={lw} height={c2s(item.depth || 60)} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />}
+                                <text x={x + kw / 2} y={y + kh + (isL && rot === 0 ? lw + 14 : 14)} textAnchor="middle" fontSize="11" fill="#5D4037" fontWeight="700">{isL ? "L " : ""}Mutfak {item.width || 240}x{item.depth || 60}</text>
                             </g>
                         );
                     }
@@ -1108,18 +1102,18 @@
                     const vy = veranda.position === "front" ? pad + cw : pad - vd;
                     return (
                         <g>
-                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="1.5" strokeDasharray="6,3" rx="2"/>
+                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="2" strokeDasharray="8,4" rx="2"/>
                             {[0,1,2,3].map(i=>{
                                 const cx = vx + i * (vw / 3);
                                 const cy = veranda.position === "front" ? vy + vd : vy;
-                                return <rect key={"vc2-"+i} x={cx-3} y={cy-3} width={6} height={6} fill="#795548" stroke="#5D4037" strokeWidth="0.5" rx="1"/>;
+                                return <rect key={"vc2-"+i} x={cx-4} y={cy-4} width={8} height={8} fill="#795548" stroke="#5D4037" strokeWidth="0.8" rx="1"/>;
                             })}
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 3} textAnchor="middle" fontSize="9" fill="#2E7D32" fontWeight="600">VERANDA</text>
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 13} textAnchor="middle" fontSize="7" fill="#4CAF50">{veranda.width}x{veranda.depth} cm</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 4} textAnchor="middle" fontSize="14" fill="#2E7D32" fontWeight="700">VERANDA</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 18} textAnchor="middle" fontSize="11" fill="#4CAF50" fontWeight="500">{veranda.width}x{veranda.depth} cm</text>
                         </g>
                     );
                 })()}
-                <text x={pad + cl / 2} y={vH - 4} textAnchor="middle" fontSize="9" fill="#999">Detay Krokisi - Elemanlar ve Olculer</text>
+                <text x={pad + cl / 2} y={vH - 6} textAnchor="middle" fontSize="12" fill="#999">Detay Krokisi - Elemanlar ve Olculer</text>
             </svg>
         );
     }
@@ -1749,6 +1743,34 @@
         setPdfLoading(false);
       };
       // ---- SADECE KROKİ PDF ----
+      // SVG'yi dogrudan canvas'a cizme (html2canvas yerine — kayma/olcekleme sorunu olmaz)
+      const svgToCanvas=async(svgEl,targetW)=>{
+        const clone=svgEl.cloneNode(true);
+        clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+        // viewBox'tan aspect ratio al
+        const vb=svgEl.getAttribute("viewBox");
+        const [,, vbW, vbH]=vb?vb.split(/[\s,]+/).map(Number):[800,600,800,600];
+        const aspect=vbH/vbW;
+        const canvasW=targetW;
+        const canvasH=Math.round(canvasW*aspect);
+        clone.setAttribute("width",canvasW);
+        clone.setAttribute("height",canvasH);
+        clone.style.maxHeight="none";
+        clone.style.border="none";
+        const svgStr=new XMLSerializer().serializeToString(clone);
+        const blob=new Blob([svgStr],{type:"image/svg+xml;charset=utf-8"});
+        const url=URL.createObjectURL(blob);
+        const img=document.createElement("img");
+        await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url});
+        const cvs=document.createElement("canvas");
+        cvs.width=canvasW;cvs.height=canvasH;
+        const ctx=cvs.getContext("2d");
+        ctx.fillStyle="#ffffff";
+        ctx.fillRect(0,0,canvasW,canvasH);
+        ctx.drawImage(img,0,0,canvasW,canvasH);
+        URL.revokeObjectURL(url);
+        return cvs;
+      };
       const handleKrokiPdf=async()=>{
         setPdfLoading(true);
         try{
@@ -1758,63 +1780,53 @@
             jsPDFClass=getJsPDF();
           }
           if(!jsPDFClass) throw new Error("jsPDF yuklenemedi");
-          if(!getH2C()){
-            await loadScript(["https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js","https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"]);
-          }
-          if(!getH2C()) throw new Error("html2canvas yuklenemedi");
           const pdf=new jsPDFClass({orientation:"landscape",unit:"mm",format:"a4"});
           const pW=pdf.internal.pageSize.getWidth();
           const pH=pdf.internal.pageSize.getHeight();
-          const margin=8;
-          // Title
-          pdf.setFontSize(14);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
-          pdf.text("OLCULU KAT PLANI KROKISI",margin,12);
-          pdf.setFontSize(9);pdf.setFont(undefined,'normal');pdf.setTextColor(120);
+          const margin=10;
           const tw2=combo&&combo.enabled&&combo.direction==="width"?container.width*2:container.width;
           const tl2=combo&&combo.enabled&&combo.direction==="length"?container.length*2:container.length;
-          pdf.text(container.width+"x"+container.length+"x"+container.height+" cm | "+(tw2*tl2/10000).toFixed(1)+" m²"+(veranda&&veranda.enabled?" + Veranda "+veranda.width+"x"+veranda.depth+"cm ("+(veranda.width*veranda.depth/10000).toFixed(1)+" m²)":"")+" | "+(pi?.name||"")+" | "+(ri?.name||""),margin,18);
-          // Render the kroki SVG sections to canvas
-          const krokiSection=document.querySelector('[data-pdf-section="floorplan-dims"]');
-          const detailSection=document.querySelector('[data-pdf-section="floorplan-detail"]');
-          const h2c=getH2C();
-          if(krokiSection){
-            const restoreSvgs=await convertSvgsToImages(krokiSection);
-            await new Promise(r=>setTimeout(r,80));
-            const canvas=await h2c(krokiSection,{scale:4,useCORS:true,backgroundColor:"#ffffff",logging:false,allowTaint:true});
-            restoreSvgs();
+          const infoText=container.width+"x"+container.length+"x"+container.height+" cm | "+(tw2*tl2/10000).toFixed(1)+" m²"+(veranda&&veranda.enabled?" + Veranda "+veranda.width+"x"+veranda.depth+"cm ("+(veranda.width*veranda.depth/10000).toFixed(1)+" m²)":"")+" | "+(pi?.name||"")+" | "+(ri?.name||"");
+          // Sayfa 1: Olculu kroki
+          const krokiSvg=document.querySelector('[data-pdf-section="floorplan-dims"] .kroki-svg');
+          if(krokiSvg){
+            pdf.setFontSize(16);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
+            pdf.text("OLCULU KAT PLANI KROKISI",margin,14);
+            pdf.setFontSize(10);pdf.setFont(undefined,'normal');pdf.setTextColor(100);
+            pdf.text(infoText,margin,21);
+            const canvas=await svgToCanvas(krokiSvg,3600);
             const imgData=canvas.toDataURL("image/png");
-            const availH=pH-28-margin;
-            const imgW=pW-margin*2;
-            const imgH=(canvas.height*imgW)/canvas.width;
-            const finalH=Math.min(imgH,availH);
-            const finalW=(finalH<imgH)?(canvas.width*finalH)/canvas.height:imgW;
-            pdf.addImage(imgData,"PNG",margin+(pW-margin*2-finalW)/2,22,finalW,finalH);
+            const availW=pW-margin*2;
+            const availH=pH-30-margin;
+            const imgAspect=canvas.height/canvas.width;
+            let finalW=availW, finalH=availW*imgAspect;
+            if(finalH>availH){finalH=availH;finalW=finalH/imgAspect}
+            pdf.addImage(imgData,"PNG",margin+(availW-finalW)/2,26,finalW,finalH);
           }
-          if(detailSection){
+          // Sayfa 2: Detay krokisi
+          const detailSvg=document.querySelector('[data-pdf-section="floorplan-detail"] .kroki-svg');
+          if(detailSvg){
             pdf.addPage("a4","landscape");
-            pdf.setFontSize(14);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
-            pdf.text("DETAY KROKISI",margin,12);
-            pdf.setFontSize(9);pdf.setFont(undefined,'normal');pdf.setTextColor(120);
-            pdf.text("Kapi, Pencere, Mutfak, Priz konumlari",margin,18);
-            const restoreSvgs2=await convertSvgsToImages(detailSection);
-            await new Promise(r=>setTimeout(r,80));
-            const canvas2=await h2c(detailSection,{scale:4,useCORS:true,backgroundColor:"#ffffff",logging:false,allowTaint:true});
-            restoreSvgs2();
+            pdf.setFontSize(16);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
+            pdf.text("DETAY KROKISI",margin,14);
+            pdf.setFontSize(10);pdf.setFont(undefined,'normal');pdf.setTextColor(100);
+            pdf.text("Kapi, Pencere, Mutfak, Priz konumlari",margin,21);
+            const canvas2=await svgToCanvas(detailSvg,3600);
             const imgData2=canvas2.toDataURL("image/png");
-            const availH2=pH-28-margin;
-            const imgW2=pW-margin*2;
-            const imgH2=(canvas2.height*imgW2)/canvas2.width;
-            const finalH2=Math.min(imgH2,availH2);
-            const finalW2=(finalH2<imgH2)?(canvas2.width*finalH2)/canvas2.height:imgW2;
-            pdf.addImage(imgData2,"PNG",margin+(pW-margin*2-finalW2)/2,22,finalW2,finalH2);
+            const availW2=pW-margin*2;
+            const availH2=pH-30-margin;
+            const imgAspect2=canvas2.height/canvas2.width;
+            let finalW2=availW2, finalH2=availW2*imgAspect2;
+            if(finalH2>availH2){finalH2=availH2;finalW2=finalH2/imgAspect2}
+            pdf.addImage(imgData2,"PNG",margin+(availW2-finalW2)/2,26,finalW2,finalH2);
           }
-          // Footer on all pages
+          // Footer
           const totalPages=pdf.internal.getNumberOfPages();
           for(let i=1;i<=totalPages;i++){
             pdf.setPage(i);
-            pdf.setFontSize(7);pdf.setTextColor(150);pdf.setFont(undefined,'normal');
-            pdf.text("Tokyay Kereste - Kroki",margin,pH-3);
-            pdf.text(new Date().toLocaleDateString("tr-TR")+" | Sayfa "+i+"/"+totalPages,pW-margin,pH-3,{align:"right"});
+            pdf.setFontSize(8);pdf.setTextColor(150);pdf.setFont(undefined,'normal');
+            pdf.text("Tokyay Kereste - Kroki",margin,pH-4);
+            pdf.text(new Date().toLocaleDateString("tr-TR")+" | Sayfa "+i+"/"+totalPages,pW-margin,pH-4,{align:"right"});
           }
           pdf.save("TK-Kroki-"+Date.now().toString(36)+".pdf");
         }catch(err){console.error("Kroki PDF hatasi:",err);alert("Kroki PDF hatasi: "+err.message)}
