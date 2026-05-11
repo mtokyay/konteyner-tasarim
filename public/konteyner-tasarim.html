@@ -1512,7 +1512,7 @@
     }
 
     // ==================== PDF / PRINT VIEW ====================
-    function PrintView({container,items,partitions,wcZones,combo,veranda,onClose,autoKroki,onAutoKrokiDone}){
+    function PrintView({container,items,partitions,wcZones,combo,veranda,onClose,autoKroki,onAutoKrokiDone,krokiOrientation="auto"}){
       const pi=PANEL_TYPES.find(p=>p.id===container.panelType);
       const ri=ROOF_TYPES.find(r=>r.id===container.roofType);
       const rc=ROOF_COLORS.find(r=>r.id===container.roofColor);
@@ -1996,7 +1996,12 @@
             jsPDFClass=getJsPDF();
           }
           if(!jsPDFClass) throw new Error("jsPDF yuklenemedi");
-          const pdf=new jsPDFClass({orientation:"landscape",unit:"mm",format:"a4"});
+          // Orientation: auto-detect based on container aspect ratio
+          const cl2=combo&&combo.enabled&&combo.direction==="length"?container.length*2:container.length;
+          const cw2=combo&&combo.enabled&&combo.direction==="width"?container.width*2:container.width;
+          let orient=krokiOrientation;
+          if(orient==="auto"){orient=cl2/cw2>1.8?"portrait":"landscape"}
+          const pdf=new jsPDFClass({orientation:orient,unit:"mm",format:"a4"});
           const pW=pdf.internal.pageSize.getWidth();
           const pH=pdf.internal.pageSize.getHeight();
           const margin=10;
@@ -2022,7 +2027,7 @@
           // Sayfa 2: Detay krokisi
           const detailSvg=document.querySelector('[data-pdf-section="floorplan-detail"] .kroki-svg');
           if(detailSvg){
-            pdf.addPage("a4","landscape");
+            pdf.addPage("a4",orient);
             pdf.setFontSize(16);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
             pdf.text("DETAY KROKISI",margin,14);
             pdf.setFontSize(10);pdf.setFont(undefined,'normal');pdf.setTextColor(100);
@@ -2039,7 +2044,7 @@
           // Sayfa 3: Birlesik kroki
           const combinedSvg=document.querySelector('[data-pdf-section="floorplan-combined"] .kroki-svg');
           if(combinedSvg){
-            pdf.addPage("a4","landscape");
+            pdf.addPage("a4",orient);
             pdf.setFontSize(16);pdf.setTextColor(55,71,79);pdf.setFont(undefined,'bold');
             pdf.text("BIRLESIK KROKI - OLCULU KAT PLANI + DETAY",margin,14);
             pdf.setFontSize(10);pdf.setFont(undefined,'normal');pdf.setTextColor(100);
@@ -2187,6 +2192,8 @@
       const [showExport,setShowExport]=useState(false);
       const [showPrint,setShowPrint]=useState(false);
       const [autoKroki,setAutoKroki]=useState(false);
+      const [krokiOrientation,setKrokiOrientation]=useState("auto");
+      const [showKrokiMenu,setShowKrokiMenu]=useState(false);
       const [viewMode,setViewMode]=useState("2d");
       const [mousePos,setMousePos]=useState({x:0,y:0});
       const [isDragging,setIsDragging]=useState(false);
@@ -2500,10 +2507,26 @@
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 {et("actions.export")}
               </button>
-              <button onClick={()=>{setAutoKroki(true);setShowPrint(true)}} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>
-                Kroki PDF
-              </button>
+              <div className="relative">
+                <div className="flex">
+                  <button onClick={()=>{setShowKrokiMenu(false);setAutoKroki(true);setShowPrint(true)}} className="px-3 py-1.5 bg-blue-600 text-white rounded-l-lg text-xs font-medium hover:bg-blue-700 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>
+                    Kroki PDF
+                  </button>
+                  <button onClick={()=>setShowKrokiMenu(!showKrokiMenu)} className="px-1.5 py-1.5 bg-blue-700 text-white rounded-r-lg text-xs font-medium hover:bg-blue-800 border-l border-blue-500">
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                </div>
+                {showKrokiMenu && <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 min-w-[160px]">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wide">Sayfa Yonu</div>
+                  {[["auto","Otomatik"],["landscape","Yatay (Landscape)"],["portrait","Dikey (Portrait)"]].map(([val,label])=>(
+                    <button key={val} onClick={()=>{setKrokiOrientation(val);setShowKrokiMenu(false)}} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 flex items-center gap-2 ${krokiOrientation===val?"text-blue-700 font-bold bg-blue-50":"text-gray-700"}`}>
+                      {krokiOrientation===val?<svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>:<span className="w-3.5"/>}
+                      {label}
+                    </button>
+                  ))}
+                </div>}
+              </div>
             </div>
           </div>
           <div className="flex flex-row flex-1 overflow-hidden min-w-0" style={{flexDirection:"row"}}>
@@ -2805,7 +2828,7 @@
               </div>
             </div>
           )}
-          {showPrint && <PrintView container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda} onClose={()=>{setShowPrint(false);setAutoKroki(false)}} autoKroki={autoKroki} onAutoKrokiDone={()=>{setAutoKroki(false);setShowPrint(false)}}/>}
+          {showPrint && <PrintView container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda} onClose={()=>{setShowPrint(false);setAutoKroki(false)}} autoKroki={autoKroki} onAutoKrokiDone={()=>{setAutoKroki(false);setShowPrint(false)}} krokiOrientation={krokiOrientation}/>}
         </div>
       );
     }
