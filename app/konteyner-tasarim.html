@@ -843,12 +843,13 @@
         const dimLine = (x1, y1, x2, y2, label, above, fontSize) => {
             const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
             const isVert = Math.abs(x1 - x2) < 2;
-            const off = above ? -12 : 14;
+            const off = above ? -18 : 22;
+            const fs = fontSize || "32";
             return (
                 <g>
-                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#E53935" strokeWidth="1.5" />
-                    {isVert ? (<><line x1={x1 - 5} y1={y1} x2={x1 + 5} y2={y1} stroke="#E53935" strokeWidth="1.5" /><line x1={x2 - 5} y1={y2} x2={x2 + 5} y2={y2} stroke="#E53935" strokeWidth="1.5" /></>) : (<><line x1={x1} y1={y1 - 5} x2={x1} y2={y1 + 5} stroke="#E53935" strokeWidth="1.5" /><line x1={x2} y1={y2 - 5} x2={x2} y2={y2 + 5} stroke="#E53935" strokeWidth="1.5" /></>)}
-                    {isVert ? <text x={mx + off} y={my + 4} textAnchor="middle" fontSize={fontSize || "14"} fill="#C62828" fontWeight="600" transform={`rotate(90,${mx + off},${my + 4})`}>{label}</text> : <text x={mx} y={my + off} textAnchor="middle" fontSize={fontSize || "14"} fill="#C62828" fontWeight="600">{label}</text>}
+                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#B71C1C" strokeWidth="2.5" />
+                    {isVert ? (<><line x1={x1 - 7} y1={y1} x2={x1 + 7} y2={y1} stroke="#B71C1C" strokeWidth="2.5" /><line x1={x2 - 7} y1={y2} x2={x2 + 7} y2={y2} stroke="#B71C1C" strokeWidth="2.5" /></>) : (<><line x1={x1} y1={y1 - 7} x2={x1} y2={y1 + 7} stroke="#B71C1C" strokeWidth="2.5" /><line x1={x2} y1={y2 - 7} x2={x2} y2={y2 + 7} stroke="#B71C1C" strokeWidth="2.5" /></>)}
+                    {isVert ? <text x={mx + off} y={my + 5} textAnchor="middle" fontSize={fs} fill="#B71C1C" fontWeight="800" transform={`rotate(90,${mx + off},${my + 5})`}>{label}</text> : <text x={mx} y={my + off} textAnchor="middle" fontSize={fs} fill="#B71C1C" fontWeight="800">{label}</text>}
                 </g>
             );
         };
@@ -856,15 +857,15 @@
         return (
             <svg viewBox={`0 0 ${vW} ${vH}`} className="kroki-svg" style={{ width: "100%", maxHeight: "400px", border: "1px solid #e5e7eb", borderRadius: "6px", background: "white" }}>
                 <rect x={pad} y={pad} width={cl} height={cw} fill={panelInfo?.color || "#F0F0F0"} opacity="0.08" />
-                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="4" rx="1" />
+                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#263238" strokeWidth="5" rx="1" />
                 {/* Ust duvar segmentleri */}
                 {topSegs.map((seg, i) => {
                     const sx = c2s(seg.start) + pad, ex = c2s(seg.end) + pad;
-                    if (seg.type === "wall" && seg.len > 5) return <g key={"ts-" + i}>{dimLine(sx, pad - 18, ex, pad - 18, seg.len + " cm", true)}</g>;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"ts-" + i}>{dimLine(sx, pad - 25, ex, pad - 25, seg.len + " cm", true)}</g>;
                     if (seg.type === "item") return (
                         <g key={"ts-" + i}>
-                            <rect x={sx} y={pad - 3} width={c2s(seg.len)} height="6" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.7" rx="1" />
-                            <text x={(sx + ex) / 2} y={pad - 22} textAnchor="middle" fontSize="12" fill="#555" fontWeight="500">{seg.item.type === "door" ? "K" : seg.item.type === "window" ? "P" : "Pr"} {seg.len}</text>
+                            <rect x={sx} y={pad - 4} width={c2s(seg.len)} height="8" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" />
+                            <text x={(sx + ex) / 2} y={pad - 30} textAnchor="middle" fontSize="24" fill="#333" fontWeight="700">{seg.item.type === "door" ? "K" : seg.item.type === "window" ? "P" : "Pr"} {seg.len}</text>
                         </g>
                     );
                     return null;
@@ -872,8 +873,8 @@
                 {/* Alt duvar segmentleri */}
                 {botSegs.map((seg, i) => {
                     const sx = c2s(seg.start) + pad, ex = c2s(seg.end) + pad;
-                    if (seg.type === "wall" && seg.len > 5) return <g key={"bs-" + i}>{dimLine(sx, pad + cw + 18, ex, pad + cw + 18, seg.len + " cm", false)}</g>;
-                    if (seg.type === "item") return <g key={"bs-" + i}><rect x={sx} y={pad + cw - 3} width={c2s(seg.len)} height="6" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.7" rx="1" /></g>;
+                    if (seg.type === "wall" && seg.len > 5) return <g key={"bs-" + i}>{dimLine(sx, pad + cw + 25, ex, pad + cw + 25, seg.len + " cm", false)}</g>;
+                    if (seg.type === "item") return <g key={"bs-" + i}><rect x={sx} y={pad + cw - 4} width={c2s(seg.len)} height="8" fill={seg.item.type === "door" ? "#795548" : seg.item.type === "window" ? "#1565C0" : "#FF9800"} opacity="0.8" rx="2" /></g>;
                     return null;
                 })}
                 {/* WC bolgeleri */}
@@ -881,9 +882,9 @@
                     const x = c2s(wc.x) + pad, y = c2s(wc.y) + pad, w = c2s(wc.w), h = c2s(wc.h);
                     return (
                         <g key={"dwc-" + i}>
-                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.4" stroke="#00838F" strokeWidth="1.5" strokeDasharray="6,3" />
-                            <text x={x + w / 2} y={y + h / 2 + 4} textAnchor="middle" fontSize="14" fill="#00695C" fontWeight="700">WC</text>
-                            <text x={x + w / 2} y={y + h / 2 + 18} textAnchor="middle" fontSize="11" fill="#00897B" fontWeight="500">{wc.w}x{wc.h}</text>
+                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.4" stroke="#00838F" strokeWidth="2" strokeDasharray="8,4" />
+                            <text x={x + w / 2} y={y + h / 2 + 5} textAnchor="middle" fontSize="26" fill="#00695C" fontWeight="800">WC</text>
+                            <text x={x + w / 2} y={y + h / 2 + 28} textAnchor="middle" fontSize="20" fill="#00897B" fontWeight="600">{wc.w}x{wc.h}</text>
                         </g>
                     );
                 })}
@@ -895,9 +896,9 @@
                         const ex = c2s((p.startPos || 0) + (p.length || container.length)) + pad;
                         return (
                             <g key={"dp-" + i}>
-                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="3" />
-                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="white" strokeWidth="1.5" />
-                                <text x={pad - 5} y={py + 5} textAnchor="end" fontSize="11" fill="#546E7A" fontWeight="500">{p.position}cm</text>
+                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="4" />
+                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="white" strokeWidth="2" />
+                                <text x={pad - 8} y={py + 7} textAnchor="end" fontSize="20" fill="#37474F" fontWeight="700">{p.position}cm</text>
                             </g>
                         );
                     }
@@ -906,9 +907,9 @@
                     const ey = c2s((p.startPos || 0) + (p.length || container.width)) + pad;
                     return (
                         <g key={"dp-" + i}>
-                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="3" />
-                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="white" strokeWidth="1.5" />
-                            <text x={px} y={pad - 5} textAnchor="middle" fontSize="11" fill="#546E7A" fontWeight="500">{p.position}cm</text>
+                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="4" />
+                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="white" strokeWidth="2" />
+                            <text x={px} y={pad - 8} textAnchor="middle" fontSize="20" fill="#37474F" fontWeight="700">{p.position}cm</text>
                         </g>
                     );
                 })}
@@ -920,11 +921,11 @@
                     const kh = c2s(rot === 90 || rot === 270 ? (k.width || 240) : (k.depth || 60));
                     return (
                         <g key={"dkitchen-" + ki}>
-                            <rect x={kx} y={ky} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="2" rx="1" />
-                            <line x1={kx + 3} y1={ky + 3} x2={kx + kw - 3} y2={ky + kh - 3} stroke="#A1887F" strokeWidth="0.6" opacity="0.5" />
-                            <line x1={kx + kw - 3} y1={ky + 3} x2={kx + 3} y2={ky + kh - 3} stroke="#A1887F" strokeWidth="0.6" opacity="0.5" />
-                            <text x={kx + kw / 2} y={ky + kh / 2 + 4} textAnchor="middle" fontSize="12" fill="#5D4037" fontWeight="700">Mutfak</text>
-                            <text x={kx + kw / 2} y={ky + kh / 2 + 16} textAnchor="middle" fontSize="10" fill="#8D6E63" fontWeight="500">{k.width || 240}x{k.depth || 60}</text>
+                            <rect x={kx} y={ky} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="2.5" rx="2" />
+                            <line x1={kx + 4} y1={ky + 4} x2={kx + kw - 4} y2={ky + kh - 4} stroke="#A1887F" strokeWidth="0.8" opacity="0.5" />
+                            <line x1={kx + kw - 4} y1={ky + 4} x2={kx + 4} y2={ky + kh - 4} stroke="#A1887F" strokeWidth="0.8" opacity="0.5" />
+                            <text x={kx + kw / 2} y={ky + kh / 2 + 5} textAnchor="middle" fontSize="22" fill="#4E342E" fontWeight="800">Mutfak</text>
+                            <text x={kx + kw / 2} y={ky + kh / 2 + 24} textAnchor="middle" fontSize="18" fill="#795548" fontWeight="600">{k.width || 240}x{k.depth || 60}</text>
                         </g>
                     );
                 })}
@@ -935,24 +936,24 @@
                     const vy = veranda.position === "front" ? pad + cw : pad - vd;
                     return (
                         <g>
-                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="2" strokeDasharray="8,4" rx="2"/>
+                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="2.5" strokeDasharray="10,5" rx="3"/>
                             {[0,1,2,3].map(i=>{
                                 const cx = vx + i * (vw / 3);
                                 const cy = veranda.position === "front" ? vy + vd : vy;
-                                return <rect key={"vc-"+i} x={cx-4} y={cy-4} width={8} height={8} fill="#795548" stroke="#5D4037" strokeWidth="0.8" rx="1"/>;
+                                return <rect key={"vc-"+i} x={cx-5} y={cy-5} width={10} height={10} fill="#795548" stroke="#5D4037" strokeWidth="1" rx="2"/>;
                             })}
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 4} textAnchor="middle" fontSize="14" fill="#2E7D32" fontWeight="700">VERANDA</text>
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 18} textAnchor="middle" fontSize="11" fill="#4CAF50" fontWeight="500">{veranda.width}x{veranda.depth} cm ({(veranda.width * veranda.depth / 10000).toFixed(1)} m\u00B2)</text>
-                            {dimLine(vx, vy + vd + 12, vx + vw, vy + vd + 12, veranda.width + " cm", false, "12")}
-                            {dimLine(vx + vw + 12, vy, vx + vw + 12, vy + vd, veranda.depth + " cm", false, "12")}
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 5} textAnchor="middle" fontSize="26" fill="#1B5E20" fontWeight="800">VERANDA</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 26} textAnchor="middle" fontSize="20" fill="#2E7D32" fontWeight="600">{veranda.width}x{veranda.depth} cm ({(veranda.width * veranda.depth / 10000).toFixed(1)} m\u00B2)</text>
+                            {dimLine(vx, vy + vd + 16, vx + vw, vy + vd + 16, veranda.width + " cm", false, "24")}
+                            {dimLine(vx + vw + 16, vy, vx + vw + 16, vy + vd, veranda.depth + " cm", false, "24")}
                         </g>
                     );
                 })()}
                 {/* Ana olculer */}
-                <text x={pad + cl / 2} y={pad + cw + (hasVeranda && veranda.position === "front" ? verandaDepthPx + 50 : 40)} textAnchor="middle" fontSize="18" fill="#37474F" fontWeight="700">{tl} cm</text>
-                <text x={pad + cl + 30} y={pad + cw / 2 + 4} textAnchor="middle" fontSize="18" fill="#37474F" fontWeight="700" transform={`rotate(90,${pad + cl + 30},${pad + cw / 2 + 4})`}>{tw} cm</text>
-                <text x={pad + cl / 2} y={pad + cw / 2} textAnchor="middle" fontSize="18" fill="#37474F" opacity="0.15" fontWeight="700">{(tw * tl / 10000).toFixed(1)} m\u00B2{hasVeranda ? " + " + (veranda.width * veranda.depth / 10000).toFixed(1) + " m\u00B2" : ""}</text>
-                <text x={pad} y={vH - 6} fontSize="12" fill="#999">Duvar Olculeri Krokisi</text>
+                <text x={pad + cl / 2} y={pad + cw + (hasVeranda && veranda.position === "front" ? verandaDepthPx + 60 : 50)} textAnchor="middle" fontSize="36" fill="#1A237E" fontWeight="900">{tl} cm</text>
+                <text x={pad + cl + 40} y={pad + cw / 2 + 5} textAnchor="middle" fontSize="36" fill="#1A237E" fontWeight="900" transform={`rotate(90,${pad + cl + 40},${pad + cw / 2 + 5})`}>{tw} cm</text>
+                <text x={pad + cl / 2} y={pad + cw / 2} textAnchor="middle" fontSize="28" fill="#37474F" opacity="0.18" fontWeight="800">{(tw * tl / 10000).toFixed(1)} m\u00B2{hasVeranda ? " + " + (veranda.width * veranda.depth / 10000).toFixed(1) + " m\u00B2" : ""}</text>
+                <text x={pad} y={vH - 8} fontSize="16" fill="#999" fontWeight="500">Duvar Olculeri Krokisi</text>
             </svg>
         );
     }
@@ -963,8 +964,8 @@
         const tl = combo && combo.enabled && combo.direction === "length" ? container.length * 2 : container.length;
         const hasVeranda = veranda && veranda.enabled;
         const verandaDepthPx = hasVeranda ? c2s(veranda.depth) : 0;
-        const pad = 60, cw = c2s(tw), cl = c2s(tl);
-        const vW = cl + pad * 2 + 30, vH = cw + pad * 2 + 40 + (hasVeranda ? verandaDepthPx + 25 : 0);
+        const pad = 80, cw = c2s(tw), cl = c2s(tl);
+        const vW = cl + pad * 2 + 40, vH = cw + pad * 2 + 50 + (hasVeranda ? verandaDepthPx + 30 : 0);
         const panelInfo = PANEL_TYPES.find(p => p.id === container.panelType);
 
         return (
@@ -977,15 +978,15 @@
                     </pattern>
                 </defs>
                 <rect x={pad} y={pad} width={cl} height={cw} fill={panelInfo?.color || "#F0F0F0"} opacity="0.08" />
-                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#37474F" strokeWidth="4" rx="1" />
+                <rect x={pad} y={pad} width={cl} height={cw} fill="none" stroke="#263238" strokeWidth="5" rx="1" />
                 {/* WC */}
                 {wcZones.map((wc, i) => {
                     const x = c2s(wc.x) + pad, y = c2s(wc.y) + pad, w = c2s(wc.w), h = c2s(wc.h);
                     return (
                         <g key={"pwc2-" + i}>
-                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.5" stroke="#00838F" strokeWidth="1.5" strokeDasharray="6,3" />
+                            <rect x={x} y={y} width={w} height={h} fill="#E0F7FA" opacity="0.5" stroke="#00838F" strokeWidth="2" strokeDasharray="8,4" />
                             <rect x={x} y={y} width={w} height={h} fill="url(#pptile2)" opacity="0.3" />
-                            <text x={x + w / 2} y={y + h / 2 + 4} textAnchor="middle" fontSize="14" fill="#00695C" fontWeight="700">WC</text>
+                            <text x={x + w / 2} y={y + h / 2 + 6} textAnchor="middle" fontSize="26" fill="#00695C" fontWeight="800">WC</text>
                         </g>
                     );
                 })}
@@ -997,9 +998,9 @@
                         const ex = c2s((p.startPos || 0) + (p.length || container.length)) + pad;
                         return (
                             <g key={"pp2-" + i}>
-                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="3.5" />
-                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="white" strokeWidth="1.5" />
-                                <text x={pad - 5} y={py + 4} textAnchor="end" fontSize="12" fill="#546E7A" fontWeight="500">{p.label}</text>
+                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="#78909C" strokeWidth="4" />
+                                <line x1={sx} y1={py} x2={ex} y2={py} stroke="white" strokeWidth="2" />
+                                <text x={pad - 8} y={py + 7} textAnchor="end" fontSize="20" fill="#37474F" fontWeight="700">{p.label}</text>
                             </g>
                         );
                     }
@@ -1008,9 +1009,9 @@
                     const ey = c2s((p.startPos || 0) + (p.length || container.width)) + pad;
                     return (
                         <g key={"pp2-" + i}>
-                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="3.5" />
-                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="white" strokeWidth="1.5" />
-                            <text x={px} y={pad - 5} textAnchor="middle" fontSize="12" fill="#546E7A" fontWeight="500">{p.label}</text>
+                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="#78909C" strokeWidth="4" />
+                            <line x1={px} y1={sy} x2={px} y2={ey} stroke="white" strokeWidth="2" />
+                            <text x={px} y={pad - 8} textAnchor="middle" fontSize="20" fill="#37474F" fontWeight="700">{p.label}</text>
                         </g>
                     );
                 })}
@@ -1035,10 +1036,10 @@
                         }
                         return (
                             <g key={item.id}>
-                                <rect x={x} y={y} width={dw} height={dh} fill="white" stroke="#555" strokeWidth="1.5" />
-                                <path d={arcPath} fill="none" stroke="#aaa" strokeWidth="1" strokeDasharray="4,3" />
-                                <text x={x + dw / 2} y={y + dh + 12} textAnchor="middle" fontSize="11" fill="#555" fontWeight="600">{di?.name}</text>
-                                <text x={x + dw / 2} y={y + dh + 23} textAnchor="middle" fontSize="10" fill="#888">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
+                                <rect x={x} y={y} width={dw} height={dh} fill="white" stroke="#333" strokeWidth="2" />
+                                <path d={arcPath} fill="none" stroke="#999" strokeWidth="1.2" strokeDasharray="5,3" />
+                                <text x={x + dw / 2} y={y + dh + 18} textAnchor="middle" fontSize="20" fill="#333" fontWeight="700">{di?.name}</text>
+                                <text x={x + dw / 2} y={y + dh + 34} textAnchor="middle" fontSize="16" fill="#666" fontWeight="500">{od === "sol" ? "Sola" : "Saga"} | {inout === "dis" ? "Disa" : "Ice"}</text>
                             </g>
                         );
                     }
@@ -1047,19 +1048,19 @@
                         const od = item.openDir || "ic";
                         return (
                             <g key={item.id}>
-                                <rect x={x} y={y} width={ww} height={wh} fill="#E3F2FD" stroke="#1565C0" strokeWidth="1.5" />
-                                <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="0.8" />
-                                <text x={x + ww / 2} y={y + wh + 12} textAnchor="middle" fontSize="11" fill="#555" fontWeight="600">{item.width}x{item.windowHeight}</text>
-                                <text x={x + ww / 2} y={y + wh + 23} textAnchor="middle" fontSize="10" fill="#888">h:{item.elevation || 90} | {od === "dis" ? "Disa" : "Ice"}</text>
+                                <rect x={x} y={y} width={ww} height={wh} fill="#E3F2FD" stroke="#1565C0" strokeWidth="2" />
+                                <line x1={x + ww / 2} y1={y} x2={x + ww / 2} y2={y + wh} stroke="#1565C0" strokeWidth="1" />
+                                <text x={x + ww / 2} y={y + wh + 18} textAnchor="middle" fontSize="20" fill="#333" fontWeight="700">{item.width}x{item.windowHeight}</text>
+                                <text x={x + ww / 2} y={y + wh + 34} textAnchor="middle" fontSize="16" fill="#666" fontWeight="500">h:{item.elevation || 90} | {od === "dis" ? "Disa" : "Ice"}</text>
                             </g>
                         );
                     }
                     if (item.type === "outlet") {
                         return (
                             <g key={item.id}>
-                                <circle cx={x + 7} cy={y + 7} r={7} fill="#FFF8E1" stroke="#FF9800" strokeWidth="1.2" />
-                                <text x={x + 7} y={y + 11} textAnchor="middle" fontSize="11" fill="#E65100" fontWeight="bold">P</text>
-                                <text x={x + 7} y={y + 24} textAnchor="middle" fontSize="10" fill="#F57C00" fontWeight="500">h:{item.elevation || 40}</text>
+                                <circle cx={x + 9} cy={y + 9} r={9} fill="#FFF8E1" stroke="#FF9800" strokeWidth="1.5" />
+                                <text x={x + 9} y={y + 14} textAnchor="middle" fontSize="16" fill="#E65100" fontWeight="bold">P</text>
+                                <text x={x + 9} y={y + 32} textAnchor="middle" fontSize="14" fill="#F57C00" fontWeight="600">h:{item.elevation || 40}</text>
                             </g>
                         );
                     }
@@ -1067,9 +1068,9 @@
                         const mi = MARKER_TYPES.find(m => m.id === item.markerType) || MARKER_TYPES[5];
                         return (
                             <g key={item.id}>
-                                <circle cx={x + 9} cy={y + 9} r={8} fill={mi.color} opacity="0.85" />
-                                <text x={x + 9} y={y + 13} textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">{mi.icon}</text>
-                                <text x={x + 9} y={y + 26} textAnchor="middle" fontSize="10" fill="#555" fontWeight="500">{item.note || mi.name}</text>
+                                <circle cx={x + 11} cy={y + 11} r={10} fill={mi.color} opacity="0.85" />
+                                <text x={x + 11} y={y + 16} textAnchor="middle" fontSize="16" fill="white" fontWeight="bold">{mi.icon}</text>
+                                <text x={x + 11} y={y + 34} textAnchor="middle" fontSize="14" fill="#333" fontWeight="600">{item.note || mi.name}</text>
                             </g>
                         );
                     }
@@ -1081,15 +1082,15 @@
                         const lw = c2s(item.lWing || 60);
                         return (
                             <g key={item.id}>
-                                <rect x={x} y={y} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="2" rx="1" />
-                                <line x1={x + 3} y1={y + 3} x2={x + kw - 3} y2={y + kh - 3} stroke="#A1887F" strokeWidth="0.5" opacity="0.4" />
-                                <line x1={x + kw - 3} y1={y + 3} x2={x + 3} y2={y + kh - 3} stroke="#A1887F" strokeWidth="0.5" opacity="0.4" />
-                                <ellipse cx={x + kw * 0.3} cy={y + kh / 2} rx={Math.min(kw * 0.12, 10)} ry={Math.min(kh * 0.3, 8)} fill="#B3E5FC" stroke="#0288D1" strokeWidth="0.7" />
-                                <circle cx={x + kw * 0.7} cy={y + kh * 0.35} r={4} fill="none" stroke="#F44336" strokeWidth="0.7" />
-                                <circle cx={x + kw * 0.85} cy={y + kh * 0.65} r={4} fill="none" stroke="#F44336" strokeWidth="0.7" />
-                                {isL && rot === 0 && <rect x={x} y={y + kh} width={c2s(item.depth || 60)} height={lw} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />}
-                                {isL && rot === 90 && <rect x={x + kw} y={y} width={lw} height={c2s(item.depth || 60)} fill="#EFEBE9" stroke="#795548" strokeWidth="1.5" rx="1" />}
-                                <text x={x + kw / 2} y={y + kh + (isL && rot === 0 ? lw + 14 : 14)} textAnchor="middle" fontSize="11" fill="#5D4037" fontWeight="700">{isL ? "L " : ""}Mutfak {item.width || 240}x{item.depth || 60}</text>
+                                <rect x={x} y={y} width={kw} height={kh} fill="#EFEBE9" stroke="#795548" strokeWidth="2.5" rx="2" />
+                                <line x1={x + 4} y1={y + 4} x2={x + kw - 4} y2={y + kh - 4} stroke="#A1887F" strokeWidth="0.7" opacity="0.4" />
+                                <line x1={x + kw - 4} y1={y + 4} x2={x + 4} y2={y + kh - 4} stroke="#A1887F" strokeWidth="0.7" opacity="0.4" />
+                                <ellipse cx={x + kw * 0.3} cy={y + kh / 2} rx={Math.min(kw * 0.12, 12)} ry={Math.min(kh * 0.3, 10)} fill="#B3E5FC" stroke="#0288D1" strokeWidth="1" />
+                                <circle cx={x + kw * 0.7} cy={y + kh * 0.35} r={5} fill="none" stroke="#F44336" strokeWidth="1" />
+                                <circle cx={x + kw * 0.85} cy={y + kh * 0.65} r={5} fill="none" stroke="#F44336" strokeWidth="1" />
+                                {isL && rot === 0 && <rect x={x} y={y + kh} width={c2s(item.depth || 60)} height={lw} fill="#EFEBE9" stroke="#795548" strokeWidth="2" rx="2" />}
+                                {isL && rot === 90 && <rect x={x + kw} y={y} width={lw} height={c2s(item.depth || 60)} fill="#EFEBE9" stroke="#795548" strokeWidth="2" rx="2" />}
+                                <text x={x + kw / 2} y={y + kh + (isL && rot === 0 ? lw + 20 : 20)} textAnchor="middle" fontSize="20" fill="#4E342E" fontWeight="800">{isL ? "L " : ""}Mutfak {item.width || 240}x{item.depth || 60}</text>
                             </g>
                         );
                     }
@@ -1102,18 +1103,18 @@
                     const vy = veranda.position === "front" ? pad + cw : pad - vd;
                     return (
                         <g>
-                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="2" strokeDasharray="8,4" rx="2"/>
+                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="2.5" strokeDasharray="10,5" rx="3"/>
                             {[0,1,2,3].map(i=>{
                                 const cx = vx + i * (vw / 3);
                                 const cy = veranda.position === "front" ? vy + vd : vy;
-                                return <rect key={"vc2-"+i} x={cx-4} y={cy-4} width={8} height={8} fill="#795548" stroke="#5D4037" strokeWidth="0.8" rx="1"/>;
+                                return <rect key={"vc2-"+i} x={cx-5} y={cy-5} width={10} height={10} fill="#795548" stroke="#5D4037" strokeWidth="1" rx="2"/>;
                             })}
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 4} textAnchor="middle" fontSize="14" fill="#2E7D32" fontWeight="700">VERANDA</text>
-                            <text x={vx + vw / 2} y={vy + vd / 2 + 18} textAnchor="middle" fontSize="11" fill="#4CAF50" fontWeight="500">{veranda.width}x{veranda.depth} cm</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 5} textAnchor="middle" fontSize="26" fill="#1B5E20" fontWeight="800">VERANDA</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 26} textAnchor="middle" fontSize="20" fill="#2E7D32" fontWeight="600">{veranda.width}x{veranda.depth} cm</text>
                         </g>
                     );
                 })()}
-                <text x={pad + cl / 2} y={vH - 6} textAnchor="middle" fontSize="12" fill="#999">Detay Krokisi - Elemanlar ve Olculer</text>
+                <text x={pad + cl / 2} y={vH - 8} textAnchor="middle" fontSize="16" fill="#999" fontWeight="500">Detay Krokisi - Elemanlar ve Olculer</text>
             </svg>
         );
     }
