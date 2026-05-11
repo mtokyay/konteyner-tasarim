@@ -828,11 +828,13 @@
     }
 
     // ======================== OLCULU KAT PLANI (PDF sayfa 1) ========================
-    function FloorPlanDimensions({ container, items, partitions, wcZones, combo }) {
+    function FloorPlanDimensions({ container, items, partitions, wcZones, combo, veranda }) {
         const tw = combo && combo.enabled && combo.direction === "width" ? container.width * 2 : container.width;
         const tl = combo && combo.enabled && combo.direction === "length" ? container.length * 2 : container.length;
+        const hasVeranda = veranda && veranda.enabled;
+        const verandaDepthPx = hasVeranda ? c2s(veranda.depth) : 0;
         const pad = 55, cw = c2s(tw), cl = c2s(tl);
-        const vW = cl + pad * 2 + 40, vH = cw + pad * 2 + 50;
+        const vW = cl + pad * 2 + 40, vH = cw + pad * 2 + 50 + (hasVeranda ? verandaDepthPx + 20 : 0);
         const panelInfo = PANEL_TYPES.find(p => p.id === container.panelType);
 
         const topSegs = calcWallSegments(items, container.length, "top", container.width);
@@ -840,13 +842,13 @@
 
         const dimLine = (x1, y1, x2, y2, label, above, fontSize) => {
             const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+            const isVert = Math.abs(x1 - x2) < 2;
             const off = above ? -8 : 8;
             return (
                 <g>
                     <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#E53935" strokeWidth="1" />
-                    <line x1={x1} y1={y1 - 3} x2={x1} y2={y1 + 3} stroke="#E53935" strokeWidth="1" />
-                    <line x1={x2} y1={y2 - 3} x2={x2} y2={y2 + 3} stroke="#E53935" strokeWidth="1" />
-                    <text x={mx} y={my + off} textAnchor="middle" fontSize={fontSize || "9"} fill="#C62828" fontWeight="500">{label}</text>
+                    {isVert ? (<><line x1={x1 - 3} y1={y1} x2={x1 + 3} y2={y1} stroke="#E53935" strokeWidth="1" /><line x1={x2 - 3} y1={y2} x2={x2 + 3} y2={y2} stroke="#E53935" strokeWidth="1" /></>) : (<><line x1={x1} y1={y1 - 3} x2={x1} y2={y1 + 3} stroke="#E53935" strokeWidth="1" /><line x1={x2} y1={y2 - 3} x2={x2} y2={y2 + 3} stroke="#E53935" strokeWidth="1" /></>)}
+                    {isVert ? <text x={mx + off} y={my + 3} textAnchor="middle" fontSize={fontSize || "9"} fill="#C62828" fontWeight="500" transform={`rotate(90,${mx + off},${my + 3})`}>{label}</text> : <text x={mx} y={my + off} textAnchor="middle" fontSize={fontSize || "9"} fill="#C62828" fontWeight="500">{label}</text>}
                 </g>
             );
         };
@@ -926,21 +928,44 @@
                         </g>
                     );
                 })}
+                {/* Veranda */}
+                {hasVeranda && (()=>{
+                    const vw = c2s(veranda.width), vd = c2s(veranda.depth);
+                    const vx = pad + (cl - vw) / 2;
+                    const vy = veranda.position === "front" ? pad + cw : pad - vd;
+                    return (
+                        <g>
+                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="1.5" strokeDasharray="6,3" rx="2"/>
+                            {[0,1,2,3].map(i=>{
+                                const cx = vx + i * (vw / 3);
+                                const cy = veranda.position === "front" ? vy + vd : vy;
+                                return <rect key={"vc-"+i} x={cx-3} y={cy-3} width={6} height={6} fill="#795548" stroke="#5D4037" strokeWidth="0.5" rx="1"/>;
+                            })}
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 3} textAnchor="middle" fontSize="9" fill="#2E7D32" fontWeight="600">VERANDA</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 13} textAnchor="middle" fontSize="7" fill="#4CAF50">{veranda.width}x{veranda.depth} cm ({(veranda.width * veranda.depth / 10000).toFixed(1)} m\u00B2)</text>
+                            {/* Veranda olcu cizgileri */}
+                            {dimLine(vx, vy + vd + 8, vx + vw, vy + vd + 8, veranda.width + " cm", false, "8")}
+                            {dimLine(vx + vw + 8, vy, vx + vw + 8, vy + vd, veranda.depth + " cm", false, "8")}
+                        </g>
+                    );
+                })()}
                 {/* Ana olculer */}
-                <text x={pad + cl / 2} y={pad + cw + 30} textAnchor="middle" fontSize="12" fill="#37474F" fontWeight="600">{tl} cm</text>
+                <text x={pad + cl / 2} y={pad + cw + (hasVeranda && veranda.position === "front" ? verandaDepthPx + 40 : 30)} textAnchor="middle" fontSize="12" fill="#37474F" fontWeight="600">{tl} cm</text>
                 <text x={pad + cl + 20} y={pad + cw / 2 + 3} textAnchor="middle" fontSize="12" fill="#37474F" fontWeight="600" transform={`rotate(90,${pad + cl + 20},${pad + cw / 2 + 3})`}>{tw} cm</text>
-                <text x={pad + cl / 2} y={pad + cw / 2} textAnchor="middle" fontSize="13" fill="#37474F" opacity="0.12" fontWeight="600">{(tw * tl / 10000).toFixed(1)} m\u00B2</text>
+                <text x={pad + cl / 2} y={pad + cw / 2} textAnchor="middle" fontSize="13" fill="#37474F" opacity="0.12" fontWeight="600">{(tw * tl / 10000).toFixed(1)} m\u00B2{hasVeranda ? " + " + (veranda.width * veranda.depth / 10000).toFixed(1) + " m\u00B2" : ""}</text>
                 <text x={pad} y={vH - 4} fontSize="9" fill="#999">Duvar Olculeri Krokisi</text>
             </svg>
         );
     }
 
     // ======================== DETAY KROKISI (PDF sayfa 2) ========================
-    function FloorPlanDetail({ container, items, partitions, wcZones, combo }) {
+    function FloorPlanDetail({ container, items, partitions, wcZones, combo, veranda }) {
         const tw = combo && combo.enabled && combo.direction === "width" ? container.width * 2 : container.width;
         const tl = combo && combo.enabled && combo.direction === "length" ? container.length * 2 : container.length;
+        const hasVeranda = veranda && veranda.enabled;
+        const verandaDepthPx = hasVeranda ? c2s(veranda.depth) : 0;
         const pad = 35, cw = c2s(tw), cl = c2s(tl);
-        const vW = cl + pad * 2 + 20, vH = cw + pad * 2 + 30;
+        const vW = cl + pad * 2 + 20, vH = cw + pad * 2 + 30 + (hasVeranda ? verandaDepthPx + 20 : 0);
         const panelInfo = PANEL_TYPES.find(p => p.id === container.panelType);
 
         return (
@@ -1076,6 +1101,24 @@
                     }
                     return null;
                 })}
+                {/* Veranda */}
+                {hasVeranda && (()=>{
+                    const vw = c2s(veranda.width), vd = c2s(veranda.depth);
+                    const vx = pad + (cl - vw) / 2;
+                    const vy = veranda.position === "front" ? pad + cw : pad - vd;
+                    return (
+                        <g>
+                            <rect x={vx} y={vy} width={vw} height={vd} fill="#A5D6A7" opacity="0.15" stroke="#388E3C" strokeWidth="1.5" strokeDasharray="6,3" rx="2"/>
+                            {[0,1,2,3].map(i=>{
+                                const cx = vx + i * (vw / 3);
+                                const cy = veranda.position === "front" ? vy + vd : vy;
+                                return <rect key={"vc2-"+i} x={cx-3} y={cy-3} width={6} height={6} fill="#795548" stroke="#5D4037" strokeWidth="0.5" rx="1"/>;
+                            })}
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 3} textAnchor="middle" fontSize="9" fill="#2E7D32" fontWeight="600">VERANDA</text>
+                            <text x={vx + vw / 2} y={vy + vd / 2 + 13} textAnchor="middle" fontSize="7" fill="#4CAF50">{veranda.width}x{veranda.depth} cm</text>
+                        </g>
+                    );
+                })()}
                 <text x={pad + cl / 2} y={vH - 4} textAnchor="middle" fontSize="9" fill="#999">Detay Krokisi - Elemanlar ve Olculer</text>
             </svg>
         );
@@ -1729,7 +1772,7 @@
           pdf.setFontSize(9);pdf.setFont(undefined,'normal');pdf.setTextColor(120);
           const tw2=combo&&combo.enabled&&combo.direction==="width"?container.width*2:container.width;
           const tl2=combo&&combo.enabled&&combo.direction==="length"?container.length*2:container.length;
-          pdf.text(container.width+"x"+container.length+"x"+container.height+" cm | "+(tw2*tl2/10000).toFixed(1)+" m² | "+(pi?.name||"")+" | "+(ri?.name||""),margin,18);
+          pdf.text(container.width+"x"+container.length+"x"+container.height+" cm | "+(tw2*tl2/10000).toFixed(1)+" m²"+(veranda&&veranda.enabled?" + Veranda "+veranda.width+"x"+veranda.depth+"cm ("+(veranda.width*veranda.depth/10000).toFixed(1)+" m²)":"")+" | "+(pi?.name||"")+" | "+(ri?.name||""),margin,18);
           // Render the kroki SVG sections to canvas
           const krokiSection=document.querySelector('[data-pdf-section="floorplan-dims"]');
           const detailSection=document.querySelector('[data-pdf-section="floorplan-detail"]');
@@ -1838,12 +1881,12 @@
               {/* PAGE 2: Dimension Floor Plan */}
               <div data-pdf-section="floorplan-dims" className="bg-white p-4">
                 <div className="font-bold text-gray-700 mb-3 text-base">DUVAR OLCULERI KROKISI</div>
-                <FloorPlanDimensions container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>
+                <FloorPlanDimensions container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda}/>
               </div>
               {/* PAGE 3: Detail Floor Plan */}
               <div data-pdf-section="floorplan-detail" className="bg-white p-4">
                 <div className="font-bold text-gray-700 mb-3 text-base">DETAY KROKISI</div>
-                <FloorPlanDetail container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo}/>
+                <FloorPlanDetail container={container} items={items} partitions={partitions} wcZones={wcZones} combo={combo} veranda={veranda}/>
               </div>
               {/* PAGE 4-5: Wall Elevation Views - 2 walls per page */}
               <div data-pdf-section="walls-AB" className="bg-white p-4">
